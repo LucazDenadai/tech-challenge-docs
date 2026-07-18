@@ -4,7 +4,7 @@
 **Status:** To Do
 **Depende de:** CARD-30
 **Bloqueia:** CARD-32
-**Decisão arquitetural:** a registrar (ADR-010, ver passo 1)
+**Decisão arquitetural:** a registrar (ADR-011, ver passo 1)
 
 ---
 
@@ -18,7 +18,7 @@ Este card não substitui a stack OTel existente — decide se ela é mantida em 
 
 ## Critérios de aceite
 
-- [ ] ADR-010 registrado: escolha entre Datadog e New Relic, e decisão sobre manter ou substituir a stack OTel da Fase 2
+- [ ] ADR-011 registrado: escolha entre Datadog e New Relic, e decisão sobre manter ou substituir a stack OTel da Fase 2
 - [ ] Agente/integração instalado no cluster EKS (DaemonSet ou sidecar, conforme a ferramenta escolhida)
 - [ ] Dashboard: latência das APIs (Atendimento e Estoque)
 - [ ] Dashboard: consumo de recursos do Kubernetes (CPU, memória) por pod/deployment
@@ -33,7 +33,7 @@ Este card não substitui a stack OTel existente — decide se ela é mantida em 
 
 ## Passos
 
-1. Escrever ADR-010 com a decisão Datadog vs New Relic e o tradeoff de manter/substituir OTel
+1. Escrever ADR-011 com a decisão Datadog vs New Relic e o tradeoff de manter/substituir OTel
 2. Criar conta/workspace na ferramenta escolhida
 3. Instalar agente no cluster EKS via Helm chart oficial
 4. Configurar coleta de métricas de aplicação (latência, taxa de erro) via instrumentação já existente (OTel, se mantido) ou SDK nativo da ferramenta
