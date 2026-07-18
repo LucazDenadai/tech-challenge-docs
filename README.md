@@ -39,6 +39,7 @@ diagramas/    ← Diagramas de componentes e sequência
 | [ADR-007](adr/ADR-007-banco-compartilhado-schemas-separados.md) | Banco compartilhado com schemas separados por serviço |
 | [ADR-008](adr/ADR-008-observabilidade-opentelemetry.html) | Observabilidade com OpenTelemetry |
 | [ADR-009](adr/ADR-009-migracao-aws-e-separacao-repositorios.md) | Migração para AWS e separação em repositórios (Fase 3) |
+| [ADR-010](adr/ADR-010-sizing-e-regiao-aws.md) | Sizing, custo e região da infraestrutura AWS (Fase 3) |
 
 ## Cards
 
