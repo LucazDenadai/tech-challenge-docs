@@ -1,10 +1,28 @@
 # CARD-27 — CI/CD nos 4 repositórios (proteção de branch + deploy automático)
 
 **Tipo:** CI/CD
-**Status:** To Do
+**Status:** Em andamento — executado em conjunto com CARD-28 (ver nota abaixo)
 **Depende de:** CARD-26
-**Bloqueia:** CARD-28, CARD-29
-**Decisão arquitetural:** [ADR-009](../../adr/ADR-009-migracao-aws-e-separacao-repositorios.md), [ADR-006](../../adr/ADR-006-self-hosted-runner-cicd.md) (superseded)
+**Bloqueia:** CARD-29
+**Decisão arquitetural:** [ADR-009](../../adr/ADR-009-migracao-aws-e-separacao-repositorios.md), [ADR-010](../../adr/ADR-010-sizing-e-regiao-aws.md), [ADR-006](../../adr/ADR-006-self-hosted-runner-cicd.md) (superseded)
+
+---
+
+## Nota de execução: CARD-27 e CARD-28 combinados
+
+Na prática, este card não pode ser concluído isoladamente: o pipeline `terraform plan`/`apply` só faz sentido quando o código Terraform de `tech-challenge-infra-k8s`/`tech-challenge-infra-db` já declara recursos AWS reais (`aws_eks_cluster`, `aws_db_instance` etc.) — isso é o CARD-28. Criar o pipeline antes do código reescrito resultaria em um workflow que falha em todo push, o que viola a regra do projeto de nunca commitar CI quebrado.
+
+**Decisão:** CARD-27 (pipeline) e CARD-28 (código Terraform AWS) são executados juntos, na mesma leva de trabalho. Este card permanece registrando os critérios de aceite de CI/CD; o CARD-28 registra os de infraestrutura. Ver também [ADR-010](../../adr/ADR-010-sizing-e-regiao-aws.md) para as decisões de região/sizing que precisam estar fechadas antes de escrever qualquer Terraform ou pipeline.
+
+### Pré-requisito de bootstrap (manual, uma única vez, antes de qualquer `terraform apply`)
+
+1. Criar bucket S3 para o backend remoto do state (região `us-east-1`, versionamento ativado)
+2. Criar tabela DynamoDB para lock do state (partition key `LockID`)
+3. Criar o OIDC provider do GitHub Actions na conta AWS (`token.actions.githubusercontent.com`)
+4. Criar a(s) IAM role(s) com trust policy restrita a `repo:LucazDenadai/<repo>:ref:refs/heads/main`, permissões mínimas necessárias (EKS, RDS, VPC, API Gateway conforme o repositório)
+5. Guardar o ARN da role como GitHub Secret `AWS_ROLE_ARN` em cada repositório que rodar Terraform/deploy
+
+Esses recursos ficam **fora do Terraform gerenciado** (problema de bootstrap circular: o backend remoto não pode gerenciar a si mesmo) — são criados uma vez via AWS Console ou CLI e documentados no README de `tech-challenge-infra-k8s`.
 
 ---
 
