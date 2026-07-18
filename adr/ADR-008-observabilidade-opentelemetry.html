@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADR-008 — Arquitetura de Observabilidade com OpenTelemetry</title>
+  <style>
+    :root {
+      --blue-dark:   #1a237e;
+      --blue-mid:    #1565c0;
+      --blue-light:  #1e88e5;
+      --cyan:        #00acc1;
+      --green:       #2e7d32;
+      --orange:      #e65100;
+      --purple:      #6a1b9a;
+      --teal:        #00695c;
+      --gray-bg:     #f5f7fa;
+      --gray-border: #cfd8dc;
+      --text:        #212121;
+      --text-muted:  #546e7a;
+      --white:       #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--gray-bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
+      color: var(--white);
+      padding: 40px 48px 32px;
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      padding: 3px 10px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+    header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    header .meta { font-size: 14px; opacity: .75; display: flex; gap: 24px; flex-wrap: wrap; margin-top: 10px; }
+    header .meta span { display: flex; align-items: center; gap: 6px; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+    section { margin-bottom: 48px; }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--blue-dark);
+      border-left: 4px solid var(--blue-light);
+      padding-left: 12px;
+      margin-bottom: 20px;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--blue-mid);
+      margin: 24px 0 10px;
+    }
+    p { margin-bottom: 12px; color: var(--text); }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card .card-icon { font-size: 28px; margin-bottom: 10px; }
+    .card .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+    .card .card-value { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 4px; }
+
+    .diagram-wrapper {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: 12px;
+      padding: 24px;
+      overflow-x: auto;
+    }
+    .diagram-wrapper svg { display: block; margin: 0 auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--white);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--gray-border);
+      font-size: 14px;
+    }
+    th {
+      background: var(--blue-dark);
+      color: var(--white);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+    }
+    td { padding: 11px 16px; border-bottom: 1px solid var(--gray-border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fbfd; }
+    code {
+      background: #e8eaf6;
+      color: var(--blue-dark);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+    }
+
+    .pillar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+    .pillar-card {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .pillar-card.traces  { border-top: 4px solid #1e88e5; }
+    .pillar-card.metrics { border-top: 4px solid #2e7d32; }
+    .pillar-card.logs    { border-top: 4px solid #e65100; }
+    .pillar-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+    .pillar-card.traces  h4 { color: #1e88e5; }
+    .pillar-card.metrics h4 { color: #2e7d32; }
+    .pillar-card.logs    h4 { color: #e65100; }
+    .pillar-card ul { padding-left: 18px; font-size: 13px; }
+    .pillar-card li { margin-bottom: 5px; }
+    .pillar-card .backend {
+      margin-top: 14px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .pillar-card.traces  .backend { background: #e3f2fd; color: #1565c0; }
+    .pillar-card.metrics .backend { background: #e8f5e9; color: #2e7d32; }
+    .pillar-card.logs    .backend { background: #fff3e0; color: #e65100; }
+
+    .flow-box {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-border);
+      font-size: 14px;
+    }
+    .flow-step:last-child { border-bottom: none; }
+    .flow-num {
+      min-width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--blue-mid);
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .alt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .alt-card {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .alt-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--blue-dark); }
+    .alt-card ul { padding-left: 18px; font-size: 13px; }
+    .alt-card li { margin-bottom: 4px; }
+    .alt-card .verdict {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .verdict.rejected { background: #ffebee; color: #c62828; border-left: 4px solid #c62828; }
+    .verdict.accepted { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #2e7d32; }
+
+    .consequence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .consequence-box {
+      background: var(--white);
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .consequence-box.positive { border-top: 4px solid var(--green); }
+    .consequence-box.negative { border-top: 4px solid var(--orange); }
+    .consequence-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+    .consequence-box.positive h4 { color: var(--green); }
+    .consequence-box.negative h4 { color: var(--orange); }
+    .consequence-box ul { padding-left: 18px; font-size: 13px; }
+    .consequence-box li { margin-bottom: 6px; }
+
+    .refs ul { list-style: none; padding: 0; }
+    .refs li { padding: 8px 0; border-bottom: 1px solid var(--gray-border); font-size: 14px; }
+    .refs li:last-child { border-bottom: none; }
+    .refs a { color: var(--blue-light); text-decoration: none; }
+    .refs a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .pillar-grid, .consequence-grid { grid-template-columns: 1fr; }
+      header { padding: 28px 20px; }
+      main { padding: 24px 16px; }
+    }
+    @media (max-width: 900px) {
+      .pillar-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">ADR-008 · Aceito</div>
+  <h1>Arquitetura de Observabilidade com OpenTelemetry</h1>
+  <p style="opacity:.8;margin-top:8px;font-size:15px;">
+    Decisão sobre os três pilares de observabilidade (traces, metrics, logs), escolha de backends independentes e mecanismo de coleta para os microserviços da Oficina Mecânica.
+  </p>
+  <div class="meta">
+    <span>📅 2026-06-23</span>
+    <span>👥 Time Tech Challenge — Fase 3</span>
+    <span>🔗 Depende de: ADR-003</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- CONTEXTO -->
+  <section>
+    <h2>Contexto</h2>
+    <p>
+      Com dois microserviços em produção no Kubernetes — <strong>Atendimento</strong> e <strong>Estoque</strong> — e comunicação tanto síncrona (HTTP) quanto assíncrona (RabbitMQ), identificar problemas exige mais do que logs isolados. Uma requisição de abertura de OS atravessa múltiplos serviços e camadas; sem rastreamento distribuído, localizar a causa de uma lentidão ou erro é inviável.
+    </p>
+    <p>
+      A decisão central é como instrumentar, coletar e armazenar os três pilares de observabilidade sem introduzir um único ponto de falha e mantendo o ambiente auto-suficiente para demonstração local.
+    </p>
+    <div class="card-grid" style="margin-top:20px;">
+      <div class="card">
+        <div class="card-icon">🔍</div>
+        <div class="card-title">Requisito #1</div>
+        <div class="card-value">Rastrear uma requisição atravessando Atendimento e Estoque com um único ID</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Requisito #2</div>
+        <div class="card-value">Detectar degradação de latência e taxa de erros antes que o usuário perceba</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📋</div>
+        <div class="card-title">Requisito #3</div>
+        <div class="card-value">Correlacionar logs com o trace-id da requisição que os gerou</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏠</div>
+        <div class="card-title">Requisito #4</div>
+        <div class="card-value">Self-hosted, sem dependência de cloud ou licença paga</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OS TRÊS PILARES -->
+  <section>
+    <h2>Os Três Pilares e seus Backends</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:4px;">
+      Cada pilar tem responsabilidade distinta e backend dedicado. Nenhum componente acumula mais de uma função.
+    </p>
+    <div class="pillar-grid">
+      <div class="pillar-card traces">
+        <h4>Traces</h4>
+        <ul>
+          <li>Registra o caminho de uma requisição entre serviços</li>
+          <li>Cada etapa vira um <strong>span</strong> com duração e atributos</li>
+          <li>Spans ligados pelo mesmo <code>trace-id</code> formam uma árvore</li>
+          <li>Instrumentação automática: ASP.NET Core, EF Core, MassTransit, HttpClient</li>
+        </ul>
+        <div class="backend">Backend: Jaeger — recebe via OTLP HTTP (:4318)</div>
+      </div>
+      <div class="pillar-card metrics">
+        <h4>Metrics</h4>
+        <ul>
+          <li>Medidores contínuos em séries temporais</li>
+          <li>Latência, throughput, erros, uso de memória/CPU</li>
+          <li>Prometheus <strong>puxa</strong> o endpoint <code>/metrics</code> a cada 15s</li>
+          <li>Instrumentação automática: ASP.NET Core runtime</li>
+        </ul>
+        <div class="backend">Backend: Prometheus — scrape pull em /metrics (:9090)</div>
+      </div>
+      <div class="pillar-card logs">
+        <h4>Logs</h4>
+        <ul>
+          <li>Estado interno do código em momentos específicos</li>
+          <li>Estruturado em JSON com <code>TraceId</code> extraído pelo Promtail</li>
+          <li>App escreve no stdout; Kubernetes salva em arquivo; Promtail coleta</li>
+          <li>Filtro por <code>trace-id</code> correlaciona log com trace</li>
+        </ul>
+        <div class="backend">Backend: Loki via Promtail — push de arquivo (:3100)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIAGRAMA -->
+  <section>
+    <h2>Arquitetura de Coleta e Armazenamento</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;">
+      Cada pilar tem mecanismo de transporte independente. O Grafana é apenas painel de leitura — não armazena nada.
+    </p>
+    <div class="diagram-wrapper">
+      <svg width="960" height="560" viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',system-ui,sans-serif">
+        <defs>
+          <marker id="arr-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1e88e5"/>
+          </marker>
+          <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+          </marker>
+          <marker id="arr-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#e65100"/>
+          </marker>
+          <marker id="arr-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#6a1b9a"/>
+          </marker>
+          <marker id="arr-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#90a4ae"/>
+          </marker>
+          <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000018"/>
+          </filter>
+        </defs>
+
+        <!-- NAMESPACE oficina-mecanica -->
+        <rect x="10" y="10" width="430" height="340" rx="10" fill="#e3f2fd" stroke="#42a5f5" stroke-width="1.5" stroke-dasharray="6,3"/>
+        <text x="30" y="30" font-size="11" font-weight="700" fill="#1565c0">namespace: oficina-mecanica</text>
+
+        <!-- Pod Atendimento -->
+        <rect x="30" y="46" width="180" height="140" rx="8" fill="white" stroke="#1565c0" stroke-width="1.5" filter="url(#shadow)"/>
+        <rect x="30" y="46" width="180" height="28" rx="8" fill="#1565c0"/>
+        <rect x="30" y="60" width="180" height="14" fill="#1565c0"/>
+        <text x="120" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="white">pod: atendimento</text>
+        <text x="120" y="94" text-anchor="middle" font-size="11" fill="#37474f">SDK OpenTelemetry</text>
+        <rect x="46" y="104" width="148" height="20" rx="4" fill="#e3f2fd"/>
+        <text x="120" y="118" text-anchor="middle" font-size="10" fill="#1565c0">AddAspNetCoreInstrumentation</text>
+        <rect x="46" y="128" width="148" height="20" rx="4" fill="#e3f2fd"/>
+        <text x="120" y="142" text-anchor="middle" font-size="10" fill="#1565c0">AddEntityFrameworkCoreInstrumentation</text>
+        <rect x="46" y="152" width="148" height="20" rx="4" fill="#e3f2fd"/>
+        <text x="120" y="166" text-anchor="middle" font-size="10" fill="#1565c0">AddMassTransitInstrumentation</text>
+
+        <!-- Pod Estoque -->
+        <rect x="240" y="46" width="180" height="140" rx="8" fill="white" stroke="#1565c0" stroke-width="1.5" filter="url(#shadow)"/>
+        <rect x="240" y="46" width="180" height="28" rx="8" fill="#1565c0"/>
+        <rect x="240" y="60" width="180" height="14" fill="#1565c0"/>
+        <text x="330" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="white">pod: estoque</text>
+        <text x="330" y="94" text-anchor="middle" font-size="11" fill="#37474f">SDK OpenTelemetry</text>
+        <rect x="256" y="104" width="148" height="20" rx="4" fill="#e3f2fd"/>
+        <text x="330" y="118" text-anchor="middle" font-size="10" fill="#1565c0">AddAspNetCoreInstrumentation</text>
+        <rect x="256" y="128" width="148" height="20" rx="4" fill="#e3f2fd"/>
+        <text x="330" y="142" text-anchor="middle" font-size="10" fill="#1565c0">AddEntityFrameworkCoreInstrumentation</text>
+        <rect x="256" y="152" width="148" height="20" rx="4" fill="#e3f2fd"/>
+        <text x="330" y="166" text-anchor="middle" font-size="10" fill="#1565c0">AddMassTransitInstrumentation</text>
+
+        <!-- OTLP label -->
+        <text x="120" y="202" text-anchor="middle" font-size="10" fill="#1e88e5" font-weight="700">PUSH OTLP HTTP :4318</text>
+        <text x="330" y="202" text-anchor="middle" font-size="10" fill="#1e88e5" font-weight="700">PUSH OTLP HTTP :4318</text>
+
+        <!-- /metrics label -->
+        <text x="120" y="228" text-anchor="middle" font-size="10" fill="#2e7d32" font-weight="700">EXPÕE GET /metrics</text>
+        <text x="330" y="228" text-anchor="middle" font-size="10" fill="#2e7d32" font-weight="700">EXPÕE GET /metrics</text>
+
+        <!-- stdout label -->
+        <text x="120" y="254" text-anchor="middle" font-size="10" fill="#e65100" font-weight="700">stdout → /var/log/pods/</text>
+        <text x="330" y="254" text-anchor="middle" font-size="10" fill="#e65100" font-weight="700">stdout → /var/log/pods/</text>
+
+        <!-- trace id propagation -->
+        <line x1="210" y1="116" x2="240" y2="116" stroke="#546e7a" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-gray)"/>
+        <text x="225" y="110" text-anchor="middle" font-size="9" fill="#546e7a">trace-id</text>
+
+        <!-- NAMESPACE observabilidade -->
+        <rect x="460" y="10" width="490" height="540" rx="10" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1.5" stroke-dasharray="6,3"/>
+        <text x="480" y="30" font-size="11" font-weight="700" fill="#6a1b9a">namespace: observabilidade</text>
+
+        <!-- Jaeger -->
+        <rect x="480" y="46" width="200" height="100" rx="8" fill="white" stroke="#1e88e5" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="480" y="46" width="200" height="28" rx="8" fill="#1e88e5"/>
+        <rect x="480" y="60" width="200" height="14" fill="#1e88e5"/>
+        <text x="580" y="65" text-anchor="middle" font-size="12" font-weight="700" fill="white">Jaeger</text>
+        <text x="580" y="92" text-anchor="middle" font-size="11" fill="#37474f">armazena traces</text>
+        <text x="580" y="108" text-anchor="middle" font-size="10" fill="#546e7a">OTLP gRPC :4317</text>
+        <text x="580" y="122" text-anchor="middle" font-size="10" fill="#546e7a">OTLP HTTP :4318</text>
+        <text x="580" y="136" text-anchor="middle" font-size="10" fill="#1e88e5">UI :16686</text>
+
+        <!-- Prometheus -->
+        <rect x="480" y="180" width="200" height="90" rx="8" fill="white" stroke="#2e7d32" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="480" y="180" width="200" height="28" rx="8" fill="#2e7d32"/>
+        <rect x="480" y="194" width="200" height="14" fill="#2e7d32"/>
+        <text x="580" y="199" text-anchor="middle" font-size="12" font-weight="700" fill="white">Prometheus</text>
+        <text x="580" y="224" text-anchor="middle" font-size="11" fill="#37474f">armazena séries temporais</text>
+        <text x="580" y="240" text-anchor="middle" font-size="10" fill="#546e7a">scrape pull a cada 15s</text>
+        <text x="580" y="256" text-anchor="middle" font-size="10" fill="#2e7d32">UI/API :9090</text>
+
+        <!-- Promtail -->
+        <rect x="480" y="306" width="180" height="80" rx="8" fill="white" stroke="#ef6c00" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="480" y="306" width="180" height="28" rx="8" fill="#ef6c00"/>
+        <rect x="480" y="320" width="180" height="14" fill="#ef6c00"/>
+        <text x="570" y="325" text-anchor="middle" font-size="12" font-weight="700" fill="white">Promtail</text>
+        <text x="570" y="352" text-anchor="middle" font-size="11" fill="#37474f">DaemonSet — lê arquivos</text>
+        <text x="570" y="368" text-anchor="middle" font-size="10" fill="#546e7a">extrai TraceId do JSON</text>
+        <text x="570" y="382" text-anchor="middle" font-size="10" fill="#ef6c00">push → Loki :3100</text>
+
+        <!-- Loki -->
+        <rect x="480" y="420" width="180" height="80" rx="8" fill="white" stroke="#e65100" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="480" y="420" width="180" height="28" rx="8" fill="#e65100"/>
+        <rect x="480" y="434" width="180" height="14" fill="#e65100"/>
+        <text x="570" y="439" text-anchor="middle" font-size="12" font-weight="700" fill="white">Loki</text>
+        <text x="570" y="466" text-anchor="middle" font-size="11" fill="#37474f">armazena e indexa logs</text>
+        <text x="570" y="482" text-anchor="middle" font-size="10" fill="#546e7a">filtrável por trace-id</text>
+        <text x="570" y="496" text-anchor="middle" font-size="10" fill="#e65100">API :3100</text>
+
+        <!-- Grafana -->
+        <rect x="710" y="180" width="220" height="240" rx="8" fill="white" stroke="#6a1b9a" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="710" y="180" width="220" height="28" rx="8" fill="#6a1b9a"/>
+        <rect x="710" y="194" width="220" height="14" fill="#6a1b9a"/>
+        <text x="820" y="199" text-anchor="middle" font-size="12" font-weight="700" fill="white">Grafana</text>
+        <text x="820" y="228" text-anchor="middle" font-size="11" fill="#37474f">painel unificado</text>
+        <text x="820" y="246" text-anchor="middle" font-size="10" fill="#546e7a">não armazena — só lê</text>
+
+        <rect x="726" y="262" width="188" height="22" rx="4" fill="#e3f2fd"/>
+        <text x="820" y="277" text-anchor="middle" font-size="10" fill="#1565c0">datasource: Prometheus :9090</text>
+
+        <rect x="726" y="290" width="188" height="22" rx="4" fill="#fff3e0"/>
+        <text x="820" y="305" text-anchor="middle" font-size="10" fill="#e65100">datasource: Loki :3100</text>
+
+        <rect x="726" y="318" width="188" height="22" rx="4" fill="#e3f2fd"/>
+        <text x="820" y="333" text-anchor="middle" font-size="10" fill="#1e88e5">datasource: Jaeger :16686</text>
+
+        <text x="820" y="368" text-anchor="middle" font-size="10" fill="#6a1b9a" font-weight="700">UI :3000</text>
+
+        <!-- SETAS: traces PUSH -->
+        <line x1="120" y1="195" x2="120" y2="285" stroke="#1e88e5" stroke-width="2" marker-end="url(#arr-blue)"/>
+        <path d="M 120 295 Q 120 320 480 96" stroke="#1e88e5" stroke-width="2" fill="none" marker-end="url(#arr-blue)"/>
+        <line x1="330" y1="195" x2="330" y2="295" stroke="#1e88e5" stroke-width="2" marker-end="url(#arr-blue)"/>
+        <path d="M 330 305 Q 330 330 480 96" stroke="#1e88e5" stroke-width="2" fill="none" marker-end="url(#arr-blue)"/>
+
+        <!-- SETAS: metrics PULL (Prometheus → apps, invertido) -->
+        <path d="M 480 225 Q 440 225 420 228" stroke="#2e7d32" stroke-width="2" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-green)"/>
+        <text x="448" y="218" font-size="9" fill="#2e7d32" text-anchor="middle">scrape pull</text>
+
+        <!-- SETAS: logs stdout → Promtail -->
+        <line x1="120" y1="262" x2="120" y2="320" stroke="#e65100" stroke-width="2" marker-end="url(#arr-orange)"/>
+        <path d="M 120 330 Q 120 346 480 346" stroke="#e65100" stroke-width="2" fill="none" marker-end="url(#arr-orange)"/>
+        <line x1="330" y1="262" x2="330" y2="330" stroke="#e65100" stroke-width="2" marker-end="url(#arr-orange)"/>
+        <path d="M 330 340 Q 330 356 480 356" stroke="#e65100" stroke-width="2" fill="none" marker-end="url(#arr-orange)"/>
+
+        <!-- SETA: Promtail → Loki -->
+        <line x1="570" y1="386" x2="570" y2="420" stroke="#e65100" stroke-width="2" marker-end="url(#arr-orange)"/>
+
+        <!-- SETAS: Grafana lê -->
+        <line x1="710" y1="275" x2="680" y2="225" stroke="#6a1b9a" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-purple)"/>
+        <line x1="710" y1="305" x2="660" y2="460" stroke="#6a1b9a" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-purple)"/>
+        <line x1="710" y1="333" x2="680" y2="120" stroke="#6a1b9a" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-purple)"/>
+
+        <!-- Legenda -->
+        <rect x="480" y="510" width="440" height="32" rx="6" fill="#fafafa" stroke="#cfd8dc" stroke-width="1"/>
+        <line x1="495" y1="526" x2="520" y2="526" stroke="#1e88e5" stroke-width="2" marker-end="url(#arr-blue)"/>
+        <text x="524" y="530" font-size="10" fill="#1e88e5">Traces (PUSH)</text>
+        <line x1="598" y1="526" x2="623" y2="526" stroke="#2e7d32" stroke-width="2" stroke-dasharray="4,2" marker-end="url(#arr-green)"/>
+        <text x="627" y="530" font-size="10" fill="#2e7d32">Metrics (PULL)</text>
+        <line x1="702" y1="526" x2="727" y2="526" stroke="#e65100" stroke-width="2" marker-end="url(#arr-orange)"/>
+        <text x="731" y="530" font-size="10" fill="#e65100">Logs (filesystem)</text>
+        <line x1="816" y1="526" x2="841" y2="526" stroke="#6a1b9a" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-purple)"/>
+        <text x="845" y="530" font-size="10" fill="#6a1b9a">Leitura Grafana</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- MECANISMO DE COLETA POR PILAR -->
+  <section>
+    <h2>Mecanismo de Coleta por Pilar</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Pilar</th>
+          <th>Mecanismo</th>
+          <th>Transporte</th>
+          <th>Backend</th>
+          <th>O app sabe o destino?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Traces</strong></td>
+          <td>PUSH — o app envia ativamente</td>
+          <td>OTLP HTTP/Protobuf → <code>:4318/v1/traces</code></td>
+          <td>Jaeger</td>
+          <td>Sim — endpoint configurado em <code>Jaeger:Endpoint</code></td>
+        </tr>
+        <tr>
+          <td><strong>Metrics</strong></td>
+          <td>PULL — Prometheus busca periodicamente</td>
+          <td>HTTP GET <code>/metrics</code> (formato texto Prometheus)</td>
+          <td>Prometheus</td>
+          <td>Não — o app só expõe o endpoint; não sabe quem consome</td>
+        </tr>
+        <tr>
+          <td><strong>Logs</strong></td>
+          <td>Indireto — filesystem intermediário</td>
+          <td>stdout → arquivo K8s → Promtail → HTTP push para Loki</td>
+          <td>Loki</td>
+          <td>Não — o app só escreve no stdout; ignora Loki e Promtail</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- CENÁRIO DE INVESTIGAÇÃO -->
+  <section>
+    <h2>Cenário de Investigação: OS com Latência Alta</h2>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:4px;">Como os três pilares se complementam para localizar um problema real no projeto.</p>
+    <div class="flow-box">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div>
+          <strong style="color:#2e7d32;">Metrics detecta o sintoma</strong><br>
+          Grafana/Prometheus mostra <code>http_server_request_duration_seconds</code> do <em>atendimento</em> subindo de 200ms para 1.8s. Nenhum usuário reclamou ainda — o painel alertou antes.
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div>
+          <strong style="color:#1e88e5;">Traces localiza onde</strong><br>
+          Jaeger mostra que o span <code>HTTP POST /estoque/disponibilidade</code> consome 1.6s dos 1.8s totais. Os spans de EF Core do atendimento são normais. O gargalo está na chamada ao serviço de estoque.
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div>
+          <strong style="color:#e65100;">Logs explica o porquê</strong><br>
+          Loki filtrado pelo <code>trace-id</code> do trace lento mostra, no pod <em>estoque</em>: <code>WARN: pool de conexões esgotado — aguardando conexão disponível (700ms)</code>. O pool de conexões do PostgreSQL no estoque está subdimensionado para a carga atual.
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div>
+          <strong>Ação e validação</strong><br>
+          Aumenta-se <code>MaxPoolSize</code> no connection string do estoque. Métricas voltam ao baseline em 2 minutos. O trace seguinte mostra o span do estoque em 80ms. Os três pilares confirmam a correção.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTRUMENTAÇÕES AUTOMÁTICAS -->
+  <section>
+    <h2>Instrumentações Automáticas Ativas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Pacote</th>
+          <th>O que instrumenta</th>
+          <th>Spans gerados automaticamente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>AddAspNetCoreInstrumentation</code></td>
+          <td>Todo request HTTP recebido</td>
+          <td><code>POST /ordens</code>, <code>GET /estoque/pecas/{id}</code>, etc. com status e duração</td>
+        </tr>
+        <tr>
+          <td><code>AddEntityFrameworkCoreInstrumentation</code></td>
+          <td>Toda query enviada ao banco</td>
+          <td><code>SELECT * FROM Veiculos</code>, <code>INSERT INTO OrdensServico</code>, com o SQL completo</td>
+        </tr>
+        <tr>
+          <td><code>AddMassTransitInstrumentation</code></td>
+          <td>Publicação e consumo de mensagens RabbitMQ</td>
+          <td>Spans de publish e consume ligados ao trace raiz via header AMQP</td>
+        </tr>
+        <tr>
+          <td><code>AddRuntimeInstrumentation</code></td>
+          <td>Runtime .NET</td>
+          <td>GC collections, heap size, thread pool queue length — exportado para Prometheus</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ALTERNATIVAS -->
+  <section>
+    <h2>Alternativas Consideradas</h2>
+    <div class="alt-grid">
+      <div class="alt-card">
+        <h4>Alt. 1 — OTel Collector como hub central</h4>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Apps enviam tudo para um Collector; ele roteia para Jaeger, Prometheus e Loki.</p>
+        <strong style="font-size:12px;color:var(--green);">Prós</strong>
+        <ul style="margin-top:4px;margin-bottom:10px;">
+          <li>Ponto único de configuração de roteamento</li>
+          <li>Suporta múltiplos backends sem reconfigurar apps</li>
+          <li>Filtragem e enriquecimento centralizado</li>
+        </ul>
+        <strong style="font-size:12px;color:#c62828;">Contras</strong>
+        <ul style="margin-top:4px;">
+          <li>Componente extra para operar e monitorar</li>
+          <li>Ponto único de falha — se cair, perde todos os três pilares</li>
+          <li>Overhead desnecessário para dois serviços</li>
+        </ul>
+        <div class="verdict rejected">Rejeitado — complexidade não justificada para dois microserviços; sem ganho operacional real</div>
+      </div>
+      <div class="alt-card">
+        <h4>Alt. 2 — Grafana Stack completa (Tempo + Mimir + Loki)</h4>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Substituir Jaeger + Prometheus por Grafana Tempo (traces) e Mimir (metrics) — tudo no ecossistema Grafana.</p>
+        <strong style="font-size:12px;color:var(--green);">Prós</strong>
+        <ul style="margin-top:4px;margin-bottom:10px;">
+          <li>Integração nativa entre traces, metrics e logs no Grafana</li>
+          <li>Vendor único facilita upgrades</li>
+        </ul>
+        <strong style="font-size:12px;color:#c62828;">Contras</strong>
+        <ul style="margin-top:4px;">
+          <li>Jaeger e Prometheus são mais maduros e com mais documentação</li>
+          <li>Mimir requer configuração de armazenamento em objeto para produção</li>
+          <li>Escopo além do necessário para o desafio</li>
+        </ul>
+        <div class="verdict rejected">Rejeitado — Jaeger + Prometheus têm ecossistema mais consolidado e documentação mais ampla para fins avaliativos</div>
+      </div>
+      <div class="alt-card">
+        <h4>Alt. 3 — Logs via OTLP (sem Promtail)</h4>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">App envia logs diretamente ao Loki via OTLP, eliminando Promtail e coleta de arquivo.</p>
+        <strong style="font-size:12px;color:var(--green);">Prós</strong>
+        <ul style="margin-top:4px;margin-bottom:10px;">
+          <li>Mesmo protocolo para os três pilares</li>
+          <li>Elimina o DaemonSet Promtail</li>
+        </ul>
+        <strong style="font-size:12px;color:#c62828;">Contras</strong>
+        <ul style="margin-top:4px;">
+          <li>Suporte a OTLP logs no Loki ainda experimental</li>
+          <li>Promtail via filesystem captura logs mesmo de crashes antes do shutdown gracioso</li>
+          <li>Logs de outros pods (Postgres, RabbitMQ) também seriam capturados gratuitamente pelo Promtail</li>
+        </ul>
+        <div class="verdict rejected">Rejeitado — abordagem filesystem via Promtail é mais resiliente e captura logs de toda a stack, não só dos apps .NET</div>
+      </div>
+      <div class="alt-card">
+        <h4>Alt. 4 — Solução escolhida: backends independentes</h4>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Jaeger (traces) + Prometheus pull (metrics) + Promtail→Loki (logs) + Grafana como painel.</p>
+        <strong style="font-size:12px;color:var(--green);">Prós</strong>
+        <ul style="margin-top:4px;margin-bottom:10px;">
+          <li>Falha em um backend não afeta os outros dois pilares</li>
+          <li>Cada backend é a ferramenta canônica do seu pilar</li>
+          <li>Grafana conecta os três sem acoplamento entre eles</li>
+          <li>Promtail captura logs de toda a stack automaticamente</li>
+        </ul>
+        <strong style="font-size:12px;color:#c62828;">Contras</strong>
+        <ul style="margin-top:4px;">
+          <li>Três backends para operar em vez de um</li>
+          <li>Configuração distribuída entre quatro componentes</li>
+        </ul>
+        <div class="verdict accepted">Escolhido — isolamento de falhas, maturidade de cada ferramenta e cobertura completa da stack superam a complexidade operacional</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONSEQUÊNCIAS -->
+  <section>
+    <h2>Consequências</h2>
+    <div class="consequence-grid">
+      <div class="consequence-box positive">
+        <h4>Positivas</h4>
+        <ul>
+          <li><strong>Correlação completa:</strong> trace-id liga spans, métricas e logs da mesma requisição</li>
+          <li><strong>Instrumentação zero-code:</strong> ASP.NET Core, EF Core e MassTransit geram spans automaticamente sem alterar o domínio</li>
+          <li><strong>Isolamento de falhas:</strong> queda do Jaeger não afeta coleta de logs nem métricas</li>
+          <li><strong>Cobertura total da stack:</strong> Promtail captura logs de Postgres, RabbitMQ e apps sem configuração por serviço</li>
+          <li><strong>Vendor-neutral:</strong> trocar Jaeger por outra ferramenta exige mudar apenas o endpoint OTLP — não o código do app</li>
+        </ul>
+      </div>
+      <div class="consequence-box negative">
+        <h4>Riscos e Limitações</h4>
+        <ul>
+          <li><strong>Sem alertas ativos:</strong> Prometheus não tem AlertManager configurado — monitoramento é reativo via Grafana</li>
+          <li><strong>Armazenamento efêmero:</strong> Jaeger e Loki usam filesystem local; dados perdidos se o pod reiniciar (aceitável para o desafio)</li>
+          <li><strong>Sem sampling:</strong> 100% dos traces exportados — em produção com alto volume seria necessário tail-based sampling</li>
+          <li><strong>Logs não chegam ao Loki via docker-compose:</strong> Promtail só existe no K8s; no ambiente local os logs ficam apenas no stdout</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERÊNCIAS -->
+  <section class="refs">
+    <h2>Referências</h2>
+    <ul>
+      <li><a href="https://opentelemetry.io/docs/concepts/" target="_blank">OpenTelemetry — Conceitos fundamentais (traces, metrics, logs)</a></li>
+      <li><a href="https://opentelemetry.io/docs/specs/otlp/" target="_blank">OpenTelemetry — Especificação do protocolo OTLP</a></li>
+      <li><a href="https://www.jaegertracing.io/docs/" target="_blank">Jaeger — Documentação oficial</a></li>
+      <li><a href="https://prometheus.io/docs/introduction/overview/" target="_blank">Prometheus — Overview e modelo pull</a></li>
+      <li><a href="https://grafana.com/docs/loki/latest/" target="_blank">Grafana Loki — Documentação oficial</a></li>
+      <li><a href="https://grafana.com/docs/loki/latest/send-data/promtail/" target="_blank">Promtail — Agente de coleta de logs</a></li>
+      <li><a href="ADR-003-arquitetura-kubernetes.html">ADR-003 — Arquitetura de Deploy no Kubernetes</a></li>
+    </ul>
+  </section>
+
+</main>
+
+<footer style="text-align:center;padding:24px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--gray-border);margin-top:16px;">
+  Tech Challenge — Pós-Graduação Software Architecture &nbsp;·&nbsp; ADR-008 &nbsp;·&nbsp; 2026-06-23
+</footer>
+
+</body>
+</html>
