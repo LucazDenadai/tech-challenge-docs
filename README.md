@@ -49,6 +49,13 @@ diagramas/    ← Diagramas de componentes e sequência
 | [RFC-002](rfcs/RFC-002-escolha-do-banco-de-dados.md) | Escolha do banco de dados gerenciado (RDS PostgreSQL) |
 | [RFC-003](rfcs/RFC-003-estrategia-de-autenticacao.md) | Estratégia de autenticação (CPF + JWT via Lambda) |
 
+## Diagramas
+
+| Diagrama | Conteúdo |
+|---|---|
+| [Componentes](diagramas/diagrama-componentes.md) | Visão de nuvem, APIs, banco e monitoramento (Fase 3) |
+| [Sequência — Autenticação via CPF](diagramas/diagrama-sequencia-autenticacao.md) | Fluxo completo: CPF → JWT → consumo de rota protegida |
+
 ## Cards
 
 Organizados por épico em [`cards/`](cards/):
