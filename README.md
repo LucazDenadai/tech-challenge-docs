@@ -41,6 +41,14 @@ diagramas/    ← Diagramas de componentes e sequência
 | [ADR-009](adr/ADR-009-migracao-aws-e-separacao-repositorios.md) | Migração para AWS e separação em repositórios (Fase 3) |
 | [ADR-010](adr/ADR-010-sizing-e-regiao-aws.md) | Sizing, custo e região da infraestrutura AWS (Fase 3) |
 
+## RFCs
+
+| RFC | Decisão |
+|---|---|
+| [RFC-001](rfcs/RFC-001-escolha-da-nuvem.md) | Escolha da nuvem (AWS) |
+| [RFC-002](rfcs/RFC-002-escolha-do-banco-de-dados.md) | Escolha do banco de dados gerenciado (RDS PostgreSQL) |
+| [RFC-003](rfcs/RFC-003-estrategia-de-autenticacao.md) | Estratégia de autenticação (CPF + JWT via Lambda) |
+
 ## Cards
 
 Organizados por épico em [`cards/`](cards/):
