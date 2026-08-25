@@ -38,11 +38,13 @@ Ambos em `us-east-1`, conforme região decidida no ADR-010.
 
 - **OIDC provider:** `token.actions.githubusercontent.com`, client ID `sts.amazonaws.com`
 - **IAM role:** `tech-challenge-github-actions` (`arn:aws:iam::575225901719:role/tech-challenge-github-actions`)
-- **Trust policy:** restrita por `StringLike` ao `sub` do token OIDC, listando exatamente os 4 repositórios na branch `main`:
-  - `repo:LucazDenadai/Tech-challenge:ref:refs/heads/main`
-  - `repo:LucazDenadai/tech-challenge-lambda:ref:refs/heads/main`
-  - `repo:LucazDenadai/tech-challenge-infra-k8s:ref:refs/heads/main`
-  - `repo:LucazDenadai/tech-challenge-infra-db:ref:refs/heads/main`
+- **Trust policy:** restrita por `StringLike` ao `sub` do token OIDC, por repositório (sem restringir branch/evento):
+  - `repo:LucazDenadai/Tech-challenge:*`
+  - `repo:LucazDenadai/tech-challenge-lambda:*`
+  - `repo:LucazDenadai/tech-challenge-infra-k8s:*`
+  - `repo:LucazDenadai/tech-challenge-infra-db:*`
+
+  A versão inicial restringia a `ref:refs/heads/main`, mas isso quebrou o job de `terraform plan` do CARD-27 rodando em `pull_request` — o GitHub OIDC gera um `sub` diferente (`repo:.../pull/<n>/merge`) para esse evento, e o `AssumeRoleWithWebIdentity` falhava com `Not authorized`. Ajustado para wildcard por repositório em 2026-08-25. Aceitável porque os 4 repositórios são pessoais, sem colaboradores externos ou forks — o risco de um PR malicioso assumir a role é baixo nesse contexto.
 - **Uma role compartilhada**, não uma por repositório — escolhida por simplicidade de manutenção (ver alternativas abaixo). O secret `AWS_ROLE_ARN` com o ARN acima foi configurado nos 4 repositórios.
 
 ### Escopo de permissões da role
