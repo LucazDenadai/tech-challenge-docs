@@ -39,12 +39,14 @@ Ambos em `us-east-1`, conforme região decidida no ADR-010.
 - **OIDC provider:** `token.actions.githubusercontent.com`, client ID `sts.amazonaws.com`
 - **IAM role:** `tech-challenge-github-actions` (`arn:aws:iam::575225901719:role/tech-challenge-github-actions`)
 - **Trust policy:** restrita por `StringLike` ao `sub` do token OIDC, por repositório (sem restringir branch/evento):
-  - `repo:LucazDenadai/Tech-challenge:*`
-  - `repo:LucazDenadai/tech-challenge-lambda:*`
-  - `repo:LucazDenadai/tech-challenge-infra-k8s:*`
-  - `repo:LucazDenadai/tech-challenge-infra-db:*`
+  - `repo:LucazDenadai*tech-challenge*`
+  - `repo:LucazDenadai*tech-challenge-lambda*`
+  - `repo:LucazDenadai*tech-challenge-infra-k8s*`
+  - `repo:LucazDenadai*tech-challenge-infra-db*`
 
-  A versão inicial restringia a `ref:refs/heads/main`, mas isso quebrou o job de `terraform plan` do CARD-27 rodando em `pull_request` — o GitHub OIDC gera um `sub` diferente (`repo:.../pull/<n>/merge`) para esse evento, e o `AssumeRoleWithWebIdentity` falhava com `Not authorized`. Ajustado para wildcard por repositório em 2026-08-25. Aceitável porque os 4 repositórios são pessoais, sem colaboradores externos ou forks — o risco de um PR malicioso assumir a role é baixo nesse contexto.
+  A versão inicial restringia a `ref:refs/heads/main` no formato documentado pela AWS/GitHub (`repo:owner/repo:ref:refs/heads/main`), mas isso quebrou o job de `terraform plan` do CARD-27 rodando em `pull_request`. Investigação com um passo de debug temporário (decodificando o JWT do token OIDC direto no job) revelou que o `sub` real emitido para este repositório tem o formato `repo:LucazDenadai@47866683/tech-challenge-infra-k8s@1304922384:pull_request` — com IDs numéricos estáveis do owner e do repositório inseridos após o nome, e não o formato clássico `owner/repo:ref:...`. Esse formato aparece em contas/repositórios que passaram por rename (este repositório era `Tech-challenge`, renomeado para `tech-challenge`) — o GitHub inclui o ID estável para não ambiguar tokens antigos e novos após a mudança de nome.
+
+  Corrigido para `StringLike` com wildcard tanto antes quanto depois do nome do repositório (`repo:LucazDenadai*<repo>*`), cobrindo o `@<id>` em ambas as posições e qualquer evento (`push`, `pull_request`). Isso introduz uma sobreposição inofensiva entre os padrões de `tech-challenge` e `tech-challenge-infra-k8s`/`tech-challenge-lambda`/`tech-challenge-infra-db` (o padrão mais curto também bate nos nomes mais longos, por serem prefixo) — aceito porque todos os 4 repositórios já compartilham a mesma role com o mesmo escopo de permissões, então a sobreposição não amplia o que qualquer um deles pode fazer. Aceitável também por serem repositórios pessoais, sem colaboradores externos ou forks — o risco de um PR malicioso assumir a role é baixo nesse contexto. Ajustado em 2026-08-25.
 - **Uma role compartilhada**, não uma por repositório — escolhida por simplicidade de manutenção (ver alternativas abaixo). O secret `AWS_ROLE_ARN` com o ARN acima foi configurado nos 4 repositórios.
 
 ### Escopo de permissões da role
