@@ -1,7 +1,7 @@
 # CARD-27 — CI/CD nos 4 repositórios (proteção de branch + deploy automático)
 
 **Tipo:** CI/CD
-**Status:** Em andamento — executado em conjunto com CARD-28 (ver nota abaixo)
+**Status:** Concluído — executado em conjunto com CARD-28 (ver nota abaixo)
 **Depende de:** CARD-26
 **Bloqueia:** CARD-29
 **Decisão arquitetural:** [ADR-009](../../adr/ADR-009-migracao-aws-e-separacao-repositorios.md), [ADR-010](../../adr/ADR-010-sizing-e-regiao-aws.md), [ADR-006](../../adr/ADR-006-self-hosted-runner-cicd.md) (superseded)

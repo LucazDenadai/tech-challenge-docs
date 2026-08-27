@@ -1,7 +1,7 @@
 # CARD-26 — Separação em 5 repositórios
 
 **Tipo:** Infra
-**Status:** To Do
+**Status:** Concluído
 **Depende de:** —
 **Bloqueia:** CARD-27, CARD-28, CARD-29, CARD-30
 **Decisão arquitetural:** [ADR-009](../../adr/ADR-009-migracao-aws-e-separacao-repositorios.md)

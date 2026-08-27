@@ -1,7 +1,7 @@
 # CARD-28 — Infraestrutura AWS via Terraform (EKS, RDS, API Gateway)
 
 **Tipo:** Infra
-**Status:** Em andamento — executado em conjunto com CARD-27 (ver nota no CARD-27)
+**Status:** Concluído — executado em conjunto com CARD-27 (ver nota no CARD-27)
 **Depende de:** CARD-26, [ADR-010](../../adr/ADR-010-sizing-e-regiao-aws.md) (região/sizing decididos)
 **Bloqueia:** CARD-29, CARD-30
 **Decisão arquitetural:** [ADR-009](../../adr/ADR-009-migracao-aws-e-separacao-repositorios.md), [ADR-010](../../adr/ADR-010-sizing-e-regiao-aws.md)
