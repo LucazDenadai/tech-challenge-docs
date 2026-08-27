@@ -1,7 +1,7 @@
 # CARD-29 — Lambda de autenticação via CPF
 
 **Tipo:** Serverless
-**Status:** To Do
+**Status:** Concluído
 **Depende de:** CARD-28
 **Bloqueia:** CARD-30
 **Decisão arquitetural:** [ADR-009](../../adr/ADR-009-migracao-aws-e-separacao-repositorios.md)
