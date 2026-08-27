@@ -17,18 +17,19 @@ Consolidar os entregáveis exigidos pelo desafio: diagramas, RFCs, ADRs (já fei
 ## Critérios de aceite
 
 ### Diagramas (em `tech-challenge-docs/diagramas/`)
-- [ ] Diagrama de Componentes: visão de nuvem, APIs, banco e monitoramento (atualizado da Fase 2 para incluir API Gateway, Lambda, EKS, RDS)
-- [ ] Diagrama de Sequência: fluxo de autenticação via CPF (cliente → API Gateway → Lambda → RDS → JWT → rota protegida)
+- [x] Diagrama de Componentes: visão de nuvem, APIs, banco e monitoramento (atualizado para incluir API Gateway, Lambda, EKS, RDS, Datadog)
+- [x] Diagrama de Sequência: fluxo de autenticação via CPF (cliente → API Gateway → Lambda → RDS → JWT → rota protegida via `[Authorize]`, ver ADR-013)
 - [ ] Diagrama de Sequência: fluxo de abertura de ordem de serviço (já existente na Fase 2, revisar se algo mudou)
 
 ### RFCs (em `tech-challenge-docs/rfcs/`)
-- [ ] RFC: escolha da nuvem (AWS vs Azure vs GCP) — pode reaproveitar o raciocínio do ADR-009, formatado como RFC
-- [ ] RFC: escolha do banco de dados gerenciado (RDS PostgreSQL)
-- [ ] RFC: estratégia de autenticação (CPF + JWT via Lambda)
+- [x] RFC-001: escolha da nuvem (AWS vs Azure vs GCP)
+- [x] RFC-002: escolha do banco de dados gerenciado (RDS PostgreSQL)
+- [x] RFC-003: estratégia de autenticação (CPF + JWT via Lambda) — revisar se reflete a decisão final do ADR-013 (validação no Atendimento, não no API Gateway)
 
 ### ADRs
-- [ ] ADR-009 (migração AWS + repos) já registrado
-- [ ] ADR-010 (observabilidade, CARD-31) já registrado
+- [x] ADR-009 (migração AWS + repos) já registrado
+- [x] ADR-012 (observabilidade Datadog, CARD-31) já registrado
+- [x] ADR-013 (autorização via `[Authorize]` no Atendimento, não authorizer no API Gateway) já registrado
 - [ ] Justificativa formal da escolha do banco de dados com diagrama ER e explicação dos relacionamentos (pode reaproveitar/atualizar ADR-007 e ADR-004)
 
 ### READMEs

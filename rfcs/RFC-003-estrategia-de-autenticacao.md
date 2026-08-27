@@ -3,7 +3,7 @@
 **Status:** Aceito
 **Data:** 2026-07-18
 **Autores:** Time Tech Challenge — Fase 3
-**ADR relacionado:** [ADR-009](../adr/ADR-009-migracao-aws-e-separacao-repositorios.md)
+**ADR relacionado:** [ADR-009](../adr/ADR-009-migracao-aws-e-separacao-repositorios.md), [ADR-013](../adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md)
 **Card relacionado:** [CARD-29](../cards/05-fase3-aws/CARD-29-lambda-autenticacao.md), [CARD-30](../cards/05-fase3-aws/CARD-30-api-gateway-integracao.md)
 
 ---
@@ -36,7 +36,7 @@ Cliente → POST /auth/cpf {cpf} → API Gateway → Lambda
                                               200 { token } | 400 | 404 | 403
 ```
 
-O JWT emitido pela Lambda é validado pelo **mesmo mecanismo** já usado pelas rotas protegidas do Atendimento (mesma chave secreta, compartilhada via AWS Secrets Manager) — não é um sistema de autenticação paralelo, é uma segunda *forma de obter* um token com a mesma validade e formato.
+O JWT emitido pela Lambda é validado pelo **mesmo mecanismo** já usado pelas rotas protegidas do Atendimento (mesma chave secreta, injetada como variável de ambiente/Kubernetes Secret via GitHub Secrets em ambos os repositórios) — não é um sistema de autenticação paralelo, é uma segunda *forma de obter* um token com a mesma validade e formato. A validação em si acontece dentro do Atendimento via `[Authorize]`, não no API Gateway — ver [ADR-013](../adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md).
 
 ### Por que Lambda (Function Serverless) e não um endpoint dentro do Atendimento
 
@@ -82,7 +82,7 @@ A Lambda vive em um repositório diferente (`tech-challenge-lambda`) do `Domain`
 
 ## Decisão
 
-Lambda .NET em `tech-challenge-lambda`, exposta via rota `POST /auth/cpf` do API Gateway, reimplementando `CpfValidator`, consultando o RDS diretamente (Npgsql/Dapper, sem EF Core completo) e assinando JWT com a mesma chave HMAC-SHA256 do Atendimento, compartilhada via AWS Secrets Manager.
+Lambda .NET em `tech-challenge-lambda`, exposta via rota `POST /atendimento/auth/cpf` do API Gateway, reimplementando `CpfValidator`, consultando o RDS diretamente (Npgsql, sem EF Core completo) e assinando JWT com a mesma chave HMAC-SHA256 do Atendimento, injetada via GitHub Secrets em ambos os repositórios.
 
 ## Consequências
 
