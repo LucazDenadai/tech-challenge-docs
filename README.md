@@ -40,6 +40,9 @@ diagramas/    ← Diagramas de componentes e sequência
 | [ADR-008](adr/ADR-008-observabilidade-opentelemetry.html) | Observabilidade com OpenTelemetry |
 | [ADR-009](adr/ADR-009-migracao-aws-e-separacao-repositorios.md) | Migração para AWS e separação em repositórios (Fase 3) |
 | [ADR-010](adr/ADR-010-sizing-e-regiao-aws.md) | Sizing, custo e região da infraestrutura AWS (Fase 3) |
+| [ADR-011](adr/ADR-011-bootstrap-aws-backend-remoto-oidc.md) | Bootstrap AWS: budget, backend remoto Terraform, OIDC (Fase 3) |
+| [ADR-012](adr/ADR-012-observabilidade-corporativa-datadog.md) | Observabilidade corporativa com Datadog (Fase 3) |
+| [ADR-013](adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md) | Autorização via `[Authorize]` no Atendimento, não no API Gateway (Fase 3) |
 
 ## RFCs
 
@@ -55,6 +58,8 @@ diagramas/    ← Diagramas de componentes e sequência
 |---|---|
 | [Componentes](diagramas/diagrama-componentes.md) | Visão de nuvem, APIs, banco e monitoramento (Fase 3) |
 | [Sequência — Autenticação via CPF](diagramas/diagrama-sequencia-autenticacao.md) | Fluxo completo: CPF → JWT → consumo de rota protegida |
+| [Sequência — Abertura e Finalização de OS](diagramas/diagrama-sequencia-abertura-os.md) | Fluxo completo: abertura → transições de status → baixa de estoque assíncrona |
+| [Entidade-Relacionamento](diagramas/diagrama-er.md) | Modelo de dados, schemas `atendimento`/`estoque`, relacionamentos |
 
 ## Cards
 
