@@ -22,26 +22,23 @@ flowchart TB
                     RabbitMQ["RabbitMQ\n(StatefulSet)"]
                 end
                 subgraph NsObs["namespace: observabilidade"]
-                    Otel["Coletor OTel /\nagente Datadog·New Relic"]
+                    Otel["Coletor OTel /\nagente Datadog"]
                 end
             end
             RDS["RDS PostgreSQL\nschemas: atendimento, estoque"]
         end
-
-        SecretsManager["Secrets Manager\nchave JWT, connection strings"]
     end
 
     subgraph Obs["Observabilidade externa"]
-        DatadogNR["Datadog / New Relic\n(dashboards, alertas)"]
+        DatadogExt["Datadog\n(dashboards, alertas — ADR-012)"]
     end
 
-    Browser -->|"POST /auth/cpf"| APIGW
+    Browser -->|"POST /atendimento/auth/cpf"| APIGW
     Browser -->|"rotas protegidas\n(Bearer JWT)"| APIGW
-    APIGW -->|"autoriza"| Lambda
-    APIGW -->|"proxy autenticado"| Atendimento
+    APIGW -->|"invoca (proxy AWS_PROXY)"| Lambda
+    APIGW -->|"proxy genérico\n(sem authorizer — ADR-013)"| Atendimento
     Lambda -->|"consulta cliente"| RDS
-    Lambda -.->|"lê chave JWT"| SecretsManager
-    Atendimento -.->|"lê secrets"| SecretsManager
+    Atendimento -.->|"valida JWT via [Authorize]\n(chave HMAC em env var/K8s Secret)"| Atendimento
     Atendimento -->|"HTTP síncrono\ndisponibilidade de peças"| Estoque
     Atendimento -->|"evento os.finalizada"| RabbitMQ
     RabbitMQ -->|"consome"| Estoque
@@ -49,19 +46,19 @@ flowchart TB
     Estoque --> RDS
     Atendimento -.->|"métricas/traces/logs"| Otel
     Estoque -.->|"métricas/traces/logs"| Otel
-    Otel -.-> DatadogNR
+    Otel -.-> DatadogExt
 ```
 
 ## Componentes
 
 | Componente | Responsabilidade |
 |---|---|
-| API Gateway | Roteamento e controle de acesso — rotas sensíveis exigem JWT válido |
-| Lambda (auth por CPF) | Valida CPF, consulta cliente no RDS, emite JWT |
+| API Gateway | Proxy genérico para o ALB do EKS + rota de autenticação para a Lambda (sem authorizer na borda — [ADR-013](../adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md)) |
+| Lambda (auth por CPF) | Valida CPF, consulta cliente no RDS, emite JWT (HMAC-SHA256) |
 | Cluster EKS | Executa Atendimento e Estoque com HPA (2-10 réplicas) |
 | RDS PostgreSQL | Banco gerenciado, schemas `atendimento` e `estoque` (ADR-007) |
 | RabbitMQ | Mensageria assíncrona para baixa de estoque (ADR-001) |
-| Secrets Manager | Chave JWT e connection strings, sem credenciais hardcoded |
-| Datadog / New Relic | Observabilidade corporativa — dashboards e alertas (CARD-31) |
+| Atendimento (`[Authorize]`) | Valida o JWT nas rotas sensíveis, incluindo `/ordens-servico/acompanhar/{numero}` — [ADR-013](../adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md) |
+| Datadog | Observabilidade corporativa — dashboards e alertas ([ADR-012](../adr/ADR-012-observabilidade-corporativa-datadog.md), CARD-31) |
 
 Ver também [Diagrama de Sequência — Autenticação via CPF](diagrama-sequencia-autenticacao.md).

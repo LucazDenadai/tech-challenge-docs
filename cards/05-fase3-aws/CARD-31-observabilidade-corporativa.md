@@ -1,10 +1,10 @@
-# CARD-31 — Observabilidade corporativa (Datadog/New Relic)
+# CARD-31 — Observabilidade corporativa (Datadog)
 
 **Tipo:** Observabilidade
-**Status:** To Do
+**Status:** Em andamento (ADR registrado; instalação depende de janela de reativação da AWS)
 **Depende de:** CARD-30
 **Bloqueia:** CARD-32
-**Decisão arquitetural:** a registrar (ADR-011, ver passo 1)
+**Decisão arquitetural:** [ADR-012](../../adr/ADR-012-observabilidade-corporativa-datadog.md)
 
 ---
 
@@ -12,33 +12,36 @@
 
 A Fase 2 já tem observabilidade própria (Prometheus, Grafana, Loki, Jaeger — ADR-008). A Fase 3 pede integração com **Datadog ou New Relic** especificamente, com dashboards e alertas voltados a métricas de negócio (ordens de serviço), não apenas infraestrutura.
 
-Este card não substitui a stack OTel existente — decide se ela é mantida em paralelo (métricas técnicas) com Datadog/New Relic cobrindo os requisitos específicos do desafio (dashboards de negócio, alertas), ou se é migrada integralmente. Essa decisão é um tradeoff arquitetural e deve virar ADR antes de implementar.
+Este card não substitui a stack OTel existente — [ADR-012](../../adr/ADR-012-observabilidade-corporativa-datadog.md) decide manter as duas em paralelo: Datadog cobre o requisito corporativo da Fase 3, a stack OTel local continua servindo depuração sem depender de conta externa.
+
+**Restrição de custo (ver ADR-009 e ADR-012):** a infraestrutura AWS (EKS, RDS) é mantida desligada fora de janelas de demonstração/avaliação, por ter excedido o budget de $5/mês configurado. A instalação do agente Datadog e a geração de dados reais nos dashboards só acontecem durante uma reativação pontual da infra — não há ambiente ligado continuamente para popular os dashboards.
 
 ---
 
 ## Critérios de aceite
 
-- [ ] ADR-011 registrado: escolha entre Datadog e New Relic, e decisão sobre manter ou substituir a stack OTel da Fase 2
-- [ ] Agente/integração instalado no cluster EKS (DaemonSet ou sidecar, conforme a ferramenta escolhida)
+- [x] ADR-012 registrado: escolha do Datadog e decisão de manter a stack OTel em paralelo
+- [ ] Agente Datadog instalado no cluster EKS via Helm chart oficial (Terraform `helm_release`, mesmo padrão do ALB Controller) — durante janela de reativação
 - [ ] Dashboard: latência das APIs (Atendimento e Estoque)
 - [ ] Dashboard: consumo de recursos do Kubernetes (CPU, memória) por pod/deployment
 - [ ] Dashboard: healthchecks e uptime dos serviços
 - [ ] Alerta configurado para falhas no processamento de ordens de serviço (ex: taxa de erro > threshold, ou mensagens na dead letter queue `estoque.baixa_error`)
-- [ ] Logs estruturados (JSON) com correlação entre requisições (trace ID) chegando à ferramenta escolhida
+- [ ] Logs estruturados (JSON) com correlação entre requisições (trace ID) chegando ao Datadog via OTLP
 - [ ] Dashboard: volume diário de ordens de serviço
 - [ ] Dashboard: tempo médio de execução por status (Diagnóstico, Execução, Finalização)
 - [ ] Dashboard: erros e falhas nas integrações (chamada HTTP Atendimento→Estoque, consumo RabbitMQ)
+- [ ] Screenshots dos dashboards capturados durante a janela de reativação, para a documentação final (CARD-32)
 
 ---
 
 ## Passos
 
-1. Escrever ADR-011 com a decisão Datadog vs New Relic e o tradeoff de manter/substituir OTel
-2. Criar conta/workspace na ferramenta escolhida
-3. Instalar agente no cluster EKS via Helm chart oficial
-4. Configurar coleta de métricas de aplicação (latência, taxa de erro) via instrumentação já existente (OTel, se mantido) ou SDK nativo da ferramenta
-5. Configurar dashboards de infraestrutura (CPU, memória, uptime)
-6. Configurar dashboards de negócio (volume de OS, tempo por status, erros de integração)
-7. Configurar alerta de falha de processamento
-8. Validar logs estruturados chegando com correlação de trace ID
-9. Capturar screenshots/link dos dashboards para a documentação final (CARD-32)
+1. ~~Escrever ADR com a decisão Datadog vs New Relic~~ — concluído, ver ADR-012
+2. Criar conta/workspace Datadog (trial)
+3. Definir dashboards e monitors como código Terraform (provider `DataDog/datadog`), para sobreviverem a ciclos de destroy/apply
+4. Na próxima janela de reativação da AWS: aplicar o Terraform da infra + o agente Datadog via Helm
+5. Configurar coleta de métricas de aplicação (latência, taxa de erro) via instrumentação OTel já existente, exportando via OTLP para o Datadog
+6. Validar dashboards e alerta de falha de processamento populados com dados reais
+7. Validar logs estruturados chegando com correlação de trace ID
+8. Capturar screenshots/link dos dashboards para a documentação final (CARD-32)
+9. Encerrar a janela de reativação (`terraform destroy`) ao concluir a captura
