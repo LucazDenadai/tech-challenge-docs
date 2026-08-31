@@ -98,6 +98,18 @@ Não foi usada `AdministratorAccess`. A policy inline (`tech-challenge-infra-per
 
 ---
 
+## Lições do primeiro provisionamento real (2026-08-25)
+
+O primeiro `terraform apply` real (não simulado) do `tech-challenge-infra-k8s` revelou três lacunas que `terraform plan`/`validate` não detectam, porque só aparecem quando chamadas de API são de fato executadas contra a conta AWS:
+
+1. **Policy IAM incompleta para módulos de terceiros.** A policy inicial da role `tech-challenge-github-actions` não incluía `iam:CreatePolicy`/`DeletePolicy` nem `kms:*` — o módulo `terraform-aws-modules/eks` cria sua própria KMS key (criptografia de secrets do cluster) e uma policy gerenciada para o AWS Load Balancer Controller. O apply criou VPC/subnets/NAT Gateway/security groups/roles com sucesso e só falhou nesses dois pontos, deixando infraestrutura parcial provisionada (e gerando custo mínimo enquanto existiu).
+2. **`iam:CreateServiceLinkedRole` e as próprias service-linked roles.** Contas que nunca usaram EKS ou ELB não têm `AWSServiceRoleForAmazonEKS`/`AWSServiceRoleForElasticLoadBalancing` — a AWS tenta criá-las na primeira chamada, exigindo essa ação na policy. Corrigido adicionando a ação e pré-criando as duas roles manualmente (`aws iam create-service-linked-role`), evitando mais um ciclo de apply parcial.
+3. **`enable_cluster_creator_admin_permissions` só cobre o criador original.** Essa flag do módulo EKS registra automaticamente, como admin do cluster (via EKS Access Entry), apenas a identidade que executa o apply que *cria* o cluster. Um `access_entries` manual registrando a mesma role causava `ResourceInUseException` nesse primeiro apply — mas depois de destravar as permissões e rodar o primeiro apply real localmente com uma identidade administrativa pessoal (para não gastar mais ciclos de apply/destroy parcial via pipeline), essa identidade — não a role `tech-challenge-github-actions` usada pelos pipelines — virou o "criador". Applies subsequentes via pipeline passaram a falhar com `Unauthorized` ao ler/criar recursos `kubernetes_*`. Resolvido reintroduzindo o `access_entries` explícito para a role de CI/CD — agora sem conflito, pois ela nunca havia recebido essa entry antes.
+
+**Padrão geral:** para módulos Terraform de terceiros complexos (como `terraform-aws-modules/eks`), esperar que o primeiro `apply` real numa conta nova revele permissões e efeitos colaterais que `plan`/`validate` não expõem. Preferir descobrir isso rodando o primeiro apply localmente com credenciais amplas (ex: `AdministratorAccess`) para completar o provisionamento de uma vez, em vez de iterar via pipeline com a role restrita — cada rodada de apply parcial + destroy custa tempo e gera custo mínimo de recursos que chegam a existir.
+
+---
+
 ## Referências
 
 - [ADR-009 — Migração para AWS e Separação em Repositórios](ADR-009-migracao-aws-e-separacao-repositorios.md)
