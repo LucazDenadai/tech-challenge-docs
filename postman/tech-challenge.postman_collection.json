@@ -1,0 +1,144 @@
+{
+  "info": {
+    "name": "Tech Challenge — Oficina Mecânica (Fase 3)",
+    "description": "Fluxo de demonstração usado no vídeo da Fase 3: login de atendente, abertura de OS, autenticação via CPF (Lambda), e consumo da rota protegida de acompanhamento (ADR-013). Ver tech-challenge-docs/README.md para o índice completo de ADRs/RFCs/diagramas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "", "description": "api_gateway_url do output do tech-challenge-infra-k8s, sem barra final" },
+    { "key": "token_admin", "value": "" },
+    { "key": "token_cliente", "value": "" },
+    { "key": "cliente_id", "value": "" },
+    { "key": "veiculo_id", "value": "" },
+    { "key": "numero_os", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0. Healthcheck",
+      "item": [
+        {
+          "name": "Health — Atendimento",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/atendimento/health", "host": ["{{base_url}}"], "path": ["atendimento", "health"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Health — Estoque",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/estoque/health", "host": ["{{base_url}}"], "path": ["estoque", "health"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1. Login do atendente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const body = pm.response.json();",
+              "  pm.collectionVariables.set('token_admin', body.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@oficina.com\",\n  \"senha\": \"Admin@123\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/atendimento/auth/login", "host": ["{{base_url}}"], "path": ["atendimento", "auth", "login"] }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Criar ordem de serviço",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "  const body = pm.response.json();",
+              "  pm.collectionVariables.set('numero_os', body.numero);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clienteId\": \"{{cliente_id}}\",\n  \"veiculoId\": \"{{veiculo_id}}\",\n  \"observacoes\": \"Demonstracao ao vivo - video Fase 3\",\n  \"pecas\": []\n}"
+        },
+        "url": { "raw": "{{base_url}}/atendimento/ordens-servico", "host": ["{{base_url}}"], "path": ["atendimento", "ordens-servico"] }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Login por CPF (Lambda)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const body = pm.response.json();",
+              "  pm.collectionVariables.set('token_cliente', body.token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cpf\": \"52998224725\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/atendimento/auth/cpf", "host": ["{{base_url}}"], "path": ["atendimento", "auth", "cpf"] }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Acompanhar OS — sem token (401 esperado)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/atendimento/ordens-servico/acompanhar/{{numero_os}}",
+          "host": ["{{base_url}}"],
+          "path": ["atendimento", "ordens-servico", "acompanhar", "{{numero_os}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Acompanhar OS — com token de cliente (200 esperado)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+        "url": {
+          "raw": "{{base_url}}/atendimento/ordens-servico/acompanhar/{{numero_os}}",
+          "host": ["{{base_url}}"],
+          "path": ["atendimento", "ordens-servico", "acompanhar", "{{numero_os}}"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

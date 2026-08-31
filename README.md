@@ -24,6 +24,7 @@ adr/          ← Architecture Decision Records
 cards/        ← Cards de execução (planejamento e rastreio de implementação)
 rfcs/         ← Request for Comments (decisões técnicas relevantes)
 diagramas/    ← Diagramas de componentes e sequência
+postman/      ← Collection e environment para testar/demonstrar a API
 ```
 
 ## ADRs
