@@ -54,8 +54,10 @@ Ambos em `us-east-1`, conforme região decidida no ADR-010.
 Não foi usada `AdministratorAccess`. A policy inline (`tech-challenge-infra-permissions`) cobre apenas o necessário para os módulos Terraform do CARD-28 e os pipelines do CARD-27:
 - `s3:GetObject/PutObject/ListBucket` restrito ao bucket do state
 - `dynamodb:GetItem/PutItem/DeleteItem` restrito à tabela de lock
-- `eks:*`, `rds:*`, `ec2:*`, `apigateway:*`, `lambda:*`, `logs:*` — amplos dentro do serviço, sem restrição de recurso (necessário porque os módulos `terraform-aws-modules/eks` e `/vpc` criam recursos com nomes/IDs gerados dinamicamente)
-- `iam:CreateRole/PassRole/AttachRolePolicy` e afins — necessário porque o módulo EKS cria suas próprias service roles (cluster role, node group role) como parte do `apply`
+- `eks:*`, `rds:*`, `ec2:*`, `apigateway:*`, `lambda:*`, `logs:*`, `kms:*` — amplos dentro do serviço, sem restrição de recurso (necessário porque os módulos `terraform-aws-modules/eks` e `/vpc` criam recursos com nomes/IDs gerados dinamicamente)
+- `iam:CreateRole/PassRole/AttachRolePolicy`, `iam:CreatePolicy/DeletePolicy` e afins — necessário porque o módulo EKS cria suas próprias service roles (cluster role, node group role) e policies gerenciadas como parte do `apply`
+
+**Lição aprendida (primeiro apply real, 2026-08-25):** a policy inicial não incluía `iam:CreatePolicy`/`DeletePolicy` nem `kms:*`. O primeiro `terraform apply` real criou VPC, subnets, NAT Gateway, security groups e as roles do EKS com sucesso, mas falhou ao tentar criar a policy do AWS Load Balancer Controller e a KMS key de criptografia dos secrets do cluster — deixando infraestrutura parcial provisionada (e gerando custo, ainda que mínimo, enquanto o NAT Gateway existiu). Corrigido adicionando as ações faltantes à policy; a infraestrutura parcial foi destruída via `terraform destroy` antes de tentar novamente. Lição: ao testar uma policy IAM nova contra um módulo de terceiros (`terraform-aws-modules/eks`), esperar que o primeiro `apply` real revele permissões que o `plan` sozinho não expõe — `plan` não executa as chamadas de API que falhariam por `AccessDenied`.
 
 ---
 
