@@ -4,8 +4,8 @@
 **Status:** To Do
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
-**Repositório alvo:** Repositório exclusivo do serviço OS (nome definido no CARD-34)
-**Decisão arquitetural:** [ADR-014](../../adr/ADR-014-limites-microsservicos-fase4.md) e ADR de persistência aprovado no CARD-35
+**Repositório alvo:** `tech-challenge-os`
+**Decisão arquitetural:** [ADR-014](../../adr/ADR-014-limites-microsservicos-fase4.md), [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md), [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md), [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md), [ADR-018](../../adr/ADR-018-contratos-assincronos-asyncapi-fase4.md)
 
 ---
 
@@ -16,7 +16,10 @@ O atual Atendimento contém capacidades que passarão a pertencer a OS, Billing 
 ## Escopo
 
 - Criar ou preparar repositório exclusivo, projeto executável, API, banco próprio, Dockerfile e manifests do serviço.
-- Migrar apenas entidades, regras e casos de uso cujo owner seja OS.
+- Extrair do Atendimento apenas o código (entidades, regras e casos de uso) cujo owner seja OS. Não há migração de dados: banco vazio, migrations próprias e seed de demonstração (emenda do ADR-015).
+- Manter os cadastros sob ownership do OS: clientes, veículos, filiais e usuários funcionários (Admin, Atendente, Mecânico), incluindo a emissão do JWT dos funcionários.
+- Expor endpoint interno autenticado para a Lambda localizar o cliente por CPF, substituindo a consulta direta da Lambda ao banco (ADR-015).
+- Manter a notificação por e-mail ao cliente quando o status da OS muda.
 - Implementar abertura de OS e consulta de status/histórico; consumir os resultados de orçamento/pagamento e diagnóstico, reserva, início, conclusão e falha de Operações pelos contratos do AsyncAPI (ADR-018).
 - Manter autorização e associação de filial conforme decisões transversais.
 - Fornecer health/readiness, Swagger/OpenAPI e telemetria com correlation ID.
