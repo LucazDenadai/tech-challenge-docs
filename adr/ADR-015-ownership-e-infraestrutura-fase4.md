@@ -129,7 +129,12 @@ Manter a Lambda e o fluxo de CPF existentes como adaptador técnico para não re
 ### 2026-10-05 — Progresso da execução
 
 **Decisão:** o OS recebe da execução apenas início, conclusão e falha (`ExecutionStarted`, `ExecutionCompleted`, `ExecutionFailed`), que são os eventos usados pela Saga (ADR-017, ADR-018). O progresso intermediário do reparo fica consultável na API de Operações, sem evento para o OS. Isso segue o PDF, que coloca a atualização de status durante diagnóstico e reparos na Execução e exige apenas comunicar a finalização ao OS.
-### 2026-10-05 — Dados da Fase 3 e usuários**Dados da Fase 3:** o PDF não exige migração de dados e os dados existentes são de demonstração. Nenhum dado da Fase 3 é migrado: cada serviço começa com banco vazio, migrations próprias e um seed de desenvolvimento/demonstração (filial, usuários, clientes e catálogo de exemplo, sem dados pessoais reais). A filial `FILIAL-LEGADA` deixa de ser necessária. O código da Fase 3 continua sendo reaproveitado na extração.**Usuários funcionários:** OS passa a ser dono dos usuários funcionários (Admin, Atendente, Mecânico) e emite o JWT deles, mantendo o comportamento do Atendimento. Billing e Operações validam o token com o mesmo issuer e chave. A autenticação de clientes por CPF continua na Lambda.
+
+### 2026-10-05 — Dados da Fase 3 e usuários
+
+**Dados da Fase 3:** o PDF não exige migração de dados e os dados existentes são de demonstração. Nenhum dado da Fase 3 é migrado: cada serviço começa com banco vazio, migrations próprias e um seed de desenvolvimento/demonstração (filial, usuários, clientes e catálogo de exemplo, sem dados pessoais reais). A filial `FILIAL-LEGADA` deixa de ser necessária. O código da Fase 3 continua sendo reaproveitado na extração.
+
+**Usuários funcionários:** OS passa a ser dono dos usuários funcionários (Admin, Atendente, Mecânico) e emite o JWT deles, mantendo o comportamento do Atendimento. Billing e Operações validam o token com o mesmo issuer e chave. A autenticação de clientes por CPF continua na Lambda.
 
 ---
 

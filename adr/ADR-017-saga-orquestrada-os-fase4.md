@@ -93,7 +93,22 @@ O preço do orçamento é o snapshot do `DiagnosisCompleted`: mudanças posterio
 `Diagnosing` → `RequestingQuote` → `AwaitingApproval` → `ReservingInventory` → `CreatingPayment` → `AwaitingPayment` → `ReconcilingPayment` (quando resultado técnico incerto) → `StartingExecution` → `InExecution` → `Completed`.
 
 Estados de desvio não terminais: `ReleasingReservation`, `Compensating`, `CompensationPending` e `ManualActionRequired`. Estados terminais: `Completed`, `Cancelled` e `Compensated`. Cada transição grava versão/estado e outbox na mesma transação PostgreSQL OS. Cada serviço persiste localmente o próprio efeito antes de emitir seu evento de resultado.
-### Status da OS visível ao clienteO OS mantém um status de negócio derivado do estado da Saga. Ele é gravado na mesma transação da transição da Saga; não há escrita independente de status.| Estados da Saga | Status da OS ||---|---|| `Diagnosing` | `EmDiagnostico` || `RequestingQuote`, `AwaitingApproval` | `AguardandoAprovacao` || `ReservingInventory`, `CreatingPayment`, `AwaitingPayment`, `ReconcilingPayment` | `AguardandoPagamento` || `StartingExecution`, `InExecution` | `EmExecucao` || `Completed` | `Finalizada` || `Cancelled`, `Compensated` | `Cancelada` || `ReleasingReservation`, `Compensating`, `CompensationPending`, `ManualActionRequired` | Mantém o status anterior; o detalhe fica no histórico |`Entregue` é uma transição manual do Atendente a partir de `Finalizada`, fora da Saga. O status `Recebida` da Fase 3 deixa de existir, porque a OS nasce solicitando diagnóstico.
+
+### Status da OS visível ao cliente
+
+O OS mantém um status de negócio derivado do estado da Saga. Ele é gravado na mesma transação da transição da Saga; não há escrita independente de status.
+
+| Estados da Saga | Status da OS |
+|---|---|
+| `Diagnosing` | `EmDiagnostico` |
+| `RequestingQuote`, `AwaitingApproval` | `AguardandoAprovacao` |
+| `ReservingInventory`, `CreatingPayment`, `AwaitingPayment`, `ReconcilingPayment` | `AguardandoPagamento` |
+| `StartingExecution`, `InExecution` | `EmExecucao` |
+| `Completed` | `Finalizada` |
+| `Cancelled`, `Compensated` | `Cancelada` |
+| `ReleasingReservation`, `Compensating`, `CompensationPending`, `ManualActionRequired` | Mantém o status anterior; o detalhe fica no histórico |
+
+`Entregue` é uma transição manual do Atendente a partir de `Finalizada`, fora da Saga. O status `Recebida` da Fase 3 deixa de existir, porque a OS nasce solicitando diagnóstico.
 
 ### Timeouts e retries iniciais
 
