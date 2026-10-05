@@ -1,6 +1,6 @@
-# ADR-015 — Proposta de ownership dos dados e infraestrutura da Fase 4
+# ADR-015 — Ownership dos dados e infraestrutura da Fase 4
 
-**Status:** Proposto — aguardando aprovação do time
+**Status:** Aceito — decisões de ownership e infraestrutura do CARD-34
 **Data:** 2026-10-05
 **Autores:** Time Tech Challenge — Fase 4
 **Relaciona-se a:** [ADR-014](ADR-014-limites-microsservicos-fase4.md), [CARD-34](../cards/06-fase4-microsservicos-saga/CARD-34-limites-e-propriedade-dados.md)
@@ -13,23 +13,23 @@ O PDF da Fase 4 exige pelo menos três microsserviços independentes, cada um co
 
 O baseline da Fase 3 tem Atendimento e Estoque no mesmo repositório de aplicação, schemas PostgreSQL separados na mesma instância RDS, um pipeline que publica os dois serviços juntos e uma Lambda que, segundo o README, consulta Clientes diretamente no RDS. Essas escolhas não podem ser carregadas para a arquitetura Fase 4 sem validar as novas regras de ownership.
 
-Esta decisão permanece **proposta** até revisão e aprovação do time. Ela fixa um caminho simples para executar o CARD-34, sem assumir que escolhas de repositório ou tecnologia são exigências literais do PDF.
+Esta decisão fecha as opções necessárias para avançar ao CARD-35. Ela atende literalmente à separação de serviço, repositório, infraestrutura e banco, reutilizando a plataforma comum sem compartilhar bancos de dados. A alocação SQL/NoSQL permanece no CARD-35.
 
 ---
 
-## Proposta de decisão
+## Decisão
 
 ### Repositórios de serviço
 
-Criar um repositório de código por microsserviço de negócio, com estes nomes provisórios:
+Manter/criar um repositório de código por microsserviço de negócio, com estes nomes oficiais para o projeto:
 
-| Microsserviço | Repositório proposto | Unidade de código/deploy |
+| Microsserviço | Repositório definido | Unidade de código/deploy |
 |---|---|---|
-| OS | `tech-challenge-os` | API e lógica dona das ordens de serviço |
+| OS | `tech-challenge-os` | API e lógica dona de clientes, veículos, filiais e ordens de serviço |
 | Billing | `tech-challenge-billing` | API/consumidores e lógica de orçamento e pagamento |
 | Operações | `tech-challenge-operacoes` | API/consumidores com módulos internos de Estoque e Execução |
 
-Os repositórios existentes `tech-challenge-infra-k8s`, `tech-challenge-infra-db` e `tech-challenge-lambda` não contam como substitutos desses três serviços de domínio. A Lambda pode permanecer como componente técnico de autenticação, mas não é dona de dados de negócio nem é necessária para satisfazer a quantidade mínima de microsserviços.
+Os repositórios existentes `tech-challenge-infra-k8s`, `tech-challenge-infra-db` e `tech-challenge-lambda` não contam como substitutos desses três serviços de domínio. Os repositórios de serviço ainda precisam ser criados; esse trabalho ocorre nos cards de implementação correspondentes. A Lambda permanece como adaptador técnico de autenticação, não é dona de dados de negócio e não conta para o mínimo de microsserviços.
 
 ### Ownership dos dados
 
@@ -47,39 +47,53 @@ Billing pode receber por contrato os dados mínimos de pagador necessários ao M
 
 ### Filial
 
-Proposta: OS mantém a identidade/cadastro mestre da filial e associa cada ordem a um `filialId` imutável. Operações mantém saldo e movimentações por `filialId`; Billing associa orçamento e pagamento à mesma referência. As referências são transportadas por contratos versionados, sem acesso às tabelas de OS. A aplicação de autorização por filial ainda precisa ser decidida conforme o requisito funcional do produto; não presumir isolamento por filial se ele não estiver no PDF ou for aprovado pelo time.
+`filialId` é uma dimensão de negócio, não apenas um rótulo para exibição:
+
+1. **OS:** OS mantém o cadastro mestre de filiais e associa cada ordem a um `filialId` imutável durante o fluxo normal. Uma mudança de filial exigiria uma operação explícita, auditada e fora do fluxo inicial.
+2. **Operações/Estoque:** confirmado pelo time, saldo, reserva e movimentação são identificados por `(filialId, pecaId)`. Disponibilidade e reserva de uma OS usam o estoque da filial associada à ordem; não há empréstimo implícito de estoque de outra filial.
+3. **Billing:** orçamento, aprovação, pagamento e estorno mantêm a referência `filialId` da OS para auditoria, reconciliação e relatórios por filial; Billing não consulta o cadastro de filiais no banco OS.
+4. **Contratos:** comandos e eventos do fluxo carregam `filialId`. OS valida a associação ao criar a ordem e os serviços consumidores validam a presença e persistem a referência local. Serviços não consultam diretamente o banco OS para resolver o ID.
+
+Na migração da Fase 3, como os dados existentes não possuem filial, criar uma filial de migração única (`FILIAL-LEGADA`) no cadastro de OS e associar a ela todas as OS, peças/saldos e registros correlatos migrados. Filiais reais adicionais são cadastradas depois, sem reatribuir registros legados automaticamente.
+
+O PDF não exige segregação de autorização entre filiais. `filialId` não será usado sozinho como controle de acesso: a autorização continua seguindo as roles existentes. Transferência de estoque entre filiais e mudança de uma OS de filial ficam fora do fluxo inicial; adicionar esses fluxos requer regra e compensação próprias.
 
 ### Infraestrutura por serviço e plataforma compartilhada
 
-- Cada repositório de serviço mantém Dockerfile, manifests Kubernetes, configuração, pipeline e definição/provisionamento dos recursos sob seu ownership, incluindo um banco isolado conforme a decisão de persistência do CARD-35.
-- “Banco próprio” significa store exclusivo, credenciais exclusivas e ciclo de migração/backup sob o serviço. O tipo físico/lógico do store e a alocação SQL/NoSQL ficam para o CARD-35.
-- A proposta é reaproveitar um cluster EKS, VPC, API Gateway e broker como **plataforma compartilhada**, pois o PDF não exige cluster físico por serviço. Cada serviço continua com Deployment/Service/configuração, política de acesso e deploy independentes.
-- O repositório/plataforma de infraestrutura pode continuar provisionando recursos compartilhados. Recursos de dados específicos de cada serviço devem ser isolados e identificáveis; evitar RDS/schema/credenciais compartilhados entre os três serviços.
-- Terraform pode ser usado por continuidade com a Fase 3, mas não é requisito do PDF da Fase 4. A ferramenta deve ser registrada no CARD-41 somente se escolhida.
+- Cada repositório de serviço mantém Dockerfile, manifests Kubernetes, configuração, pipeline e definição de provisionamento do seu banco e demais recursos sob seu ownership. Alterar, testar ou implantar um serviço não publica os outros.
+- Cada serviço terá um recurso de banco gerenciado fisicamente dedicado, credenciais, migrations, backup e ciclo de vida exclusivos. Não se considera um schema isolado dentro da mesma instância suficiente para esta entrega.
+- O tipo SQL/NoSQL e a alocação de stores por serviço ficam para o CARD-35; a decisão de isolamento físico não predetermina qual serviço usará cada tecnologia.
+- Reaproveitar EKS, VPC, API Gateway, broker e backend de observabilidade como **plataforma compartilhada**. O PDF exige infraestrutura própria por serviço, mas não exige um cluster Kubernetes, VPC ou broker exclusivos por serviço. Cada serviço terá Deployment/Service/configuração, identidade/permissões, banco, manifests e deploy independentes.
+- `tech-challenge-infra-k8s` permanece dono do provisionamento da plataforma compartilhada. Cada repositório de serviço é dono de seus recursos de aplicação e banco; interfaces/outputs da plataforma compartilhada são consumidos explicitamente e não transferem ownership dos dados.
+- Terraform pode ser usado por continuidade com a Fase 3, mas não é requisito do PDF da Fase 4. A ferramenta para os novos bancos e recursos de serviço será registrada no CARD-41.
 
 ### Lambda de autenticação existente
 
-Proposta: manter a Lambda apenas se o fluxo de autenticação continuar necessário. Remover o acesso direto ao banco OS: obter os dados necessários por API/contrato publicado pelo serviço OS, ou substituir o fluxo por autenticação dentro do próprio OS se isso reduzir dependências sem alterar o rubric. A alternativa escolhida deve ser decidida antes do cutover e não pode introduzir leitura SQL cross-service.
+Manter a Lambda e o fluxo de CPF existentes como adaptador técnico para não reescrever autenticação sem necessidade. Remover sua conexão direta ao banco OS: a Lambda consulta um endpoint interno autenticado do OS para validar/localizar o cliente e recebe somente os dados mínimos para emitir o JWT. OS continua dono dos dados; a Lambda tem credencial de API com escopo mínimo e não recebe credenciais SQL de OS. A Lambda não conta como um dos três microsserviços de negócio e sua integração é mantida no repositório próprio existente.
 
 ---
 
 ## Alternativas consideradas
 
+### Compartilhar uma instância RDS entre serviços com schemas isolados
+
+**Rejeitada:** o PDF exige banco próprio por serviço. Como o custo não é uma restrição para o time e a interpretação mais literal reduz risco de avaliação, cada serviço recebe um recurso de banco gerenciado fisicamente separado. A escolha do mecanismo relacional/não relacional permanece no CARD-35.
+
+### Criar um cluster Kubernetes por serviço
+
+**Rejeitada:** o PDF requer deploy em Kubernetes e infraestrutura própria, mas os entregáveis por serviço são Dockerfile, manifests e pipeline; não exige cluster físico exclusivo. Um EKS compartilhado com Deployment, permissões, banco e deploy isolados por serviço atende ao escopo sem fragmentar desnecessariamente a plataforma.
+
 ### Duplicar o cadastro de cliente/filial nos três serviços
 
-**Não proposta:** criaria múltiplas fontes de verdade e sincronização implícita. Serviços podem manter snapshots mínimos ligados a um ID, mas não cópias editáveis dos cadastros mestres.
+**Rejeitada:** criaria múltiplas fontes de verdade e sincronização implícita. Serviços podem manter snapshots mínimos ligados a um ID, mas não cópias editáveis dos cadastros mestres.
 
 ### Criar um microsserviço/repositório adicional de catálogo/filiais
 
-**Não proposta neste momento:** não é necessário para o mínimo de três, aumenta o número de deployments e não há requisito explícito de domínio separado. Reavaliar apenas com necessidade funcional comprovada.
-
-### Cluster Kubernetes exclusivo por serviço
-
-**Não proposto:** o PDF exige infraestrutura por serviço, mas não afirma que a plataforma de cluster precisa ser exclusiva. Isolamento de banco, permissões, manifests e pipeline por serviço satisfazem a independência operacional com menos duplicação. Confirmar interpretação no CARD-34 caso a equipe docente espere isolamento físico.
+**Não selecionada:** não é necessária para o mínimo de três, aumenta o número de deployments e não há requisito explícito de domínio separado. Reavaliar apenas com necessidade funcional comprovada.
 
 ---
 
-## Consequências se aprovada
+## Consequências
 
 ### Positivas
 
@@ -94,20 +108,15 @@ Proposta: manter a Lambda apenas se o fluxo de autenticação continuar necessá
 | Risco | Tratamento |
 |---|---|
 | Extração de Atendimento/Estoque exige migração e pode afetar consumidores existentes | Planejar cópia/cutover/reconciliação por card de serviço, mantendo contratos compatíveis e sem apagar dados antes da validação. |
-| Mais bancos e repositórios aumentam operação | Padronizar pipeline, observabilidade, backup e templates; não compartilhar bancos para reduzir esforço. |
-| Branch e autorização por filial ainda não têm regra detalhada no rubric | Definir a necessidade funcional separadamente; por ora documentar e propagar `filialId`, sem inventar regras de acesso. |
+| Mais bancos e repositórios aumentam operação | Padronizar pipeline, observabilidade, backup e templates; custos foram aceitos pelo time. |
+| Autorização por filial não é definida pelo rubric | Propagar e validar `filialId`; não adicionar segregação de acesso sem requisito de produto aprovado. |
 | AWS/EKS pode estar desligado fora das janelas de demonstração | Validar o caminho local e agendar janela de provisionamento para smoke/deploy e evidências. |
 
 ---
 
-## Critérios para aceitar ou revisar a proposta
+## Estado de implementação
 
-- O time aprova ou altera os nomes dos três repositórios.
-- O mapa de ownership é validado pelo responsável por cada serviço.
-- O time confirma a interpretação de infraestrutura por serviço versus plataforma compartilhada; se necessário, consulta a equipe docente.
-- A Lambda não lê diretamente o banco OS depois do cutover.
-- O desenho de filial está consistente nos contratos dos três serviços.
-- O diagrama Fase 4 e o CARD-34 refletem a decisão aprovada.
+Esta ADR fecha as decisões arquiteturais do CARD-34. Repositórios, bancos, APIs e migração da Lambda ainda não foram implementados; seguem nos CARD-37 a CARD-41. O status aceito desta ADR significa que a arquitetura está definida, não que os componentes estejam entregues.
 
 ---
 

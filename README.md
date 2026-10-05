@@ -45,7 +45,7 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [ADR-012](adr/ADR-012-observabilidade-corporativa-datadog.md) | Observabilidade corporativa com Datadog (Fase 3) |
 | [ADR-013](adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md) | Autorização via `[Authorize]` no Atendimento, não no API Gateway (Fase 3) |
 | [ADR-014](adr/ADR-014-limites-microsservicos-fase4.md) | Limites de domínio: OS, Billing e Operações (Estoque + Execução) (Fase 4) |
-| [ADR-015](adr/ADR-015-ownership-e-infraestrutura-fase4.md) | Proposta de repositórios, ownership dos dados e infraestrutura por serviço (Fase 4; aguardando aprovação) |
+| [ADR-015](adr/ADR-015-ownership-e-infraestrutura-fase4.md) | Ownership dos dados e infraestrutura por serviço (Fase 4) |
 
 ## RFCs
 

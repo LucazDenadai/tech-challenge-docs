@@ -3,7 +3,7 @@
 **Status:** Planejamento
 **Enunciado:** Tech Challenge — Fase 4 (texto fornecido pelo time em 2026-10-05)
 **Decisão de fronteiras:** [ADR-014](../../adr/ADR-014-limites-microsservicos-fase4.md)
-**Ownership e repositórios:** [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md) (proposta aguardando aprovação)
+**Ownership e repositórios:** [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md)
 
 ---
 
@@ -59,7 +59,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | Card | Escopo | Estado |
 |---|---|---|
 | [CARD-33](CARD-33-mapa-requisitos-e-baseline.md) | Matriz de requisitos, baseline e evidências existentes | Concluído — baseline estático |
-| [CARD-34](CARD-34-limites-e-propriedade-dados.md) | Limites, repositórios, infraestrutura e propriedade dos dados | Proposta registrada — aprovação pendente |
+| [CARD-34](CARD-34-limites-e-propriedade-dados.md) | Limites, repositórios, infraestrutura e propriedade dos dados | Concluído — decisões registradas |
 | [CARD-35](CARD-35-decisao-sql-nosql.md) | Decisão de alocação SQL/NoSQL e topologia dos bancos | To Do |
 | [CARD-36](CARD-36-contratos-e-desenho-saga.md) | Contratos, eventos, escolha da Saga e compensações | To Do |
 | [CARD-37](CARD-37-servico-os.md) | Serviço OS | To Do |
