@@ -24,6 +24,7 @@ adr/          ← Architecture Decision Records
 cards/        ← Cards de execução (planejamento e rastreio de implementação)
 rfcs/         ← Request for Comments (decisões técnicas relevantes)
 diagramas/    ← Diagramas de componentes e sequência
+contratos/    ← Contratos assíncronos entre serviços (AsyncAPI)
 postman/      ← Collection e environment para testar/demonstrar a API
 ```
 
@@ -48,6 +49,13 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [ADR-015](adr/ADR-015-ownership-e-infraestrutura-fase4.md) | Ownership dos dados e infraestrutura por serviço (Fase 4) |
 | [ADR-016](adr/ADR-016-bancos-sql-nosql-fase4.md) | Persistência SQL e NoSQL, DynamoDB Local e execução (Fase 4) |
 | [ADR-017](adr/ADR-017-saga-orquestrada-os-fase4.md) | Saga orquestrada pelo serviço OS, contratos e compensações (Fase 4) |
+| [ADR-018](adr/ADR-018-contratos-assincronos-asyncapi-fase4.md) | Contratos assíncronos em AsyncAPI 3.0 neste repositório (Fase 4) |
+
+## Contratos
+
+| Contrato | Conteúdo |
+|---|---|
+| [AsyncAPI — Saga da OS](contratos/asyncapi-saga-os.yaml) | Envelope, canais RabbitMQ e payloads dos comandos/eventos da Saga (Fase 4) |
 
 ## RFCs
 
