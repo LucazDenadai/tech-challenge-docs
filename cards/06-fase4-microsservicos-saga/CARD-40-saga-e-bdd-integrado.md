@@ -5,15 +5,15 @@
 **Depende de:** CARD-36, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
-**Decisão arquitetural:** [ADR-017 — proposta de Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md); implementação depende de confirmação do time
+**Decisão arquitetural:** [ADR-017 — Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md)
 
 ---
 
 ## Contexto
 
-O enunciado requer coordenação distribuída entre abertura de OS, orçamento, aprovação, pagamento e execução, com compensação em caso de falha. Transação local, retry de RabbitMQ e DLQ não substituem uma Saga. ADR-017 recomenda um orchestrator no OS, mas a estratégia ainda aguarda confirmação; não iniciar a implementação até essa decisão ser aceita ou revisada pelo time.
+O enunciado requer coordenação distribuída entre abertura de OS, orçamento, aprovação, pagamento e execução, com compensação em caso de falha. Transação local, retry de RabbitMQ e DLQ não substituem uma Saga. ADR-017 define o orchestrator no OS, confirmado pelo time.
 
-Este card entregará o cenário BDD ponta a ponta obrigatório. Os cenários Gherkin abaixo são exemplos de comportamento para avaliação; tornam-se especificação executável após confirmação da estratégia e dos contratos no CARD-36.
+Este card entregará o cenário BDD ponta a ponta obrigatório. Os cenários Gherkin abaixo são a especificação de comportamento, com estratégia e contratos definidos no CARD-36/ADR-017.
 
 ## Escopo
 
@@ -26,19 +26,22 @@ Este card entregará o cenário BDD ponta a ponta obrigatório. Os cenários Ghe
 
 ## Critérios de aceite
 
-- [ ] Estratégia Saga foi confirmada pelo time no CARD-36 antes da implementação deste card.
-- [ ] Fluxo completo documentado e executável: abrir OS → gerar/aprovar orçamento → reservar estoque por filial → cobrar/confirmar → autorizar execução → concluir → atualizar estado/histórico da OS.
+- [x] Estratégia Saga foi confirmada pelo time no CARD-36 antes da implementação deste card.
+- [ ] Fluxo completo documentado e executável: abrir OS → diagnosticar em Operações → gerar/aprovar orçamento → reservar estoque por filial → cobrar/confirmar → autorizar execução → concluir → atualizar estado/histórico da OS.
 - [ ] Estado da Saga sobrevive a restart e pode ser consultado sem acesso cruzado aos bancos dos serviços.
 - [ ] Toda etapa tem timeout/retry explícitos; redelivery não duplica pagamento, reserva, execução ou transição de OS.
 - [ ] Falha em cada fronteira crítica tem teste para rejeição, retry ou compensação apropriada.
 - [ ] Pagamento aprovado não é marcado como desfeito até confirmação de estorno; estado pendente de estorno permanece explícito.
-- [ ] Falha de reserva antes da cobrança cancela sem criar pagamento; falha após aprovação do pagamento aciona liberação de reserva e estorno conforme ADR-017.
+- [ ] Falha de reserva antes da cobrança cancela sem criar pagamento; falha após aprovação do pagamento (início rejeitado ou execução falhou) aciona liberação da reserva não consumida e estorno total conforme ADR-017.
+- [ ] Cada etapa da tabela de compensações do ADR-017 tem caminho de falha implementado e teste de integração; itens marcados como evolução no Escopo do MVP do ADR-017 não são implementados.
 - [ ] Resultado de pagamento desconhecido mantém Saga em reconciliação, sem marcar como recusado, cobrar de novo ou liberar reserva indevidamente.
 - [ ] Eventos publicados após persistência local seguem a garantia transacional decidida e não são perdidos silenciosamente.
 - [ ] Cenários Gherkin automatizados rodam em CI com dependências isoladas, incluindo broker e bancos necessários.
 - [ ] Logs/traces permitem identificar a Saga completa; dados pessoais e segredos não aparecem na evidência.
 
 ## Cenários BDD obrigatórios
+
+O PDF exige pelo menos um fluxo completo em BDD: o primeiro cenário é o obrigatório. Os demais são automatizados em BDD ou como testes de integração.
 
 ```gherkin
 Funcionalidade: Coordenar uma OS distribuída por Saga
@@ -56,16 +59,16 @@ Funcionalidade: Coordenar uma OS distribuída por Saga
   Cenário: Rejeitar orçamento sem iniciar pagamento ou execução
     Dado que a OS foi aberta
     Quando o cliente rejeita o orçamento
-    Então a Saga termina no estado cancelado ou rejeitado definido no ADR
+    Então a Saga termina no estado Cancelled
     E nenhuma cobrança é criada
     E Operações não inicia a execução
     E OS recebe o resultado por contrato, sem acesso ao banco de Billing
 
   Cenário: Compensar falha operacional após pagamento aprovado
     Dado que o pagamento foi confirmado
-    E Operações rejeita a reserva ou não consegue iniciar a execução
+    E Operações não consegue iniciar a execução ou a execução falha
     Quando a Saga processa a falha definitiva
-    Então a compensação definida é solicitada ao Billing e a Operações
+    Então OS solicita estorno total ao Billing e liberação da reserva não consumida a Operações
     E cada resultado é persistido e correlacionado
     E a Saga só termina como compensada após confirmação dos efeitos compensatórios
 
