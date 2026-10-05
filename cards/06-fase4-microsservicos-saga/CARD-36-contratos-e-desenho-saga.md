@@ -1,36 +1,37 @@
 # CARD-36 — Contratos entre serviços e desenho da Saga
 
 **Tipo:** Arquitetura / Integração
-**Status:** To Do
+**Status:** Desenho documentado — aguardando avaliação e confirmação da estratégia
 **Depende de:** CARD-34, CARD-35
 **Bloqueia:** CARD-37, CARD-38, CARD-39, CARD-40
 **Repositórios:** `tech-challenge-docs` e repositórios dos três serviços
-**Decisão arquitetural:** Criar ADR para a estratégia de Saga e contratos após aprovação
+**Decisão arquitetural:** [ADR-017 — recomendação de Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md)
 
 ---
 
 ## Contexto
 
-O fluxo obrigatório atravessa OS, Billing e Operações. Mensageria, retry e DLQ já existem no projeto, mas não constituem por si só uma Saga. É necessário definir quem coordena o processo, quais transições são autorizadas, como eventos são versionados e quais ações compensam cada etapa. A escolha entre orquestração e coreografia permanece aberta até a comparação deste card.
+O fluxo obrigatório atravessa OS, Billing e Operações. Mensageria, retry e DLQ já existem no projeto, mas não constituem por si só uma Saga. ADR-017 documenta orquestração por OS como recomendação, com estado persistido no banco OS e comandos versionados. A alternativa de coreografia continua válida; a estratégia não será considerada aprovada nem implementada até o time confirmar após avaliar as referências e trade-offs.
 
 ## Escopo
 
 Definir contratos REST/eventos, correlation/causation IDs, versionamento, ordenação e compatibilidade; máquina de estados da Saga; persistência do estado; timeout/retry/idempotência; estratégia outbox/inbox ou equivalente; política de mensagens inválidas/DLQ; eventos de aprovação e notificação Mercado Pago; e compensações para falhas de cobrança, reserva/baixa de peça e início/cancelamento da execução.
 
-Comparar orquestração e coreografia considerando legibilidade do fluxo, acoplamento, recuperação, evidência demonstrável, complexidade operacional e aderência ao time. Não assumir que pagamento aprovado pode ser desfeito sem integração de estorno no provedor.
+O fluxo reserva peças da filial da OS antes de criar uma cobrança. Timeout/erro técnico do provedor resulta em reconciliação, nunca em recusa presumida. Pagamento aprovado seguido de falha operacional requer estorno e liberação/ajuste de reserva como compensações separadas. A Saga só declara compensação concluída quando todos os efeitos reversíveis forem confirmados; efeitos físicos não reversíveis requerem registro real do consumo e intervenção manual quando necessário.
 
 ## Critérios de aceite
 
-- [ ] Diagrama de sequência mostra o fluxo normal da abertura à execução e conclusão.
-- [ ] Diagrama de estados identifica responsável por cada transição e estado persistido da Saga.
-- [ ] ADR compara orquestração e coreografia e justifica escolha com base no fluxo real e nos requisitos do time.
-- [ ] Contratos identificam produtor, consumidores, payload versionado e política de compatibilidade.
-- [ ] Cada comando/evento inclui identificador de correlação suficiente para rastrear o processo distribuído.
-- [ ] Para cada etapa há timeout, política de retry, comportamento idempotente e destino para falha não recuperável.
-- [ ] Cada efeito que possa ocorrer antes de falha tem compensação definida ou é explicitamente classificado como não compensável, com fluxo de recuperação manual.
-- [ ] A aprovação de pagamento é distinguida de confirmação de webhook; callbacks duplicados ou fora de ordem não duplicam efeitos.
-- [ ] A decisão é revisada por todos os responsáveis pelos repositórios antes do início da implementação.
-- [ ] Escrever o fluxo usando o mermaid para facilitar a interpretacao.
+- [x] Diagrama de sequência mostra o fluxo normal da abertura à execução e conclusão.
+- [x] Diagrama de estados identifica responsável por cada transição e estado persistido da Saga.
+- [x] ADR compara orquestração e coreografia e apresenta uma recomendação fundamentada para avaliação.
+- [x] Contratos identificam produtor, consumidores, payload versionado e política de compatibilidade.
+- [x] Cada comando/evento inclui identificadores de correlação/causação e idempotência suficientes para rastrear e deduplicar o processo.
+- [x] Cada etapa tem timeout/retry, estado para resultado desconhecido e destino de falha não recuperável.
+- [x] Efeitos reversíveis têm compensação; efeitos físicos não reversíveis têm estado real e caminho manual auditável.
+- [x] Aprovação no Billing é distinta da confirmação reconciliada do webhook Mercado Pago; duplicatas/out-of-order não repetem efeitos.
+- [x] Persistência de Saga/outbox respeita ownership; não há transação distribuída nem acesso cruzado a bancos.
+- [x] Diagramas Mermaid de sequência e estados foram adicionados.
+- [ ] O time confirma a estratégia de orquestração, coreografia ou alternativa antes de congelar contratos de implementação.
 
 ## Cenários de aceite (Gherkin)
 
@@ -38,30 +39,59 @@ Comparar orquestração e coreografia considerando legibilidade do fluxo, acopla
 Funcionalidade: Definir contratos resilientes para a Saga da OS
 
   Cenário: Correlacionar eventos de uma ordem
-    Dado que uma OS inicia uma Saga
+    Dado que a equipe confirmou uma estratégia Saga para implementação
+    E uma OS inicia essa Saga
     Quando um serviço publica um evento de domínio
     Então o evento carrega o identificador de correlação da Saga
     E o serviço consumidor registra esse identificador junto ao resultado
 
   Cenário: Definir compensação para falha após aprovação de pagamento
-    Dado que o pagamento foi confirmado pelo provedor
+    Dado que a equipe avaliou e confirmou o fluxo de compensação proposto
+    E o pagamento foi confirmado pelo provedor
     E a etapa seguinte do fluxo falhou
-    Quando o desenho de Saga é revisado
-    Então existe uma ação explícita de compensação ou recuperação
+    Quando a compensação é executada
+    Então a ação explícita de compensação ou recuperação é iniciada
     E a ação tem estado, política de repetição e evidência de resultado
+
+  Cenário: Não cobrar se a reserva de estoque falhar
+    Dado que o orçamento foi aprovado
+    E Operações não conseguiu reservar todos os itens na filial da OS
+    Quando OS processa a rejeição de reserva
+    Então a Saga termina sem solicitar pagamento ao Mercado Pago
+    E OS registra a razão do cancelamento
+
+  Cenário: Manter pagamento em reconciliação quando o provedor está indisponível
+    Dado que Billing solicitou uma cobrança com chave idempotente
+    E a chamada ou consulta ao Mercado Pago expirou sem resultado autoritativo
+    Quando Billing publica PaymentOutcomeUnknown
+    Então OS mantém a Saga em ReconcilingPayment
+    E nenhuma recusa ou aprovação é presumida
+    E Billing reconcilia a mesma tentativa sem criar cobrança duplicada
+
+  Cenário: Compensar cobrança aprovada quando execução não pode começar
+    Dado que Billing confirmou o pagamento
+    E Operações rejeitou o início antes de consumir peças ou realizar trabalho
+    Quando OS inicia compensação
+    Então comanda liberação da reserva e estorno do pagamento
+    E só marca a Saga como Compensated após confirmar ambos os resultados
+
+  Cenário: Não reverter trabalho físico por rollback lógico
+    Dado que a execução consumiu peças ou realizou trabalho antes de falhar
+    Quando a Saga trata a falha
+    Então Operações registra o consumo real e libera apenas itens não consumidos
+    E a compensação financeira fica explícita como estorno ou ação manual
+    E a Saga não afirma que o efeito físico foi desfeito
 ```
 
 ## Passos
 
-1. Escrever fluxo normal e matriz de transições, responsáveis e efeitos persistidos.
-2. Comparar orquestração e coreografia em RFC; registrar opção selecionada em ADR após aprovação.
-3. Definir schemas dos eventos, APIs e política de versionamento.
-4. Mapear falhas antes/depois de cada efeito e associar compensação, timeout e recuperação.
-5. Atualizar diagramas de sequência, componentes e fluxo de pagamento.
-6. Gerar contratos iniciais (OpenAPI/AsyncAPI ou formato equivalente escolhido) para CARD-37 a CARD-39.
+1. Estudar as referências de Saga listadas no ADR-017 e comparar coreografia/orquestração para este fluxo.
+2. Revisar a recomendação e os cenários com os responsáveis por OS, Billing e Operações; registrar a confirmação ou uma alternativa escolhida.
+3. Após a confirmação, congelar envelope e contratos versionados (OpenAPI/AsyncAPI ou formato selecionado) para CARD-37 a CARD-39.
+4. Implementar transições/timeout/retry/outbox por serviço e automatizar cenários no CARD-40; não iniciar essa implementação com o desenho ainda pendente.
 
 ## Evidências
 
-- ADR aceito para Saga, com alternativas e consequências.
-- Diagramas de sequência/estado e catálogo de eventos.
-- Contratos versionados e tabela etapa → falha → compensação → verificação.
+- [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md) proposto, com alternativa recomendada, estados, contratos, retries e compensações.
+- [Diagrama de sequência](../../diagramas/diagrama-sequencia-saga-fase4.md), [diagrama de estados](../../diagramas/diagrama-estados-saga-os-fase4.md) e catálogo de eventos.
+- Contratos versionados e matriz etapa → falha → compensação → verificação registrados no ADR-017.
