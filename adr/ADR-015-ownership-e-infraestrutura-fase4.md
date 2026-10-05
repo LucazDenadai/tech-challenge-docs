@@ -1,6 +1,6 @@
 # ADR-015 — Ownership dos dados e infraestrutura da Fase 4
 
-**Status:** Aceito — decisões de ownership e infraestrutura do CARD-34; emendado em 2026-10-05 (catálogo de serviços e progresso da execução, ver [Emendas](#emendas))
+**Status:** Aceito — decisões de ownership e infraestrutura do CARD-34; emendado em 2026-10-05 (catálogo de serviços, progresso da execução, dados da Fase 3 e usuários, ver [Emendas](#emendas))
 **Data:** 2026-10-05
 **Autores:** Time Tech Challenge — Fase 4
 **Relaciona-se a:** [ADR-014](ADR-014-limites-microsservicos-fase4.md), [CARD-34](../cards/06-fase4-microsservicos-saga/CARD-34-limites-e-propriedade-dados.md)
@@ -37,6 +37,7 @@ Os repositórios existentes `tech-challenge-infra-k8s`, `tech-challenge-infra-db
 |---|---|---|
 | Cliente e veículo | OS | IDs estáveis e dados mínimos necessários enviados por contrato; sem consulta ao banco OS |
 | Cadastro de filiais | OS | `filialId` propagado em comandos/eventos; demais serviços não mantêm cadastro mestre |
+| Usuários funcionários (Admin, Atendente, Mecânico) e autenticação deles | OS | OS emite o JWT dos funcionários; Billing e Operações apenas validam o token. Clientes continuam autenticando pela Lambda/CPF. *Emenda de 2026-10-05.* |
 | Ordem, status geral e histórico da OS | OS | `osId`; mudanças feitas apenas por OS após receber resultado de contrato/evento |
 | Orçamento, aprovação e estado financeiro | Billing | `osId`, `clienteId` e `filialId` como referências; Billing guarda apenas dados financeiros necessários e snapshots mínimos justificados |
 | Pagamento, referência do provedor e estorno | Billing | Referência por `osId`/`pagamentoId`; nenhum outro serviço grava ou consulta as tabelas de Billing |
@@ -55,7 +56,7 @@ Billing pode receber por contrato os dados mínimos de pagador necessários ao M
 3. **Billing:** orçamento, aprovação, pagamento e estorno mantêm a referência `filialId` da OS para auditoria, reconciliação e relatórios por filial; Billing não consulta o cadastro de filiais no banco OS.
 4. **Contratos:** comandos e eventos do fluxo carregam `filialId`. OS valida a associação ao criar a ordem e os serviços consumidores validam a presença e persistem a referência local. Serviços não consultam diretamente o banco OS para resolver o ID.
 
-Na migração da Fase 3, como os dados existentes não possuem filial, criar uma filial de migração única (`FILIAL-LEGADA`) no cadastro de OS e associar a ela todas as OS, peças/saldos e registros correlatos migrados. Filiais reais adicionais são cadastradas depois, sem reatribuir registros legados automaticamente.
+*Substituído pela emenda "Dados da Fase 3 e usuários": não há migração de dados.* Na migração da Fase 3, como os dados existentes não possuem filial, criar uma filial de migração única (`FILIAL-LEGADA`) no cadastro de OS e associar a ela todas as OS, peças/saldos e registros correlatos migrados. Filiais reais adicionais são cadastradas depois, sem reatribuir registros legados automaticamente.
 
 O PDF não exige segregação de autorização entre filiais. `filialId` não será usado sozinho como controle de acesso: a autorização continua seguindo as roles existentes. Transferência de estoque entre filiais e mudança de uma OS de filial ficam fora do fluxo inicial; adicionar esses fluxos requer regra e compensação próprias.
 
@@ -108,7 +109,7 @@ Manter a Lambda e o fluxo de CPF existentes como adaptador técnico para não re
 
 | Risco | Tratamento |
 |---|---|
-| Extração de Atendimento/Estoque exige migração e pode afetar consumidores existentes | Planejar cópia/cutover/reconciliação por card de serviço, mantendo contratos compatíveis e sem apagar dados antes da validação. |
+| Extração de Atendimento/Estoque afeta consumidores existentes | Extrair código por card de serviço, com contratos versionados (ADR-018). Não há migração de dados: cada serviço começa com banco vazio e seed (emenda "Dados da Fase 3 e usuários"). |
 | Mais bancos e repositórios aumentam operação | Padronizar pipeline, observabilidade, backup e templates; custos foram aceitos pelo time. |
 | Autorização por filial não é definida pelo rubric | Propagar e validar `filialId`; não adicionar segregação de acesso sem requisito de produto aprovado. |
 | AWS/EKS pode estar desligado fora das janelas de demonstração | Validar o caminho local e agendar janela de provisionamento para smoke/deploy e evidências. |
@@ -128,6 +129,7 @@ Manter a Lambda e o fluxo de CPF existentes como adaptador técnico para não re
 ### 2026-10-05 — Progresso da execução
 
 **Decisão:** o OS recebe da execução apenas início, conclusão e falha (`ExecutionStarted`, `ExecutionCompleted`, `ExecutionFailed`), que são os eventos usados pela Saga (ADR-017, ADR-018). O progresso intermediário do reparo fica consultável na API de Operações, sem evento para o OS. Isso segue o PDF, que coloca a atualização de status durante diagnóstico e reparos na Execução e exige apenas comunicar a finalização ao OS.
+### 2026-10-05 — Dados da Fase 3 e usuários**Dados da Fase 3:** o PDF não exige migração de dados e os dados existentes são de demonstração. Nenhum dado da Fase 3 é migrado: cada serviço começa com banco vazio, migrations próprias e um seed de desenvolvimento/demonstração (filial, usuários, clientes e catálogo de exemplo, sem dados pessoais reais). A filial `FILIAL-LEGADA` deixa de ser necessária. O código da Fase 3 continua sendo reaproveitado na extração.**Usuários funcionários:** OS passa a ser dono dos usuários funcionários (Admin, Atendente, Mecânico) e emite o JWT deles, mantendo o comportamento do Atendimento. Billing e Operações validam o token com o mesmo issuer e chave. A autenticação de clientes por CPF continua na Lambda.
 
 ---
 
