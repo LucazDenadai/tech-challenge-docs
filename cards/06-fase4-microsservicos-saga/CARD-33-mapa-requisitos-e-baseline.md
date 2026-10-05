@@ -1,7 +1,7 @@
 # CARD-33 — Matriz do rubric e baseline da Fase 4
 
 **Tipo:** Planejamento / Análise
-**Status:** To Do
+**Status:** Concluído — baseline estático em `matriz-requisitos.md`; os requisitos de implementação continuam pendentes nos cards vinculados
 **Depende de:** —
 **Bloqueia:** CARD-34, CARD-43
 **Repositórios:** `Tech-challenge`, `tech-challenge-lambda`, `tech-challenge-infra-k8s`, `tech-challenge-infra-db`, `tech-challenge-docs`
@@ -21,12 +21,12 @@ Incluir explicitamente: três serviços independentes; propriedade de repositór
 
 ## Critérios de aceite
 
-- [ ] Existe uma matriz única, versionada neste diretório, com todos os requisitos e entregáveis do enunciado.
-- [ ] Cada requisito tem serviço dono, card, tipo de evidência e condição objetiva de conclusão.
-- [ ] O estado atual está baseado em execução, configuração ou artefato verificável; texto de README sozinho é marcado como não verificado.
-- [ ] Débitos da fase anterior que possam bloquear a Fase 4 (incluindo evidência pendente de observabilidade/entrega) estão identificados sem reabrir escopo não relacionado.
-- [ ] Ambiguidades do enunciado são listadas separadamente para resolução em ADR/RFC, incluindo se SQL/NoSQL é requisito global ou por serviço.
-- [ ] A sequência prioriza o fluxo mínimo obrigatório antes de otimizações ou refinamentos não exigidos.
+- [x] Existe uma matriz única, versionada neste diretório, com todos os requisitos e entregáveis do enunciado.
+- [x] Cada requisito tem serviço dono, card, tipo de evidência e condição objetiva de conclusão.
+- [x] O estado atual está baseado em execução, configuração ou artefato verificável; texto de README sozinho é marcado como não verificado.
+- [x] Débitos da fase anterior que possam bloquear a Fase 4 (incluindo evidência pendente de observabilidade/entrega) estão identificados sem reabrir escopo não relacionado.
+- [x] Ambiguidades do enunciado são listadas separadamente para resolução em ADR/RFC, incluindo se SQL/NoSQL é requisito global ou por serviço.
+- [x] A sequência prioriza o fluxo mínimo obrigatório antes de otimizações ou refinamentos não exigidos.
 
 ## Cenários de aceite (Gherkin)
 
@@ -59,3 +59,4 @@ Funcionalidade: Rastrear os requisitos da Fase 4
 
 - `matriz-requisitos.md` com fonte, responsável, status, critério verificável e card associado.
 - Links para workflows, testes, manifests, documentação e evidência de execução usados no baseline.
+- Nota de baseline: esta entrega é uma inspeção estática; testes, deploys cloud, branch protection e evidência de observabilidade live não foram executados/verificados.
