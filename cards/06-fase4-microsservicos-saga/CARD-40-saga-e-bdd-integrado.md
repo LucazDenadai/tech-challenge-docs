@@ -5,19 +5,19 @@
 **Depende de:** CARD-36, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
-**Decisão arquitetural:** ADR de estratégia da Saga aprovado no CARD-36
+**Decisão arquitetural:** [ADR-017 — proposta de Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md); implementação depende de confirmação do time
 
 ---
 
 ## Contexto
 
-O enunciado requer coordenação distribuída entre abertura de OS, orçamento, aprovação, pagamento e execução, com rollback/compensação em caso de falha. Transação local, retry de RabbitMQ e DLQ não substituem uma Saga. A implementação segue a estratégia e máquina de estados decididas em CARD-36, persiste progresso e tolera redelivery.
+O enunciado requer coordenação distribuída entre abertura de OS, orçamento, aprovação, pagamento e execução, com compensação em caso de falha. Transação local, retry de RabbitMQ e DLQ não substituem uma Saga. ADR-017 recomenda um orchestrator no OS, mas a estratégia ainda aguarda confirmação; não iniciar a implementação até essa decisão ser aceita ou revisada pelo time.
 
-Este card entrega o cenário BDD ponta a ponta obrigatório. O texto Gherkin deste card é a especificação; ao menos um cenário de sucesso e cenários representativos de falha devem ser executáveis no pipeline.
+Este card entregará o cenário BDD ponta a ponta obrigatório. Os cenários Gherkin abaixo são exemplos de comportamento para avaliação; tornam-se especificação executável após confirmação da estratégia e dos contratos no CARD-36.
 
 ## Escopo
 
-- Implementar coordenação selecionada no ADR, estados persistidos e transições válidas.
+- Implementar a estratégia e os estados persistidos selecionados e confirmados no CARD-36.
 - Garantir publicação confiável de comandos/eventos com outbox/inbox ou estratégia aprovada equivalente.
 - Propagar Saga/correlation ID através de API, broker, Billing, Mercado Pago e Operações.
 - Implementar idempotência, retry limitado, timeout, recuperação após restart e tratamento de mensagem inválida.
@@ -26,12 +26,14 @@ Este card entrega o cenário BDD ponta a ponta obrigatório. O texto Gherkin des
 
 ## Critérios de aceite
 
-- [ ] Fluxo completo documentado e executável: abrir OS → gerar orçamento → aguardar aprovação → pagar/confirmar → autorizar execução → concluir → atualizar estado/histórico da OS.
+- [ ] Estratégia Saga foi confirmada pelo time no CARD-36 antes da implementação deste card.
+- [ ] Fluxo completo documentado e executável: abrir OS → gerar/aprovar orçamento → reservar estoque por filial → cobrar/confirmar → autorizar execução → concluir → atualizar estado/histórico da OS.
 - [ ] Estado da Saga sobrevive a restart e pode ser consultado sem acesso cruzado aos bancos dos serviços.
 - [ ] Toda etapa tem timeout/retry explícitos; redelivery não duplica pagamento, reserva, execução ou transição de OS.
 - [ ] Falha em cada fronteira crítica tem teste para rejeição, retry ou compensação apropriada.
 - [ ] Pagamento aprovado não é marcado como desfeito até confirmação de estorno; estado pendente de estorno permanece explícito.
-- [ ] Falha de reserva/execução após aprovação aciona a compensação definida (incluindo estorno ou recuperação manual conforme decisão do CARD-36).
+- [ ] Falha de reserva antes da cobrança cancela sem criar pagamento; falha após aprovação do pagamento aciona liberação de reserva e estorno conforme ADR-017.
+- [ ] Resultado de pagamento desconhecido mantém Saga em reconciliação, sem marcar como recusado, cobrar de novo ou liberar reserva indevidamente.
 - [ ] Eventos publicados após persistência local seguem a garantia transacional decidida e não são perdidos silenciosamente.
 - [ ] Cenários Gherkin automatizados rodam em CI com dependências isoladas, incluindo broker e bancos necessários.
 - [ ] Logs/traces permitem identificar a Saga completa; dados pessoais e segredos não aparecem na evidência.
@@ -66,6 +68,22 @@ Funcionalidade: Coordenar uma OS distribuída por Saga
     Então a compensação definida é solicitada ao Billing e a Operações
     E cada resultado é persistido e correlacionado
     E a Saga só termina como compensada após confirmação dos efeitos compensatórios
+
+  Cenário: Não cobrar quando falta estoque na filial
+    Dado que o orçamento foi aprovado para uma OS da filial A
+    E Operações não tem saldo suficiente para reservar os itens na filial A
+    Quando a Saga recebe InventoryReservationRejected
+    Então não solicita pagamento ao Mercado Pago
+    E não consome estoque de outra filial
+    E OS recebe o resultado de cancelamento por contrato
+
+  Cenário: Reconciliar resultado de pagamento desconhecido
+    Dado que uma tentativa idempotente foi enviada ao Mercado Pago
+    E Billing não consegue consultar resultado autoritativo por timeout
+    Quando OS recebe PaymentOutcomeUnknown
+    Então mantém estado ReconcilingPayment
+    E Billing consulta/reconcilia a mesma tentativa
+    E nenhuma segunda cobrança é criada
 
   Cenário: Recuperar Saga interrompida após reinício
     Dado que um serviço reiniciou após persistir uma etapa da Saga

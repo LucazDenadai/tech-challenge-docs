@@ -1,6 +1,6 @@
 # Diagrama de Componentes — Fase 4
 
-**Status:** Arquitetura aceita nos ADR-014/015. Serviços e recursos ainda não foram implementados.
+**Status:** Limites/ownership aceitos nos ADR-014/015; opção de orchestrator OS é proposta em ADR-017 e aguarda confirmação. Serviços e recursos ainda não foram implementados.
 
 ```mermaid
 flowchart LR
@@ -10,7 +10,7 @@ flowchart LR
         APIGW[API Gateway / Ingress]
         Broker[Broker de mensagens]
         subgraph Cluster[Kubernetes compartilhado]
-            OS[Deployment OS\nrepo: tech-challenge-os]
+            OS[Deployment OS\nSaga Orchestrator proposto\nrepo: tech-challenge-os]
             Billing[Deployment Billing\nrepo: tech-challenge-billing]
             Ops[Deployment Operações\nrepo: tech-challenge-operacoes\nEstoque + Execução]
         end

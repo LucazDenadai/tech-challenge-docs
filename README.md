@@ -47,6 +47,9 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [ADR-014](adr/ADR-014-limites-microsservicos-fase4.md) | Limites de domínio: OS, Billing e Operações (Estoque + Execução) (Fase 4) |
 | [ADR-015](adr/ADR-015-ownership-e-infraestrutura-fase4.md) | Ownership dos dados e infraestrutura por serviço (Fase 4) |
 | [ADR-016](adr/ADR-016-bancos-sql-nosql-fase4.md) | Persistência SQL e NoSQL, DynamoDB Local e execução (Fase 4) |
+| [ADR-017](adr/ADR-017-saga-orquestrada-os-fase4.md) | Avaliação de Saga para OS — recomendação pendente de confirmação (Fase 4) |
+| [ADR-017](adr/ADR-017-saga-orquestrada-os-fase4.md) | Avaliação de Saga para OS — recomendação pendente de confirmação (Fase 4) |
+| [ADR-017](adr/ADR-017-saga-orquestrada-os-fase4.md) | Avaliação de Saga para OS — proposta de orquestração pendente de confirmação (Fase 4) |
 
 ## RFCs
 
@@ -65,6 +68,12 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [Sequência — Abertura e Finalização de OS](diagramas/diagrama-sequencia-abertura-os.md) | Fluxo completo: abertura → transições de status → baixa de estoque assíncrona |
 | [Entidade-Relacionamento](diagramas/diagrama-er.md) | Modelo de dados, schemas `atendimento`/`estoque`, relacionamentos |
 | [Componentes — Fase 4](diagramas/diagrama-componentes-fase4.md) | Proposta de OS, Billing e Operações, ownership, dados e plataforma compartilhada |
+| [Sequência — Saga da OS Fase 4](diagramas/diagrama-sequencia-saga-fase4.md) | Proposta de fluxo com compensações para avaliação |
+| [Estados — Saga da OS Fase 4](diagramas/diagrama-estados-saga-os-fase4.md) | Proposta de estados persistidos e recuperação da Saga |
+| [Sequência — Saga da OS Fase 4](diagramas/diagrama-sequencia-saga-fase4.md) | Proposta de fluxo com compensações para avaliação |
+| [Estados — Saga da OS Fase 4](diagramas/diagrama-estados-saga-os-fase4.md) | Proposta de estados e recuperação para avaliação |
+| [Sequência — Saga da OS Fase 4](diagramas/diagrama-sequencia-saga-fase4.md) | Proposta de fluxo orquestrado, compensações e resultado incerto de pagamento |
+| [Estados — Saga da OS Fase 4](diagramas/diagrama-estados-saga-os-fase4.md) | Proposta de estados persistidos e recuperação da Saga |
 
 ## Cards
 
