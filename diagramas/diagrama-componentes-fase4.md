@@ -1,0 +1,55 @@
+# Diagrama de Componentes — Fase 4 (proposta)
+
+**Status:** Proposta alinhada ao ADR-014; ownership e infraestrutura detalhados aguardam aprovação no ADR-015.
+
+```mermaid
+flowchart LR
+    Client[Cliente / Atendente]
+
+    subgraph Platform[Plataforma compartilhada proposta]
+        APIGW[API Gateway / Ingress]
+        Broker[Broker de mensagens]
+        subgraph Cluster[Kubernetes compartilhado]
+            OS[Deployment OS\nrepo: tech-challenge-os]
+            Billing[Deployment Billing\nrepo: tech-challenge-billing]
+            Ops[Deployment Operações\nrepo: tech-challenge-operacoes\nEstoque + Execução]
+        end
+    end
+
+    subgraph Stores[Stores isolados por serviço]
+        OSDB[(Banco OS\nCliente, veículo, filial, OS)]
+        BillingDB[(Banco Billing\nOrçamento e pagamento)]
+        OpsDB[(Banco Operações\nEstoque e execução)]
+    end
+
+    Observability[Observabilidade Fase 3]
+
+    Client --> APIGW
+    APIGW --> OS
+    APIGW --> Billing
+    APIGW --> Ops
+    OS <-->|REST quando resposta imediata| Ops
+    OS -->|Comandos/eventos correlacionados| Broker
+    Billing -->|Eventos de orçamento/pagamento| Broker
+    Ops -->|Eventos de reserva/progresso/conclusão| Broker
+    Broker --> OS
+    Broker --> Billing
+    Broker --> Ops
+    OS --> OSDB
+    Billing --> BillingDB
+    Ops --> OpsDB
+
+    OS -.->|traces, métricas, logs| Observability
+    Billing -.->|traces, métricas, logs| Observability
+    Ops -.->|traces, métricas, logs| Observability
+```
+
+## Ownership representado
+
+| Serviço | Fonte da verdade | Não deve fazer |
+|---|---|---|
+| OS | Clientes, veículos, filiais, ordens, status geral e histórico | Escrever em Billing/Operações ou consultar diretamente os bancos deles |
+| Billing | Orçamentos, aprovações, pagamentos e referências do Mercado Pago | Alterar OS/estoque diretamente ou tratar snapshot de cliente como cadastro mestre |
+| Operações | Peças, saldos, reservas, movimentações e ciclo de execução | Alterar estado geral da OS ou manter cópia de orçamento/pagamento |
+
+Cluster, rede, API Gateway e broker aparecem como plataforma compartilhada **proposta**, não como requisito explícito de exclusividade física. Cada serviço ainda deve ter repositório, store, manifests e deploy independentes. Ver [ADR-015](../adr/ADR-015-ownership-e-infraestrutura-fase4.md).

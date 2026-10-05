@@ -45,6 +45,7 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [ADR-012](adr/ADR-012-observabilidade-corporativa-datadog.md) | Observabilidade corporativa com Datadog (Fase 3) |
 | [ADR-013](adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md) | Autorização via `[Authorize]` no Atendimento, não no API Gateway (Fase 3) |
 | [ADR-014](adr/ADR-014-limites-microsservicos-fase4.md) | Limites de domínio: OS, Billing e Operações (Estoque + Execução) (Fase 4) |
+| [ADR-015](adr/ADR-015-ownership-e-infraestrutura-fase4.md) | Proposta de repositórios, ownership dos dados e infraestrutura por serviço (Fase 4; aguardando aprovação) |
 
 ## RFCs
 
@@ -62,6 +63,7 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [Sequência — Autenticação via CPF](diagramas/diagrama-sequencia-autenticacao.md) | Fluxo completo: CPF → JWT → consumo de rota protegida |
 | [Sequência — Abertura e Finalização de OS](diagramas/diagrama-sequencia-abertura-os.md) | Fluxo completo: abertura → transições de status → baixa de estoque assíncrona |
 | [Entidade-Relacionamento](diagramas/diagrama-er.md) | Modelo de dados, schemas `atendimento`/`estoque`, relacionamentos |
+| [Componentes — Fase 4](diagramas/diagrama-componentes-fase4.md) | Proposta de OS, Billing e Operações, ownership, dados e plataforma compartilhada |
 
 ## Cards
 
