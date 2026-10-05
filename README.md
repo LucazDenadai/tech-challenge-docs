@@ -44,6 +44,7 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [ADR-011](adr/ADR-011-bootstrap-aws-backend-remoto-oidc.md) | Bootstrap AWS: budget, backend remoto Terraform, OIDC (Fase 3) |
 | [ADR-012](adr/ADR-012-observabilidade-corporativa-datadog.md) | Observabilidade corporativa com Datadog (Fase 3) |
 | [ADR-013](adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md) | Autorização via `[Authorize]` no Atendimento, não no API Gateway (Fase 3) |
+| [ADR-014](adr/ADR-014-limites-microsservicos-fase4.md) | Limites de domínio: OS, Billing e Operações (Estoque + Execução) (Fase 4) |
 
 ## RFCs
 
@@ -71,3 +72,4 @@ Organizados por épico em [`cards/`](cards/):
 - `03-infraestrutura/` — Docker, Kubernetes, Terraform, observabilidade (Fase 2)
 - `04-cicd/` — pipeline de CI/CD (Fase 2)
 - `05-fase3-aws/` — separação de repositórios, CI/CD multi-repo, infra AWS, Lambda, API Gateway, observabilidade corporativa (Fase 3)
+- `06-fase4-microsservicos-saga/` — decomposição em OS, Billing e Operações (Estoque + Execução), bancos por serviço, Saga, Mercado Pago, CI/CD e entregáveis (Fase 4)
