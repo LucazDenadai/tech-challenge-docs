@@ -87,11 +87,12 @@ Funcionalidade: Definir contratos resilientes para a Saga da OS
 
 1. Estudar as referências de Saga listadas no ADR-017 e comparar coreografia/orquestração para este fluxo.
 2. Revisar a recomendação e os cenários com os responsáveis por OS, Billing e Operações; registrar a confirmação ou uma alternativa escolhida.
-3. Após a confirmação, congelar envelope e contratos versionados (OpenAPI/AsyncAPI ou formato selecionado) para CARD-37 a CARD-39.
+3. Após a confirmação, congelar envelope e contratos versionados (OpenAPI/AsyncAPI ou formato selecionado) para CARD-37 a CARD-39. Feito: AsyncAPI 3.0 em [`contratos/asyncapi-saga-os.yaml`](../../contratos/asyncapi-saga-os.yaml), conforme [ADR-018](../../adr/ADR-018-contratos-assincronos-asyncapi-fase4.md).
 4. Implementar transições/timeout/retry/outbox por serviço e automatizar cenários no CARD-40; não iniciar essa implementação com o desenho ainda pendente.
 
 ## Evidências
 
 - [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md) aceito, com estratégia, estados, contratos, retries, compensações e escopo do MVP.
 - [Diagrama de sequência](../../diagramas/diagrama-sequencia-saga-fase4.md), [diagrama de estados](../../diagramas/diagrama-estados-saga-os-fase4.md) e catálogo de eventos.
-- Contratos versionados e matriz etapa → falha → compensação → verificação registrados no ADR-017.
+- Matriz etapa → falha → compensação → verificação registrada no ADR-017.
+- Contratos versionados em [AsyncAPI](../../contratos/asyncapi-saga-os.yaml) ([ADR-018](../../adr/ADR-018-contratos-assincronos-asyncapi-fase4.md)), validados com `asyncapi validate` (0 erros).

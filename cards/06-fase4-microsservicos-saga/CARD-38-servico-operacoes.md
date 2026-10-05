@@ -21,7 +21,7 @@ ADR-014 mantém Estoque e Execução no mesmo microsserviço Operações para at
 - Receber solicitação de diagnóstico na abertura da OS e publicar os itens necessários ao orçamento.
 - Receber solicitação aprovada para iniciar trabalho e controlar fila, reparo e conclusão.
 - Validar disponibilidade/reservar ou baixar peças segundo contratos e Saga do CARD-36.
-- Publicar eventos de progresso, conclusão e falha para OS/Saga.
+- Publicar para OS/Saga os eventos de diagnóstico, reserva, início, conclusão e falha definidos no [AsyncAPI](../../contratos/asyncapi-saga-os.yaml) (ADR-018). O progresso do reparo é consultado na API de Operações, sem evento para o OS.
 - Expor APIs para catálogo/saldo e operações administrativas necessárias, com Swagger.
 
 ## Fora de escopo

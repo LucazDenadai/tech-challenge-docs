@@ -17,7 +17,7 @@ O atual Atendimento contém capacidades que passarão a pertencer a OS, Billing 
 
 - Criar ou preparar repositório exclusivo, projeto executável, API, banco próprio, Dockerfile e manifests do serviço.
 - Migrar apenas entidades, regras e casos de uso cujo owner seja OS.
-- Implementar abertura de OS e consulta de status/histórico; consumir os resultados de orçamento/pagamento e progresso de Operações pelos contratos aprovados.
+- Implementar abertura de OS e consulta de status/histórico; consumir os resultados de orçamento/pagamento e diagnóstico, reserva, início, conclusão e falha de Operações pelos contratos do AsyncAPI (ADR-018).
 - Manter autorização e associação de filial conforme decisões transversais.
 - Fornecer health/readiness, Swagger/OpenAPI e telemetria com correlation ID.
 - Remover qualquer necessidade de consultar diretamente banco de Billing ou Operações.

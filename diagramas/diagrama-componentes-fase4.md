@@ -36,7 +36,7 @@ flowchart LR
     OS <-->|REST quando resposta imediata| Ops
     OS -->|Comandos/eventos correlacionados| Broker
     Billing -->|Eventos de orçamento/pagamento| Broker
-    Ops -->|Eventos de reserva/progresso/conclusão| Broker
+    Ops -->|Eventos de diagnóstico/reserva/execução| Broker
     Broker --> OS
     Broker --> Billing
     Broker --> Ops

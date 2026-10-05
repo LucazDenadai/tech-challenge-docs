@@ -11,7 +11,7 @@
 
 ## Contexto
 
-Operações precisa controlar trabalho físico sem transformar o estado de execução no estado da OS. Uma ordem pode estar em execução enquanto OS mantém seu próprio estado agregado. Progresso e conclusão são informados por eventos versionados, e a execução deve conservar filial, técnico/responsável e histórico necessário.
+Operações precisa controlar trabalho físico sem transformar o estado de execução no estado da OS. Uma ordem pode estar em execução enquanto OS mantém seu próprio estado agregado. Início, conclusão e falha são informados ao OS por eventos versionados (o progresso intermediário fica consultável na API de Operações), e a execução deve conservar filial, técnico/responsável e histórico necessário.
 
 O agregado da execução é persistido em DynamoDB. Para desenvolvimento e testes locais, DynamoDB Local sobe via Docker Compose, com endpoint configurável (`http://localhost:8000` no host ou `http://dynamodb-local:8000` entre containers), credenciais fictícias e estado de teste isolado. O deploy cloud usa a tabela DynamoDB do ambiente AWS; testes locais não podem depender dela.
 
@@ -43,7 +43,8 @@ Funcionalidade: Acompanhar execução da OS
     Dado que uma execução foi iniciada para uma OS aprovada
     Quando um técnico registra avanço do reparo
     Então Operações registra as transições no seu banco
-    E publica o progresso necessário ao serviço OS
+    E o progresso fica consultável na API de Operações
+    E nenhum evento de progresso é publicado para o OS, que só recebe início, conclusão ou falha (ADR-018)
 
   Cenário: Impedir início de execução sem autorização de fluxo
     Dado que a Saga ainda não liberou a ordem para execução
