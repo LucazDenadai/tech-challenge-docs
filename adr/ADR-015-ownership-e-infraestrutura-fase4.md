@@ -1,6 +1,6 @@
 # ADR-015 — Ownership dos dados e infraestrutura da Fase 4
 
-**Status:** Aceito — decisões de ownership e infraestrutura do CARD-34; emendado em 2026-10-05 (catálogo de serviços, ver [Emendas](#emendas))
+**Status:** Aceito — decisões de ownership e infraestrutura do CARD-34; emendado em 2026-10-05 (catálogo de serviços e progresso da execução, ver [Emendas](#emendas))
 **Data:** 2026-10-05
 **Autores:** Time Tech Challenge — Fase 4
 **Relaciona-se a:** [ADR-014](ADR-014-limites-microsservicos-fase4.md), [CARD-34](../cards/06-fase4-microsservicos-saga/CARD-34-limites-e-propriedade-dados.md)
@@ -42,7 +42,7 @@ Os repositórios existentes `tech-challenge-infra-k8s`, `tech-challenge-infra-db
 | Pagamento, referência do provedor e estorno | Billing | Referência por `osId`/`pagamentoId`; nenhum outro serviço grava ou consulta as tabelas de Billing |
 | Catálogo, saldo, reservas e movimentações de peças | Operações / módulo Estoque | Consultas síncronas ou eventos/IDs contratados; nenhum outro serviço replica saldo como dado gerenciável |
 | Catálogo de serviços (mão de obra) e preços de tabela de peças e serviços | Operações | Preço vigente enviado como snapshot no `DiagnosisCompleted` (ADR-017); nenhum outro serviço mantém tabela de preços. *Emenda de 2026-10-05.* |
-| Fila, diagnóstico, reparo e progresso da execução | Operações / módulo Execução | Referência por `osId`; OS recebe progresso/conclusão por contrato/evento |
+| Fila, diagnóstico, reparo e progresso da execução | Operações / módulo Execução | Referência por `osId`; OS recebe início, conclusão e falha por evento; progresso intermediário é consultado na API de Operações. *Emenda de 2026-10-05.* |
 
 Billing pode receber por contrato os dados mínimos de pagador necessários ao Mercado Pago, mas não se torna fonte da verdade do cadastro do cliente. Retenção, minimização e tratamento de PII devem ser definidos no desenho da integração do CARD-39.
 
@@ -124,6 +124,10 @@ Manter a Lambda e o fluxo de CPF existentes como adaptador técnico para não re
 **Decisão:** Operações passa a ser dono do catálogo de serviços e dos preços de tabela de peças e serviços. Ao concluir o diagnóstico, Operações envia no `DiagnosisCompleted` os itens com o preço vigente (snapshot). Billing calcula o orçamento a partir desse snapshot, sem consulta síncrona a Operações; o snapshot é um fato histórico do orçamento, não uma cópia editável do catálogo.
 
 **Alternativas não escolhidas:** Billing consultar preços via REST (acoplamento síncrono e preço não determinístico em replay); Billing dono da tabela de preços (catálogo de peças dividido entre dois serviços); OS dono do catálogo de serviços (preços de peças e serviços em donos diferentes).
+
+### 2026-10-05 — Progresso da execução
+
+**Decisão:** o OS recebe da execução apenas início, conclusão e falha (`ExecutionStarted`, `ExecutionCompleted`, `ExecutionFailed`), que são os eventos usados pela Saga (ADR-017, ADR-018). O progresso intermediário do reparo fica consultável na API de Operações, sem evento para o OS. Isso segue o PDF, que coloca a atualização de status durante diagnóstico e reparos na Execução e exige apenas comunicar a finalização ao OS.
 
 ---
 
