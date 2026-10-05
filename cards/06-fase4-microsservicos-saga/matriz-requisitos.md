@@ -21,8 +21,8 @@
 | R-03 | Ao menos um banco relacional e um não relacional | **Parcial no baseline; arquitetura decidida** | A Fase 3 usa PostgreSQL. ADR-016 adota três stores PostgreSQL dedicados e DynamoDB para o dossiê/fila de execução em Operações, com DynamoDB Local em Compose. Interpreta-se o requisito SQL+NoSQL como global à solução; o PDF não esclarece se ambos são exigidos por serviço. A implementação ainda está pendente. | CARD-35, CARD-37–39 |
 | R-04 | REST síncrono quando necessário e mensageria assíncrona | **Parcial** | Código/configuração local inclui adapter HTTP em Atendimento e RabbitMQ/MassTransit para baixa de estoque. Não implementa ainda todos os contratos entre OS, Billing e Operações. | CARD-36–40 |
 | R-05 | Nenhum serviço acessa diretamente o banco de outro | **Parcial / risco conhecido** | Atendimento consulta Estoque via HTTP e não por tabela; contudo, o README da Lambda descreve consulta direta de Clientes no RDS do Atendimento. Confirmar a implementação atual e remover ou justificar esse acesso no desenho da Fase 4. | CARD-34, CARD-37, CARD-39 |
-| R-06 | Implementar Saga para fluxo distribuído de OS | **Ausente no baseline; estratégia em avaliação** | Não foram encontrados código/artefatos Saga nos fontes consultados. ADR-017 documenta orquestração pelo OS como recomendação de estudo, ainda sem confirmação do time. RabbitMQ, retry e DLQ isolados não comprovam Saga. | CARD-36, CARD-40 |
-| R-07 | Compensação/rollback seguro em falhas | **Ausente no baseline; cenários propostos** | ADR-017 descreve reserva/liberação, estorno, reconciliação de resultado incerto e intervenção manual para efeitos físicos. Estratégia não confirmada e compensações ainda não implementadas/validadas. | CARD-36, CARD-39b, CARD-40 |
+| R-06 | Implementar Saga para fluxo distribuído de OS | **Ausente no baseline; estratégia decidida** | Não foram encontrados código/artefatos Saga nos fontes consultados. ADR-017 (aceito) define orquestração pelo OS. RabbitMQ, retry e DLQ isolados não comprovam Saga. | CARD-36, CARD-40 |
+| R-07 | Compensação/rollback seguro em falhas | **Ausente no baseline; compensações decididas** | ADR-017 define um caminho de falha com compensação para cada etapa (cancelamento, liberação de reserva, estorno total) e o escopo do MVP. Compensações ainda não implementadas/validadas. | CARD-36, CARD-39b, CARD-40 |
 | R-08 | Integração de pagamentos com Mercado Pago | **Ausente no escopo inspecionado** | Busca nos fontes locais não encontrou integração Mercado Pago/pagamentos. Nenhum dos READMEs dos três repositórios de fase 3 consultados descreve Billing/Mercado Pago. | CARD-39, CARD-39b |
 | R-09 | Testes unitários em todos os microsserviços | **Parcial** | Há projetos xUnit unitários e de integração para Atendimento e Estoque. Não existem ainda os três serviços Fase 4 nem testes correspondentes para eles. | CARD-37–40 |
 | R-10 | Pelo menos um fluxo completo testado com BDD | **Ausente no escopo inspecionado** | Não há arquivos `.feature` no diretório `tests` e os `.csproj` consultados não declaram SpecFlow/Reqnroll/Gherkin. Os exemplos Gherkin dos cards são especificação documental, não testes executáveis. | CARD-40 |
@@ -51,7 +51,7 @@
 |---|---|---|
 | SQL + NoSQL | Não explicita se ambos são exigidos em cada serviço ou se basta haver pelo menos um de cada na solução | ADR-016 adota ao menos um de cada tipo na solução; confirmar com a equipe docente se possível e revisitar se houver orientação diferente. |
 | Infraestrutura própria | Exige infraestrutura por serviço, mas não define se cluster/rede/broker devem ser físicos e exclusivos | CARD-34 define recursos isolados por serviço e justifica qualquer plataforma compartilhada; não assumir que Terraform ou AWS é exigência do PDF. |
-| Saga | Permite orquestração ou coreografia | ADR-017 recomenda orquestração pelo OS como material de avaliação; confirmar estratégia no CARD-36 antes de congelar contratos ou iniciar implementação. |
+| Saga | Permite orquestração ou coreografia | ADR-017 (aceito) adota orquestração pelo OS; contratos e compensações definidos no CARD-36. |
 | Microsserviços sugeridos | OS, Billing e Execução são exemplos de responsabilidades; Estoque pode ser agrupado com Execução se o mínimo de três serviços independentes for atendido | ADR-014 registra a divisão aprovada: OS, Billing e Operações (Estoque + Execução). |
 | Pagamento | Exige Mercado Pago, mas produto/API, fluxo, eventos, estorno e credenciais não estão especificados | Definir no CARD-39b após consultar documentação oficial e usar sandbox. |
 | AWS/ Terraform | Não aparecem como requisito explícito da Fase 4 | São decisões de implementação/reuso da Fase 3, não critérios de aceite do rubric desta fase. |
@@ -60,6 +60,6 @@
 
 1. CARD-34: confirmar ownership de dados/filial, nomear repositórios e delimitar recursos de infraestrutura próprios.
 2. CARD-35: fechar a interpretação SQL/NoSQL e aprovar a topologia de persistência.
-3. CARD-36: avaliar as referências e confirmar orquestração/coreografia; só então congelar contratos e compensações.
+3. CARD-36: concluído — orquestração pelo OS confirmada; contratos e compensações definidos no ADR-017.
 4. CARD-37–39: implementar os três serviços com testes e contratos independentes.
 5. CARD-40–43: validar fluxo, gates, operação e evidências finais conforme os critérios acima.

@@ -17,7 +17,7 @@ O agregado da execução é persistido em DynamoDB. Para desenvolvimento e teste
 
 ## Critérios de aceite
 
-- [ ] Fila e estados de execução são definidos (por exemplo, aguardando, diagnóstico, aguardando peça, reparo, concluída, cancelada), com transições válidas registradas.
+- [ ] Fila e estados de execução são definidos (por exemplo, em diagnóstico, diagnosticada, aguardando, aguardando peça, reparo, concluída, cancelada), com transições válidas registradas. Execução diagnosticada só entra na fila após `ExecutionStartRequested` (ADR-017).
 - [ ] Início depende de comando/evento aceito pelo contrato e não ocorre antes das condições de aprovação definidas.
 - [ ] Atualizações incluem filial, timestamps e correlation ID conforme modelo aprovado.
 - [ ] Evento de conclusão/falha só é publicado depois de persistência confirmada.
@@ -33,9 +33,15 @@ O agregado da execução é persistido em DynamoDB. Para desenvolvimento e teste
 ```gherkin
 Funcionalidade: Acompanhar execução da OS
 
-  Cenário: Atualizar diagnóstico e progresso
+  Cenário: Registrar diagnóstico antes do orçamento
+    Dado que OS solicitou o diagnóstico de uma ordem recém-aberta
+    Quando um técnico registra as peças e serviços necessários
+    Então Operações persiste a execução como diagnosticada, fora da fila de execução
+    E publica DiagnosisCompleted com os itens para o serviço OS
+
+  Cenário: Atualizar progresso do reparo
     Dado que uma execução foi iniciada para uma OS aprovada
-    Quando um técnico registra diagnóstico e avanço do reparo
+    Quando um técnico registra avanço do reparo
     Então Operações registra as transições no seu banco
     E publica o progresso necessário ao serviço OS
 

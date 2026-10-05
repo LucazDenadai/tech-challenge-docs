@@ -16,6 +16,7 @@ O Estoque existente será incorporado ao serviço Operações junto à capacidad
 ## Critérios de aceite
 
 - [ ] Operações é a única API que cria/altera catálogo, saldo e movimentações.
+- [ ] Catálogo de serviços (mão de obra) do Atendimento legado é migrado para Operações, que passa a ser a única fonte de preços de peças e serviços (emenda do ADR-015).
 - [ ] Catálogo, saldo, reserva e movimentação são persistidos somente no PostgreSQL dedicado de Operações.
 - [ ] A política de disponibilidade, reserva, baixa e liberação em compensação está alinhada ao CARD-36.
 - [ ] Cada movimentação tem referência de negócio, motivo, data e correlação suficientes para auditoria.

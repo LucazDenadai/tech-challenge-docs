@@ -16,12 +16,13 @@ O enunciado inclui geração e envio de orçamento para aprovação. Billing dev
 ## Critérios de aceite
 
 - [ ] Orçamento tem versão, valor/moeda, itens referenciados, validade, filial e estado de aprovação.
-- [ ] Criação não lê tabelas de OS/Operações; os dados necessários chegam via contrato aprovado.
+- [ ] Criação não lê tabelas de OS/Operações; os dados necessários chegam via contrato aprovado. O valor é calculado a partir do snapshot de preços do diagnóstico, sem consulta a Operações (ADR-017).
 - [ ] Aprovação/rejeição autenticada e repetida é idempotente e mantém histórico/auditoria.
 - [ ] Aprovação se aplica à versão exata apresentada ao cliente; decisão para versão antiga é rejeitada se o orçamento foi alterado.
 - [ ] Somente orçamento vigente e aprovado pode iniciar pagamento; orçamento pendente, rejeitado, cancelado ou expirado não pode gerar cobrança nem liberar execução.
 - [ ] Decisão sem autorização válida não altera o estado do orçamento nem publica evento de aprovação/rejeição.
-- [ ] Mudança de orçamento após aprovação segue uma regra explícita e reinicia autorização/pagamento quando aplicável.
+- [ ] Mudança de orçamento após aprovação é rejeitada no MVP; revisão de diagnóstico/orçamento fica fora do escopo inicial (ADR-017).
+- [ ] Aprovação/rejeição é exposta pelo Billing via REST síncrono (API Gateway, JWT existente), respondendo sucesso, versão desatualizada (`409`) ou orçamento expirado (`410`); o evento de decisão é publicado via outbox (ADR-017).
 - [ ] Resultado é publicado via evento conforme CARD-36 e não altera banco OS diretamente.
 - [ ] Testes cobrem validade, aprovação, rejeição, expiração e concorrência de decisão.
 

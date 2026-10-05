@@ -17,7 +17,9 @@ ADR-014 mantém Estoque e Execução no mesmo microsserviço Operações para at
 
 - Repositório, deploy e infraestrutura exclusivos de Operações; PostgreSQL dedicado para estoque e DynamoDB dedicado para execução.
 - Manter Estoque como única fonte da verdade para peças e saldos.
-- Receber solicitação aprovada para iniciar trabalho e controlar fila, diagnóstico, reparo e conclusão.
+- Manter o catálogo de serviços (mão de obra) e os preços de tabela de peças e serviços (emenda do ADR-015).
+- Receber solicitação de diagnóstico na abertura da OS e publicar os itens necessários ao orçamento.
+- Receber solicitação aprovada para iniciar trabalho e controlar fila, reparo e conclusão.
 - Validar disponibilidade/reservar ou baixar peças segundo contratos e Saga do CARD-36.
 - Publicar eventos de progresso, conclusão e falha para OS/Saga.
 - Expor APIs para catálogo/saldo e operações administrativas necessárias, com Swagger.

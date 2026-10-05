@@ -4,8 +4,7 @@
 **Enunciado:** Tech Challenge — Fase 4 (texto fornecido pelo time em 2026-10-05)
 **Decisão de fronteiras:** [ADR-014](../../adr/ADR-014-limites-microsservicos-fase4.md)
 **Ownership e repositórios:** [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md)
-**Saga em avaliação:** [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md) (recomendação, aguardando confirmação)
-**Saga em avaliação:** [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md) (recomendação, aguardando confirmação)
+**Saga:** [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md) (orquestração pelo OS, aceita)
 
 ---
 
@@ -63,7 +62,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | [CARD-33](CARD-33-mapa-requisitos-e-baseline.md) | Matriz de requisitos, baseline e evidências existentes | Concluído — baseline estático |
 | [CARD-34](CARD-34-limites-e-propriedade-dados.md) | Limites, repositórios, infraestrutura e propriedade dos dados | Concluído — decisões registradas |
 | [CARD-35](CARD-35-decisao-sql-nosql.md) | Decisão de alocação SQL/NoSQL e topologia dos bancos | Concluído — decisão registrada; implementação pendente |
-| [CARD-36](CARD-36-contratos-e-desenho-saga.md) | Estudo de contratos, eventos, Saga e compensações | Aguardando confirmação da estratégia pelo time |
+| [CARD-36](CARD-36-contratos-e-desenho-saga.md) | Contratos, eventos, Saga e compensações | Concluído — estratégia confirmada; implementação pendente |
 | [CARD-37](CARD-37-servico-os.md) | Serviço OS | To Do |
 | [CARD-38](CARD-38-servico-operacoes.md) | Operações: Estoque + Execução | To Do |
 | [CARD-39](CARD-39-servico-billing-pagamentos.md) | Billing e Mercado Pago | To Do |
@@ -76,7 +75,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 
 Diagrama de componentes: [Componentes — Fase 4](../../diagramas/diagrama-componentes-fase4.md).
 
-Diagramas da Saga para avaliação, ainda não aprovados: [sequência](../../diagramas/diagrama-sequencia-saga-fase4.md) e [estados](../../diagramas/diagrama-estados-saga-os-fase4.md).
+Diagramas da Saga: [sequência](../../diagramas/diagrama-sequencia-saga-fase4.md) e [estados](../../diagramas/diagrama-estados-saga-os-fase4.md).
 
 - Três ou mais microsserviços independentes, cada um com repositório, infraestrutura e banco próprios.
 - Ao menos um banco relacional e um não relacional; CARD-35 registra se a leitura adotada é por solução ou por serviço e justifica a distribuição.

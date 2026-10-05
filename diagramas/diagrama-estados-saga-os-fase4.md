@@ -1,12 +1,14 @@
 # Estados — Saga da OS na Fase 4
 
-**Proposta para avaliação:** estados para a opção de orquestração descrita no ADR-017. A máquina será congelada após confirmação do CARD-36.
+**Estados aprovados** para a orquestração descrita no ADR-017 (aceito).
 
 ```mermaid
 stateDiagram-v2
-    [*] --> RequestingQuote
+    [*] --> Diagnosing
+    Diagnosing --> RequestingQuote: DiagnosisCompleted
+    Diagnosing --> Cancelled: DiagnosisRejected
     RequestingQuote --> AwaitingApproval: QuoteReady
-    RequestingQuote --> Cancelled: QuoteRejected / timeout de orçamento
+    RequestingQuote --> Cancelled: QuoteRejected
     AwaitingApproval --> ReservingInventory: QuoteApproved
     AwaitingApproval --> Cancelled: QuoteDeclined / QuoteExpired
     ReservingInventory --> CreatingPayment: InventoryReserved
@@ -35,4 +37,4 @@ stateDiagram-v2
     Compensated --> [*]
 ```
 
-`ManualActionRequired` só sai por ação auditada ou reconciliação que determine um resultado seguro; replay não pode duplicar efeitos já confirmados.
+`ManualActionRequired` só sai por ação auditada ou reconciliação que determine um resultado seguro; replay não pode duplicar efeitos já confirmados. No MVP, as transições de replay auditado não são implementadas: o estado é persistido e alertado, e a saída é manual (ADR-017, Escopo do MVP).

@@ -1,23 +1,23 @@
 # CARD-36 — Contratos entre serviços e desenho da Saga
 
 **Tipo:** Arquitetura / Integração
-**Status:** Desenho documentado — aguardando avaliação e confirmação da estratégia
+**Status:** Concluído — estratégia confirmada pelo time em 2026-10-05
 **Depende de:** CARD-34, CARD-35
 **Bloqueia:** CARD-37, CARD-38, CARD-39, CARD-40
 **Repositórios:** `tech-challenge-docs` e repositórios dos três serviços
-**Decisão arquitetural:** [ADR-017 — recomendação de Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md)
+**Decisão arquitetural:** [ADR-017 — Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md)
 
 ---
 
 ## Contexto
 
-O fluxo obrigatório atravessa OS, Billing e Operações. Mensageria, retry e DLQ já existem no projeto, mas não constituem por si só uma Saga. ADR-017 documenta orquestração por OS como recomendação, com estado persistido no banco OS e comandos versionados. A alternativa de coreografia continua válida; a estratégia não será considerada aprovada nem implementada até o time confirmar após avaliar as referências e trade-offs.
+O fluxo obrigatório atravessa OS, Billing e Operações. Mensageria, retry e DLQ já existem no projeto, mas não constituem por si só uma Saga. ADR-017 registra a orquestração pelo OS, confirmada pelo time, com estado persistido no banco OS e comandos versionados. A coreografia foi avaliada e não escolhida.
 
 ## Escopo
 
 Definir contratos REST/eventos, correlation/causation IDs, versionamento, ordenação e compatibilidade; máquina de estados da Saga; persistência do estado; timeout/retry/idempotência; estratégia outbox/inbox ou equivalente; política de mensagens inválidas/DLQ; eventos de aprovação e notificação Mercado Pago; e compensações para falhas de cobrança, reserva/baixa de peça e início/cancelamento da execução.
 
-O fluxo reserva peças da filial da OS antes de criar uma cobrança. Timeout/erro técnico do provedor resulta em reconciliação, nunca em recusa presumida. Pagamento aprovado seguido de falha operacional requer estorno e liberação/ajuste de reserva como compensações separadas. A Saga só declara compensação concluída quando todos os efeitos reversíveis forem confirmados; efeitos físicos não reversíveis requerem registro real do consumo e intervenção manual quando necessário.
+O diagnóstico ocorre em Operações logo após a abertura e define os itens do orçamento, mantendo a ordem da Fase 3. O fluxo reserva peças da filial da OS antes de criar uma cobrança. Timeout/erro técnico do provedor resulta em reconciliação, nunca em recusa presumida. Pagamento aprovado seguido de falha operacional requer estorno e liberação/ajuste de reserva como compensações separadas. A Saga só declara compensação concluída quando todos os efeitos reversíveis forem confirmados; efeitos físicos não reversíveis requerem registro real do consumo e intervenção manual quando necessário.
 
 ## Critérios de aceite
 
@@ -31,7 +31,7 @@ O fluxo reserva peças da filial da OS antes de criar uma cobrança. Timeout/err
 - [x] Aprovação no Billing é distinta da confirmação reconciliada do webhook Mercado Pago; duplicatas/out-of-order não repetem efeitos.
 - [x] Persistência de Saga/outbox respeita ownership; não há transação distribuída nem acesso cruzado a bancos.
 - [x] Diagramas Mermaid de sequência e estados foram adicionados.
-- [ ] O time confirma a estratégia de orquestração, coreografia ou alternativa antes de congelar contratos de implementação.
+- [x] O time confirma a estratégia de orquestração, coreografia ou alternativa antes de congelar contratos de implementação (orquestração pelo OS, 2026-10-05).
 
 ## Cenários de aceite (Gherkin)
 
@@ -92,6 +92,6 @@ Funcionalidade: Definir contratos resilientes para a Saga da OS
 
 ## Evidências
 
-- [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md) proposto, com alternativa recomendada, estados, contratos, retries e compensações.
+- [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md) aceito, com estratégia, estados, contratos, retries, compensações e escopo do MVP.
 - [Diagrama de sequência](../../diagramas/diagrama-sequencia-saga-fase4.md), [diagrama de estados](../../diagramas/diagrama-estados-saga-os-fase4.md) e catálogo de eventos.
 - Contratos versionados e matriz etapa → falha → compensação → verificação registrados no ADR-017.

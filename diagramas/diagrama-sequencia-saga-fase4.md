@@ -1,12 +1,12 @@
 # Sequência — Saga da OS na Fase 4
 
-**Estratégia em avaliação:** orquestração pelo módulo Saga do serviço OS (ADR-017). O fluxo é uma proposta para comparação; não implementar antes da confirmação do CARD-36.
+**Estratégia aprovada:** orquestração pelo módulo Saga do serviço OS (ADR-017, aceito).
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Cliente
-    participant OS as Serviço OS / Orchestrator proposto
+    participant OS as Serviço OS / Orchestrator
     participant OSDB as PostgreSQL OS
     participant Broker as Broker
     participant Billing as Serviço Billing
@@ -15,19 +15,25 @@ sequenceDiagram
     participant OpsSQL as PostgreSQL Operações
     participant OpsNoSQL as DynamoDB Execução
 
-    Cliente->>OS: Abrir OS (filialId, itens)
-    OS->>OSDB: Salvar OS + Saga(RequestingQuote) + outbox
-    OS-->>Cliente: OS criada; orçamento em preparação
-    OS->>Broker: QuoteRequested.v1 (correlationId, osId, filialId)
+    Cliente->>OS: Abrir OS (filialId, veículo)
+    OS->>OSDB: Salvar OS + Saga(Diagnosing) + outbox
+    OS-->>Cliente: OS criada; diagnóstico em andamento
+    OS->>Broker: DiagnosisRequested.v1 (correlationId, osId, filialId)
+    Broker->>Ops: DiagnosisRequested.v1
+    Ops->>OpsNoSQL: Criar registro de execução (status=Diagnosing)
+    Ops->>OpsNoSQL: Técnico registra diagnóstico (status=Diagnosed, fora da fila) + outbox transacional
+    Ops->>Broker: DiagnosisCompleted.v1 (itens + snapshot de preços)
+    Broker->>OS: DiagnosisCompleted.v1
+    OS->>OSDB: Saga = RequestingQuote + outbox
+    OS->>Broker: QuoteRequested.v1 (correlationId, osId, filialId, itens + preços)
     Broker->>Billing: QuoteRequested.v1
     Billing->>Billing: Validar pedido e criar orçamento
     Billing->>Broker: QuoteReady.v1 (quoteId, version, amount, currency, expiresAt)
     Broker->>OS: QuoteReady.v1
     OS->>OSDB: Saga = AwaitingApproval; registrar referência/versão
-    Cliente->>OS: Aprovar versão do orçamento
-    OS->>Broker: QuoteApprovalRequested.v1 (quoteId, version)
-    Broker->>Billing: QuoteApprovalRequested.v1
-    Billing->>Billing: Registrar decisão idempotente
+    Cliente->>Billing: REST: aprovar versão do orçamento (quoteId, version)
+    Billing->>Billing: Validar versão/validade e registrar decisão idempotente + outbox
+    Billing-->>Cliente: 200 aprovado / 409 versão desatualizada / 410 expirado
     Billing->>Broker: QuoteApproved.v1
     Broker->>OS: QuoteApproved.v1
     OS->>OSDB: Saga = ReservingInventory + outbox
@@ -55,10 +61,10 @@ sequenceDiagram
         OS->>OSDB: Saga = StartingExecution + outbox
         OS->>Broker: ExecutionStartRequested.v1
         Broker->>Ops: ExecutionStartRequested.v1
-        Ops->>OpsNoSQL: Criar execução (status=Queued/Started) + outbox transacional
+        Ops->>OpsNoSQL: Mover execução diagnosticada para fila (status=Queued/Started) + outbox transacional
         Ops->>Broker: ExecutionStarted.v1
         Broker->>OS: ExecutionStarted.v1
-        Ops->>OpsNoSQL: Atualizar diagnóstico/progresso
+        Ops->>OpsNoSQL: Atualizar progresso do reparo
         Ops->>OpsSQL: Confirmar consumo real ao concluir; outbox
         Ops->>Broker: ExecutionCompleted.v1
         Broker->>OS: ExecutionCompleted.v1
@@ -76,16 +82,16 @@ sequenceDiagram
     else Resultado técnico desconhecido
         Billing->>Broker: PaymentOutcomeUnknown.v1
         Broker->>OS: PaymentOutcomeUnknown.v1
-        OS->>OSDB: Saga=ReconcilingPayment; manter reserva dentro do TTL
-        Note over OS,Billing: Reconciliar com a mesma idempotencyKey; renovar lease da reserva; timeout não é recusa
+        OS->>OSDB: Saga=ReconcilingPayment; manter reserva
+        Note over OS,Billing: Job de Billing reconcilia com a mesma idempotencyKey; timeout não é recusa
     end
 
-    opt Falha após pagamento aprovado antes de executar trabalho
-        Ops-->>OS: ExecutionStartRejected.v1 ou falha definitiva
-        OS->>Broker: InventoryReleaseRequested.v1 + PaymentRefundRequested.v1
+    opt Falha após pagamento aprovado (início rejeitado ou execução falhou)
+        Ops-->>OS: ExecutionStartRejected.v1 ou ExecutionFailed.v1 (itens consumidos)
+        OS->>Broker: InventoryReleaseRequested.v1 + PaymentRefundRequested.v1 (estorno total)
         Broker->>Ops: InventoryReleaseRequested.v1
         Broker->>Billing: PaymentRefundRequested.v1
-        Ops->>OpsSQL: Liberar reserva não consumida
+        Ops->>OpsSQL: Registrar baixa do consumido e liberar reserva não consumida
         Billing->>MP: Solicitar estorno
         MP-->>Billing: Estado do estorno
         Ops-->>OS: InventoryReleased.v1
