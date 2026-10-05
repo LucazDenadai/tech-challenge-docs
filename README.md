@@ -46,6 +46,7 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | [ADR-013](adr/ADR-013-autenticacao-authorize-aspnet-nao-api-gateway.md) | Autorização via `[Authorize]` no Atendimento, não no API Gateway (Fase 3) |
 | [ADR-014](adr/ADR-014-limites-microsservicos-fase4.md) | Limites de domínio: OS, Billing e Operações (Estoque + Execução) (Fase 4) |
 | [ADR-015](adr/ADR-015-ownership-e-infraestrutura-fase4.md) | Ownership dos dados e infraestrutura por serviço (Fase 4) |
+| [ADR-016](adr/ADR-016-bancos-sql-nosql-fase4.md) | Persistência SQL e NoSQL, DynamoDB Local e execução (Fase 4) |
 
 ## RFCs
 

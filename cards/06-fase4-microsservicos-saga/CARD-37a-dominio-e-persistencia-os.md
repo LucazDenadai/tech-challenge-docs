@@ -5,7 +5,7 @@
 **Depende de:** CARD-34, CARD-35
 **Bloqueia:** CARD-37b
 **Repositório alvo:** Repositório exclusivo de OS (definido no CARD-34)
-**Decisão arquitetural:** ADR-014 e decisão de bancos do CARD-35
+**Decisão arquitetural:** ADR-014 e [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md)
 
 ---
 
@@ -17,7 +17,7 @@ O atual Atendimento precisa ser dividido sem manter dependência de implantaçã
 
 - [ ] O projeto OS tem camadas e dependências alinhadas ao padrão existente, sem dependência de código em repositório remoto compilado como atalho.
 - [ ] Agregado e regras de transição da OS residem em OS; dados de orçamento, pagamento, estoque ou execução não são modelados como dados gerenciáveis locais.
-- [ ] Contexto e migrations apontam apenas para o banco OS e não criam schemas/tabelas de outros serviços.
+- [ ] Contexto e migrations apontam apenas para a instância PostgreSQL dedicada de OS e não criam schemas/tabelas de outros serviços.
 - [ ] Migrations podem ser aplicadas a banco vazio e a uma cópia controlada dos dados legados, conforme plano aprovado.
 - [ ] A estratégia de migração identifica fonte, transformação, validação, corte, rollback e proteção contra perda/duplicação.
 - [ ] Testes cobrem regras de domínio, persistência, histórico e estados inválidos.

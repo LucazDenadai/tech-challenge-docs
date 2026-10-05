@@ -5,7 +5,7 @@
 **Depende de:** CARD-35, CARD-36
 **Bloqueia:** CARD-38b, CARD-40
 **Repositório alvo:** Repositório exclusivo de Operações
-**Decisão arquitetural:** ADR-004 permanece válido quanto à fonte única da verdade; ADR-014 define o serviço owner
+**Decisão arquitetural:** ADR-004 permanece válido quanto à fonte única da verdade; ADR-014 define o serviço owner; [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md) define PostgreSQL
 
 ---
 
@@ -16,7 +16,7 @@ O Estoque existente será incorporado ao serviço Operações junto à capacidad
 ## Critérios de aceite
 
 - [ ] Operações é a única API que cria/altera catálogo, saldo e movimentações.
-- [ ] Estruturas de estoque são persistidas somente no banco Operações, conforme CARD-35.
+- [ ] Catálogo, saldo, reserva e movimentação são persistidos somente no PostgreSQL dedicado de Operações.
 - [ ] A política de disponibilidade, reserva, baixa e liberação em compensação está alinhada ao CARD-36.
 - [ ] Cada movimentação tem referência de negócio, motivo, data e correlação suficientes para auditoria.
 - [ ] Comandos repetidos com a mesma chave idempotente não duplicam movimentos.

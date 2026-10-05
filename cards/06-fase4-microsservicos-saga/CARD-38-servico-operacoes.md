@@ -5,7 +5,7 @@
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** Repositório exclusivo de Operações (nome definido no CARD-34)
-**Decisão arquitetural:** [ADR-014](../../adr/ADR-014-limites-microsservicos-fase4.md)
+**Decisão arquitetural:** [ADR-014](../../adr/ADR-014-limites-microsservicos-fase4.md), [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md)
 
 ---
 
@@ -15,7 +15,7 @@ ADR-014 mantém Estoque e Execução no mesmo microsserviço Operações para at
 
 ## Escopo
 
-- Repositório, deploy, infraestrutura e banco exclusivos do serviço Operações.
+- Repositório, deploy e infraestrutura exclusivos de Operações; PostgreSQL dedicado para estoque e DynamoDB dedicado para execução.
 - Manter Estoque como única fonte da verdade para peças e saldos.
 - Receber solicitação aprovada para iniciar trabalho e controlar fila, diagnóstico, reparo e conclusão.
 - Validar disponibilidade/reservar ou baixar peças segundo contratos e Saga do CARD-36.
@@ -31,13 +31,14 @@ ADR-014 mantém Estoque e Execução no mesmo microsserviço Operações para at
 ## Critérios de aceite
 
 - [ ] Operações pode ser compilado, testado, implantado e escalado sem publicar/reiniciar OS ou Billing.
-- [ ] Há um banco de Operações exclusivo; o mesmo serviço owns módulos lógicos de Estoque e Execução segundo CARD-35.
+- [ ] Operações possui a instância PostgreSQL e a tabela DynamoDB exclusivas definidas em ADR-016; Estoque e Execução permanecem módulos internos distintos.
 - [ ] API/eventos suportam disponibilidade, fila de execução, diagnóstico, progresso, conclusão e falha.
 - [ ] Operações publica eventos contratados, com correlação e versionamento, sem gravar no banco OS/Billing.
 - [ ] Estados de Execução e Movimentações de Estoque são distintos e têm regras de domínio próprias.
 - [ ] Reprocessamento de comando/evento não duplica movimentação, reserva ou item de execução.
 - [ ] Testes cobrem estoque insuficiente, execução cancelada/finalizada e falha de persistência/mensagem.
-- [ ] Uso de NoSQL, se alocado ao serviço, segue a decisão aprovada em CARD-35 e tem recuperação/consistência demonstráveis.
+- [ ] A API de fila/execução lê e escreve o agregado de execução no DynamoDB; saldo, reservas e movimentações permanecem exclusivamente no PostgreSQL.
+- [ ] A configuração DynamoDB Local permite executar testes sem credenciais AWS ou chamadas ao endpoint cloud.
 
 ## Cenários de aceite (Gherkin)
 

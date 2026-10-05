@@ -5,7 +5,7 @@
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** Repositório exclusivo de Billing (nome definido no CARD-34)
-**Decisão arquitetural:** ADR-014 e contratos/Saga do CARD-36
+**Decisão arquitetural:** ADR-014, [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md) e contratos/Saga do CARD-36
 
 ---
 
@@ -30,7 +30,7 @@ Billing é owner de orçamento, aprovação e estado financeiro. Deve integrar-s
 
 ## Critérios de aceite
 
-- [ ] Billing tem armazenamento próprio e não consulta tabelas de outros serviços.
+- [ ] Billing persiste orçamentos, pagamentos e reconciliação em sua instância PostgreSQL dedicada e não consulta tabelas de outros serviços.
 - [ ] Orçamento pode ser criado, consultado, aprovado ou recusado com histórico e filial/correlation ID.
 - [ ] Integração Mercado Pago funciona em sandbox, usando credenciais em secret store/variáveis seguras.
 - [ ] Webhook valida autenticidade e consulta/valida estado conforme fluxo oficial adotado, sem confiar cegamente no payload recebido.

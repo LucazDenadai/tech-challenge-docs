@@ -60,7 +60,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 |---|---|---|
 | [CARD-33](CARD-33-mapa-requisitos-e-baseline.md) | Matriz de requisitos, baseline e evidências existentes | Concluído — baseline estático |
 | [CARD-34](CARD-34-limites-e-propriedade-dados.md) | Limites, repositórios, infraestrutura e propriedade dos dados | Concluído — decisões registradas |
-| [CARD-35](CARD-35-decisao-sql-nosql.md) | Decisão de alocação SQL/NoSQL e topologia dos bancos | To Do |
+| [CARD-35](CARD-35-decisao-sql-nosql.md) | Decisão de alocação SQL/NoSQL e topologia dos bancos | Concluído — decisão registrada; implementação pendente |
 | [CARD-36](CARD-36-contratos-e-desenho-saga.md) | Contratos, eventos, escolha da Saga e compensações | To Do |
 | [CARD-37](CARD-37-servico-os.md) | Serviço OS | To Do |
 | [CARD-38](CARD-38-servico-operacoes.md) | Operações: Estoque + Execução | To Do |
