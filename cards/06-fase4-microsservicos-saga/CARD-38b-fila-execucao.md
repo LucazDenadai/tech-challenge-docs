@@ -5,13 +5,15 @@
 **Depende de:** CARD-36, CARD-38a
 **Bloqueia:** CARD-40
 **Repositório alvo:** Repositório exclusivo de Operações
-**Decisão arquitetural:** Contratos e máquina de estados aprovados no CARD-36
+**Decisão arquitetural:** [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md); contratos e máquina de estados no CARD-36
 
 ---
 
 ## Contexto
 
 Operações precisa controlar trabalho físico sem transformar o estado de execução no estado da OS. Uma ordem pode estar em execução enquanto OS mantém seu próprio estado agregado. Progresso e conclusão são informados por eventos versionados, e a execução deve conservar filial, técnico/responsável e histórico necessário.
+
+O agregado da execução é persistido em DynamoDB. Para desenvolvimento e testes locais, DynamoDB Local sobe via Docker Compose, com endpoint configurável (`http://localhost:8000` no host ou `http://dynamodb-local:8000` entre containers), credenciais fictícias e estado de teste isolado. O deploy cloud usa a tabela DynamoDB do ambiente AWS; testes locais não podem depender dela.
 
 ## Critérios de aceite
 
@@ -21,6 +23,9 @@ Operações precisa controlar trabalho físico sem transformar o estado de execu
 - [ ] Evento de conclusão/falha só é publicado depois de persistência confirmada.
 - [ ] Cancelamento/repetição não deixa execução órfã e segue compensações do CARD-36.
 - [ ] API ou interface de operação oferece consulta de fila, detalhe e atualização autorizada.
+- [ ] DynamoDB Local pode ser iniciado pelo Compose sem configurar uma conta/credencial AWS.
+- [ ] A fila pode ser consultada por filial e estado, e a execução por identificador, segundo as chaves/índices definidos e testados.
+- [ ] Alteração do agregado e registro da outbox DynamoDB são atômicos conforme ADR-016; a publicação no broker é idempotente e recuperável.
 - [ ] Testes cobrem transição inválida, evento repetido, timeout e conclusão.
 
 ## Cenários de aceite (Gherkin)
@@ -39,6 +44,13 @@ Funcionalidade: Acompanhar execução da OS
     Quando uma solicitação de início é recebida
     Então Operações não inicia o trabalho
     E devolve um resultado de rejeição correlacionado
+
+  Cenário: Executar teste local sem chamar AWS
+    Dado que DynamoDB Local está iniciado pelo Docker Compose
+    E o endpoint local foi selecionado por configuração
+    Quando os testes de persistência de execução rodam
+    Então usam apenas DynamoDB Local com credenciais fictícias
+    E não acessam o endpoint hospedado da AWS
 ```
 
 ## Passos

@@ -21,7 +21,8 @@ flowchart LR
     subgraph Stores[Stores isolados por serviço]
         OSDB[(Banco OS\nCliente, veículo, filial, OS)]
         BillingDB[(Banco Billing\nOrçamento e pagamento)]
-        OpsDB[(Banco Operações\nEstoque e execução)]
+        OpsSQL[(PostgreSQL Operações\nEstoque e movimentações)]
+        OpsNoSQL[(DynamoDB Execução\nDynamoDB Local em dev)]
     end
 
     Observability[Observabilidade Fase 3]
@@ -41,7 +42,8 @@ flowchart LR
     Broker --> Ops
     OS --> OSDB
     Billing --> BillingDB
-    Ops --> OpsDB
+    Ops --> OpsSQL
+    Ops --> OpsNoSQL
 
     OS -.->|traces, métricas, logs| Observability
     Billing -.->|traces, métricas, logs| Observability
@@ -54,6 +56,6 @@ flowchart LR
 |---|---|---|
 | OS | Clientes, veículos, filiais, ordens, status geral e histórico; associa filial imutável à OS | Escrever em Billing/Operações ou consultar diretamente os bancos deles |
 | Billing | Orçamentos, aprovações, pagamentos e referências do Mercado Pago; preserva `filialId` para auditoria/relatórios | Alterar OS/estoque diretamente ou tratar snapshot de cliente como cadastro mestre |
-| Operações | Peças, saldos, reservas, movimentações e ciclo de execução; particiona estoque por `(filialId, pecaId)` | Usar saldo de outra filial sem transferência explícita, alterar estado geral da OS ou manter cópia de orçamento/pagamento |
+| Operações | PostgreSQL: peças, saldos, reservas e movimentações por `(filialId, pecaId)`. DynamoDB: fila/dossiê de execução e diagnóstico | Usar saldo de outra filial sem transferência explícita, duplicar saldo no DynamoDB, alterar estado geral da OS ou manter cópia de orçamento/pagamento |
 
 Cluster, rede, API Gateway, broker e observabilidade são plataforma compartilhada, não recursos físicos exclusivos por serviço. Cada serviço possui repositório, banco gerenciado fisicamente dedicado, manifests, permissões e deploy independentes. A Lambda é componente técnico e consulta dados de cliente pela API interna do OS, sem conexão ao banco. Ver [ADR-015](../adr/ADR-015-ownership-e-infraestrutura-fase4.md).
