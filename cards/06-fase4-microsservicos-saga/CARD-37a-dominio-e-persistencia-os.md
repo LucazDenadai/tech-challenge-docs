@@ -13,6 +13,15 @@
 
 O atual Atendimento precisa ser dividido sem manter dependência de implantação ou banco com Billing e Operações. Este subcard extrai o código do agregado OS e dos cadastros sob ownership do OS (clientes, veículos, filiais e usuários funcionários), com migrations próprias. Não há migração de dados da Fase 3: o banco começa vazio e recebe um seed de demonstração (emenda do ADR-015).
 
+## Decisões de implementação (2026-10-05)
+
+- **Camadas:** Domain, Application (ports e casos de uso de cliente, veículo, usuário/auth, abertura, consulta e transição de OS) e Infrastructure (EF Core, migrations, seed, JWT, e-mail). API/`Program.cs`, contratos e handlers de eventos ficam no CARD-37b.
+- **Nomes:** projetos e namespaces `OficinaMecanica.OS.*`, seguindo o padrão `OficinaMecanica.<Contexto>.*` da Fase 3.
+- **Filial:** modelo mínimo `Id`, `Codigo` (único), `Nome`, `Ativo`. A OS recebe `FilialId` obrigatório e imutável. Usuário não é vinculado a filial (ADR-015: autorização segue roles).
+- **Cancelamento:** `Cancelada` só a partir de status não terminais da Saga (`EmDiagnostico`, `AguardandoAprovacao`, `AguardandoPagamento`, `EmExecucao`). `Finalizada` só segue para `Entregue`.
+- **Itens/orçamento:** a OS não possui itens de peça/serviço nem valor total; esses dados pertencem a Operações/Billing (ADR-015, ADR-017).
+- **Seed:** senha dos usuários de demonstração vem de configuração (`Seed:SenhaUsuarios`), nunca versionada; ausência da configuração falha explicitamente.
+
 ## Critérios de aceite
 
 - [ ] O projeto OS tem camadas e dependências alinhadas ao padrão existente, sem dependência de código em repositório remoto compilado como atalho.
