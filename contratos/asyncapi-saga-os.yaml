@@ -531,7 +531,7 @@ components:
         schemaVersion: { type: integer, minimum: 1 }
         producer: { type: string, enum: [os, billing, operacoes] }
         occurredAtUtc: { type: string, format: date-time }
-        correlationId: { type: string, format: uuid, description: Identificador estável da Saga, criado pelo OS. }
+        correlationId: { type: string, format: uuid, description: 'Identificador estável da Saga, criado pelo OS.' }
         causationId: { type: string, format: uuid, description: messageId que causou esta mensagem. Ausente apenas no primeiro comando da Saga. }
         osId: { type: string, format: uuid }
         filialId: { type: string, format: uuid }
@@ -594,7 +594,7 @@ components:
           required: [paymentId]
           properties:
             paymentId: { type: string, format: uuid }
-            providerReference: { type: string, description: ID da tentativa no Mercado Pago, quando já existir. }
+            providerReference: { type: string, description: 'ID da tentativa no Mercado Pago, quando já existir.' }
     RefundResult:
       allOf:
         - $ref: '#/components/schemas/Envelope'

@@ -32,7 +32,7 @@ Este card torna executável o ADR-014; não escolhe tecnologia de banco nem deci
 - [x] Cada serviço terá recurso de banco gerenciado fisicamente dedicado, credenciais e ciclo de migrations/backup próprios.
 - [x] EKS, VPC, API Gateway, broker e backend de observabilidade são plataforma compartilhada; cada serviço terá recursos Kubernetes, permissões, pipeline e deploy independentes.
 - [x] `filialId` tem uso definido como dimensão de negócio: associação imutável à OS, partição de estoque, referência financeira e correlação de mensagens; não é uma regra de autorização por si só.
-- [x] Registros legados da Fase 3 são associados a uma filial única `FILIAL-LEGADA`; transferência de estoque entre filiais e mudança de filial da OS ficam fora do fluxo inicial.
+- [x] Registros legados da Fase 3 são associados a uma filial única `FILIAL-LEGADA`; transferência de estoque entre filiais e mudança de filial da OS ficam fora do fluxo inicial. *Revisto em 2026-10-05: não há migração de dados da Fase 3 (emenda do ADR-015), então `FILIAL-LEGADA` não é criada.*
 - [x] A Lambda permanece como adaptador e consultará OS por API interna autenticada, sem acesso direto ao banco OS.
 - [x] A decisão está aceita e registrada em ADR-015 e no diagrama Fase 4; CARD-35 define as tecnologias/alocação SQL-NoSQL.
 

@@ -16,12 +16,12 @@ O Estoque existente será incorporado ao serviço Operações junto à capacidad
 ## Critérios de aceite
 
 - [ ] Operações é a única API que cria/altera catálogo, saldo e movimentações.
-- [ ] Catálogo de serviços (mão de obra) do Atendimento legado é migrado para Operações, que passa a ser a única fonte de preços de peças e serviços (emenda do ADR-015).
+- [ ] Catálogo de serviços (mão de obra) é recriado em Operações (código extraído do Atendimento, dados via seed), que passa a ser a única fonte de preços de peças e serviços (emenda do ADR-015).
 - [ ] Catálogo, saldo, reserva e movimentação são persistidos somente no PostgreSQL dedicado de Operações.
 - [ ] A política de disponibilidade, reserva, baixa e liberação em compensação está alinhada ao CARD-36.
 - [ ] Cada movimentação tem referência de negócio, motivo, data e correlação suficientes para auditoria.
 - [ ] Comandos repetidos com a mesma chave idempotente não duplicam movimentos.
-- [ ] Migração do Estoque legado tem reconciliação de catálogo e saldos, com plano de rollback/cutover.
+- [ ] Banco de Operações começa vazio, com migrations próprias e seed de catálogo e saldos por filial; não há migração de dados da Fase 3.
 - [ ] Testes cobrem saldo insuficiente, concorrência relevante, reserva/release e duplicidade.
 
 ## Cenários de aceite (Gherkin)
@@ -48,7 +48,7 @@ Funcionalidade: Manter o estoque sob ownership exclusivo de Operações
 1. Mapear modelo e regras de estoque atuais, incluindo eventos e endpoints.
 2. Migrar domínio, persistência e API para o módulo de Estoque dentro de Operações.
 3. Implementar comandos idempotentes e mecanismo de reserva/liberação conforme decisão de Saga.
-4. Validar migração e reconciliação antes do corte de tráfego.
+4. Validar o seed e o fluxo de reserva antes do deploy. Não há migração de dados da Fase 3 (emenda do ADR-015).
 
 ## Evidências
 
