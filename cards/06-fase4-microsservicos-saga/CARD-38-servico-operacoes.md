@@ -1,7 +1,7 @@
 # CARD-38 — Serviço Operações (Estoque + Execução)
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-38a concluído; CARD-38b a fazer
+**Status:** Em andamento — CARD-38a concluído e CARD-38b implementado; falta deploy independente e CI (CARD-41) e o cancelamento de execução (CARD-40)
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-operacoes` (ADR-015)
@@ -42,15 +42,15 @@ ADR-014 mantém Estoque e Execução no mesmo microsserviço Operações para at
 
 ## Critérios de aceite
 
-- [ ] Operações pode ser compilado, testado, implantado e escalado sem publicar/reiniciar OS ou Billing.
-- [ ] Operações possui a instância PostgreSQL e a tabela DynamoDB exclusivas definidas em ADR-016; Estoque e Execução permanecem módulos internos distintos.
-- [ ] API/eventos suportam disponibilidade, fila de execução, diagnóstico, progresso, conclusão e falha.
-- [ ] Operações publica eventos contratados, com correlação e versionamento, sem gravar no banco OS/Billing.
-- [ ] Estados de Execução e Movimentações de Estoque são distintos e têm regras de domínio próprias.
-- [ ] Reprocessamento de comando/evento não duplica movimentação, reserva ou item de execução.
-- [ ] Testes cobrem estoque insuficiente, execução cancelada/finalizada e falha de persistência/mensagem.
-- [ ] A API de fila/execução lê e escreve o agregado de execução no DynamoDB; saldo, reservas e movimentações permanecem exclusivamente no PostgreSQL.
-- [ ] A configuração DynamoDB Local permite executar testes sem credenciais AWS ou chamadas ao endpoint cloud.
+- [ ] Operações pode ser compilado, testado, implantado e escalado sem publicar/reiniciar OS ou Billing. *(Compila e testa sozinho; Dockerfile, manifests e workflow ficam no CARD-41.)*
+- [x] Operações possui a instância PostgreSQL e a tabela DynamoDB exclusivas definidas em ADR-016; Estoque e Execução permanecem módulos internos distintos.
+- [x] API/eventos suportam disponibilidade, fila de execução, diagnóstico, progresso, conclusão e falha.
+- [x] Operações publica eventos contratados, com correlação e versionamento, sem gravar no banco OS/Billing.
+- [x] Estados de Execução e Movimentações de Estoque são distintos e têm regras de domínio próprias.
+- [x] Reprocessamento de comando/evento não duplica movimentação, reserva ou item de execução.
+- [ ] Testes cobrem estoque insuficiente, execução cancelada/finalizada e falha de persistência/mensagem. *(Cobertos, menos execução cancelada, que depende do CARD-40.)*
+- [x] A API de fila/execução lê e escreve o agregado de execução no DynamoDB; saldo, reservas e movimentações permanecem exclusivamente no PostgreSQL.
+- [x] A configuração DynamoDB Local permite executar testes sem credenciais AWS ou chamadas ao endpoint cloud.
 
 ## Cenários de aceite (Gherkin)
 
@@ -89,3 +89,11 @@ Funcionalidade: Operar estoque e execução em um serviço com ownership único
 - Link do repositório, testes, OpenAPI, workflow e manifests.
 - Prova de que o banco contém apenas dados sob ownership de Operações.
 - Trace/eventos de um fluxo de execução completo.
+
+Registradas até 2026-10-08:
+
+- Repositório: [tech-challenge-operacoes](https://github.com/LucazDenadai/tech-challenge-operacoes), PR #1 (38a) e branch do 38b.
+- Testes e OpenAPI: tabelas de evidências do [CARD-38a](CARD-38a-estoque-em-operacoes.md#evidências) e do [CARD-38b](CARD-38b-fila-execucao.md#evidências).
+- Banco só com dados de Operações: teste `Migrations_CriamSomenteCatalogoEEstoque` e tabela DynamoDB própria.
+- Fluxo de execução completo: `FluxoDaExecucao_DiagnosticoReservaInicioEConclusao`, com eventos correlacionados e trace contínuo.
+- Workflow e manifests: pendentes (CARD-41).
