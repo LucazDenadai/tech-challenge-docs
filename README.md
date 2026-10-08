@@ -25,7 +25,8 @@ cards/        ← Cards de execução (planejamento e rastreio de implementaçã
 rfcs/         ← Request for Comments (decisões técnicas relevantes)
 diagramas/    ← Diagramas de componentes e sequência
 contratos/    ← Contratos assíncronos entre serviços (AsyncAPI)
-postman/      ← Collection e environment para testar/demonstrar a API
+postman/      ← Collections e environments para testar/demonstrar as APIs (Fase 3 e serviço OS da Fase 4)
+evidencias/   ← Evidências de execução real (traces, prints) usadas na entrega
 ```
 
 ## ADRs
@@ -56,6 +57,13 @@ postman/      ← Collection e environment para testar/demonstrar a API
 | Contrato | Conteúdo |
 |---|---|
 | [AsyncAPI — Saga da OS](contratos/asyncapi-saga-os.yaml) | Envelope, canais RabbitMQ e payloads dos comandos/eventos da Saga (Fase 4) |
+
+## Postman e evidências
+
+| Documento | Conteúdo |
+|---|---|
+| [Postman](postman/README.md) | Collection da Fase 3 (Atendimento via API Gateway) e do serviço OS da Fase 4, com environments |
+| [Evidências da Fase 4](evidencias/fase4/README.md) | Trace de exemplo do OS (CARD-37b): HTTP e mensageria no mesmo trace e correlation ID |
 
 ## RFCs
 
