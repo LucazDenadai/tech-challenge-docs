@@ -15,6 +15,16 @@ Operações precisa controlar trabalho físico sem transformar o estado de execu
 
 O agregado da execução é persistido em DynamoDB. Para desenvolvimento e testes locais, DynamoDB Local sobe via Docker Compose, com endpoint configurável (`http://localhost:8000` no host ou `http://dynamodb-local:8000` entre containers), credenciais fictícias e estado de teste isolado. O deploy cloud usa a tabela DynamoDB do ambiente AWS; testes locais não podem depender dela.
 
+## Ponto de partida (2026-10-08)
+
+O CARD-38a deixou pronto em `tech-challenge-operacoes`:
+
+- Consumidor, inbox, outbox e despachante. Para os comandos deste card, basta incluir `DiagnosisRequested` e `ExecutionStartRequested` em `CatalogoCanaisOperacoes` e tratar cada um em `ProcessarMensagemSagaUseCase`. O teste de contrato lista esses canais e os eventos de diagnóstico e execução como pendentes do 38b.
+- A porta `IEstoqueParaExecucao` (`ConcluirConsumoAsync`, `RegistrarConsumoComFalhaAsync`), idempotente, para consumir a reserva na conclusão ou na falha.
+- O catálogo de peças e serviços com preço de tabela, fonte do snapshot do `DiagnosisCompleted`.
+
+A outbox do PostgreSQL serve ao Estoque. Os eventos da execução saem da outbox do DynamoDB (`TransactWriteItems`, ADR-016).
+
 ## Critérios de aceite
 
 - [ ] Fila e estados de execução são definidos (por exemplo, em diagnóstico, diagnosticada, aguardando, aguardando peça, reparo, concluída, cancelada), com transições válidas registradas. Execução diagnosticada só entra na fila após `ExecutionStartRequested` (ADR-017).

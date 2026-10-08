@@ -1,7 +1,7 @@
 # CARD-38a — Estoque como capacidade do serviço Operações
 
 **Tipo:** Implementação / Domínio
-**Status:** To Do
+**Status:** Implementado — branch `feat/card-38a-estoque-operacoes` em `tech-challenge-operacoes`, testes verificados localmente em 2026-10-08; aguardando PR e CI (CARD-41)
 **Depende de:** CARD-35, CARD-36
 **Bloqueia:** CARD-38b, CARD-40
 **Repositório alvo:** `tech-challenge-operacoes`
@@ -40,16 +40,34 @@ O Estoque existente será incorporado ao serviço Operações junto à capacidad
 - **Seed:** catálogo de peças e serviços, a `FILIAL-DEMO` com o `Id` fixo e saldos dessa filial. Sem dados da Fase 3.
 - **OS:** o seed do OS passa a criar a `FILIAL-DEMO` com o mesmo `Id` fixo. É uma mudança pequena em `tech-challenge-os`, em PR próprio junto com este card.
 
+## Implementação (2026-10-08)
+
+- **Repositório:** `tech-challenge-operacoes`, em 7 commits, um por passo: solução, domínio, casos de uso, persistência, mensageria, API e README.
+- **Saga:** o consumidor processa `InventoryReservationRequested` e `InventoryReleaseRequested`. Inbox, efeito e evento na outbox ficam na mesma transação do PostgreSQL. Um teste força falha na outbox e confere que nem a inbox nem a reserva ficam gravadas.
+- **Despachante da outbox:** publica com confirmação do broker e depois marca a mensagem como publicada. A entrega é ao menos uma vez; o OS deduplica por `messageId`. O `traceparent` do comando segue no evento, então comando e resposta ficam no mesmo trace.
+- **Concorrência:** o `xmin` do saldo detecta duas reservas da mesma peça lidas na mesma versão. A segunda recebe conflito, o consumidor refaz a mensagem com o saldo relido e a reserva é recusada se não houver saldo. Na API, o conflito devolve `409`.
+- **Conclusão da execução:** consome o usado e devolve a sobra ao disponível, porque a Saga termina em `Completed` sem pedir liberação. Na falha, consome o usado e mantém o restante reservado até o `InventoryReleaseRequested` (ADR-017).
+- **Execução (CARD-38b):** a porta `IEstoqueParaExecucao` é a única entrada da Execução no Estoque. Repetir a chamada não consome de novo, porque o agregado de execução fica no DynamoDB e não há transação entre os dois stores (ADR-016).
+- **API:** tudo sob `/operacoes/*`. Leitura para funcionários, escrita só para `Admin`, movimentações para `Admin` e `Atendente`. Token de cliente recebe `403`. Reserva, consumo e liberação não têm rota.
+- **OS:** a `FILIAL-DEMO` passou a ter `Id` fixo no seed do OS, na branch `feat/filial-demo-id-fixo` de `tech-challenge-os` (151 unitários e 33 de integração aprovados).
+
+### Pendências
+
+- **Recusa repetida:** a recusa de reserva não é gravada. Uma nova mensagem com a mesma `idempotencyKey`, depois de uma recusa, reavalia o saldo e pode ser aceita. A mesma mensagem reentregue continua deduplicada pela inbox.
+- **Réplicas do despachante:** com mais de uma réplica, duas podem publicar o mesmo evento. O consumidor deduplica, mas o volume duplicado cresce. Travar a leitura da outbox (`FOR UPDATE SKIP LOCKED`) fica para o CARD-41, junto com o número de réplicas.
+- **Cópia da spec:** `contratos/asyncapi-saga-os.yaml` é sincronizada à mão, como no OS. A checagem de divergência no CI fica no CARD-41.
+- **Postman:** a collection de Operações fica para o CARD-43, junto com a do fluxo completo.
+
 ## Critérios de aceite
 
-- [ ] Operações é a única API que cria/altera catálogo, saldo e movimentações.
-- [ ] Catálogo de serviços (mão de obra) é recriado em Operações (código extraído do Atendimento, dados via seed), que passa a ser a única fonte de preços de peças e serviços (emenda do ADR-015).
-- [ ] Catálogo, saldo, reserva e movimentação são persistidos somente no PostgreSQL dedicado de Operações.
-- [ ] A política de disponibilidade, reserva, baixa e liberação em compensação está alinhada ao CARD-36.
-- [ ] Cada movimentação tem referência de negócio, motivo, data e correlação suficientes para auditoria.
-- [ ] Comandos repetidos com a mesma chave idempotente não duplicam movimentos.
-- [ ] Banco de Operações começa vazio, com migrations próprias e seed de catálogo e saldos por filial; não há migração de dados da Fase 3.
-- [ ] Testes cobrem saldo insuficiente, concorrência relevante, reserva/release e duplicidade.
+- [x] Operações é a única API que cria/altera catálogo, saldo e movimentações.
+- [x] Catálogo de serviços (mão de obra) é recriado em Operações (código extraído do Atendimento, dados via seed), que passa a ser a única fonte de preços de peças e serviços (emenda do ADR-015).
+- [x] Catálogo, saldo, reserva e movimentação são persistidos somente no PostgreSQL dedicado de Operações.
+- [x] A política de disponibilidade, reserva, baixa e liberação em compensação está alinhada ao CARD-36.
+- [x] Cada movimentação tem referência de negócio, motivo, data e correlação suficientes para auditoria.
+- [x] Comandos repetidos com a mesma chave idempotente não duplicam movimentos.
+- [x] Banco de Operações começa vazio, com migrations próprias e seed de catálogo e saldos por filial; não há migração de dados da Fase 3.
+- [x] Testes cobrem saldo insuficiente, concorrência relevante, reserva/release e duplicidade.
 
 ## Cenários de aceite (Gherkin)
 
@@ -81,3 +99,13 @@ Funcionalidade: Manter o estoque sob ownership exclusivo de Operações
 
 - Testes de domínio/integração, relatório de reconciliação e OpenAPI.
 - Exemplo de reserva e liberação correlacionadas sem duplicidade.
+
+Registradas em 2026-10-08, branch `feat/card-38a-estoque-operacoes`:
+
+| Evidência | Onde | Resultado |
+|---|---|---|
+| OpenAPI gerado | `docs/openapi/operacoes-v1.json` | 10 rotas e 16 operações sob `/operacoes/*`, sem rota de reserva |
+| Testes de domínio, casos de uso e contrato | `tests/OficinaMecanica.Operacoes.UnitTests` | 84 aprovados. O contrato é testado nos dois sentidos: comandos recebidos e eventos publicados contra o JSON Schema da spec |
+| Testes de persistência, mensageria e API (PostgreSQL e RabbitMQ via Testcontainers) | `tests/OficinaMecanica.Operacoes.IntegrationTests` | 34 aprovados |
+| Reserva e liberação correlacionadas sem duplicidade | `ReservaELiberacao_DevolveSaldoEPublicaInventoryReleased`, `PedidoReentregue_UmaReservaEUmEvento`, `CicloReservaFalhaLiberacao_PersisteSaldosEMovimentacoesCorrelacionadas` | Movimentações com `osId`, `reservaId` e `correlationId`; reentrega gera uma reserva e um evento |
+| Relatório de reconciliação | — | Não se aplica: era da migração de dados da Fase 3, que a emenda "Dados da Fase 3 e usuários" do ADR-015 retirou |
