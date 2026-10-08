@@ -1,7 +1,7 @@
 # CARD-38b — Fila e ciclo de execução da OS
 
 **Tipo:** Implementação / Domínio
-**Status:** Implementado — branch `feat/card-38b-execucao-operacoes` em `tech-challenge-operacoes`, testes verificados localmente em 2026-10-08; aguardando PR e CI (CARD-41)
+**Status:** Concluído — PR #2 mergeado em `tech-challenge-operacoes` (2026-10-08); cancelamento de execução em andamento (CARD-40) e evidência de CI (CARD-41) pendentes
 **Depende de:** CARD-36, CARD-38a
 **Bloqueia:** CARD-40
 **Repositório alvo:** `tech-challenge-operacoes`
@@ -123,7 +123,7 @@ Funcionalidade: Acompanhar execução da OS
 - Testes das transições e exemplos OpenAPI/Postman.
 - Histórico de uma execução completa com correlation ID.
 
-Registradas em 2026-10-08, branch `feat/card-38b-execucao-operacoes`:
+Registradas em 2026-10-08, PR #2 de `tech-challenge-operacoes`:
 
 | Evidência | Onde | Resultado |
 |---|---|---|

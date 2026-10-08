@@ -1,7 +1,7 @@
 # CARD-38 — Serviço Operações (Estoque + Execução)
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-38a concluído e CARD-38b implementado; falta deploy independente e CI (CARD-41) e o cancelamento de execução (CARD-40)
+**Status:** Em andamento — CARD-38a e CARD-38b concluídos; falta deploy independente e CI (CARD-41) e o cancelamento de execução (CARD-40)
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-operacoes` (ADR-015)
@@ -92,7 +92,7 @@ Funcionalidade: Operar estoque e execução em um serviço com ownership único
 
 Registradas até 2026-10-08:
 
-- Repositório: [tech-challenge-operacoes](https://github.com/LucazDenadai/tech-challenge-operacoes), PR #1 (38a) e branch do 38b.
+- Repositório: [tech-challenge-operacoes](https://github.com/LucazDenadai/tech-challenge-operacoes), PR #1 (38a) e PR #2 (38b).
 - Testes e OpenAPI: tabelas de evidências do [CARD-38a](CARD-38a-estoque-em-operacoes.md#evidências) e do [CARD-38b](CARD-38b-fila-execucao.md#evidências).
 - Banco só com dados de Operações: teste `Migrations_CriamSomenteCatalogoEEstoque` e tabela DynamoDB própria.
 - Fluxo de execução completo: `FluxoDaExecucao_DiagnosticoReservaInicioEConclusao`, com eventos correlacionados e trace contínuo.
