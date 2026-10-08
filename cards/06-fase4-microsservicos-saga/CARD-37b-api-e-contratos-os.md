@@ -1,7 +1,7 @@
 # CARD-37b — API, contratos e histórico da OS
 
 **Tipo:** Implementação / API
-**Status:** Implementado — branch `feat/card-37b-api-contratos-os` em `tech-challenge-os`, testes verificados localmente em 2026-10-07; aguardando PR, CI (CARD-41), coleção Postman e trace de exemplo
+**Status:** Concluído — PR #2 mergeado em `tech-challenge-os` em 2026-10-08; collection Postman e trace de exemplo registrados; evidência de CI pendente (CARD-41)
 **Depende de:** CARD-36, CARD-37a
 **Bloqueia:** CARD-40, CARD-43
 **Repositório alvo:** `tech-challenge-os`
@@ -32,7 +32,7 @@ OS é a autoridade sobre a ordem e precisa expor operações síncronas necessá
 - **Lambda:** ainda consulta o RDS. Nenhum card cobre a troca dela para o endpoint interno (repositório `tech-challenge-lambda`). Decidir se entra no CARD-41 ou em card próprio.
 - **Cancelamento manual:** cancelar a partir de `AguardandoPagamento` ou `EmExecucao` só muda o status; não dispara liberação de reserva nem estorno. O CARD-40 precisa levar o cancelamento manual pela Saga, com compensação.
 - **Cópia da spec:** a cópia em `tech-challenge-os/contratos/` é sincronizada à mão. Uma checagem de divergência no CI cabe no CARD-41.
-- **Evidências:** falta a coleção Postman e o trace de exemplo. O trace exige subir OS, RabbitMQ e o coletor.
+- **Evidências:** collection Postman e trace de exemplo registrados em 2026-10-08 (ver Evidências).
 
 ## Critérios de aceite
 
@@ -85,12 +85,12 @@ Funcionalidade: Consultar a OS sem expor bancos internos
 - OpenAPI gerado, testes de API e coleção Postman atualizada.
 - Trace de exemplo com correlation ID propagado.
 
-Registradas em 2026-10-07, branch `feat/card-37b-api-contratos-os`:
+Registradas em 2026-10-07 (testes, branch `feat/card-37b-api-contratos-os`) e 2026-10-08 (Postman e trace, `main` após o PR #2):
 
 | Evidência | Onde | Resultado |
 |---|---|---|
 | OpenAPI gerado | `docs/openapi/os-v1.json` | 18 rotas sob `/os/*` |
 | Testes unitários e de contrato | `tests/OficinaMecanica.OS.UnitTests` | 150 aprovados |
 | Testes de API, migrations e mensageria (PostgreSQL e RabbitMQ via Testcontainers) | `tests/OficinaMecanica.OS.IntegrationTests` | 33 aprovados |
-| Coleção Postman | — | Pendente |
-| Trace de exemplo | — | Pendente |
+| Collection Postman | [`postman/tech-challenge-os.postman_collection.json`](../../postman/README.md) | 29 requests, 67 asserções aprovadas via Newman |
+| Trace de exemplo | [`evidencias/fase4/card-37b-trace-os.json`](../../evidencias/fase4/README.md) | Abertura HTTP e consumo de `PaymentApproved.v1` (válida, duplicata, inválida) no mesmo trace e correlation ID |
