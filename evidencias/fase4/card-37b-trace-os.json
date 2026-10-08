@@ -1,0 +1,679 @@
+{
+  "traceId": "972b6139bbd2f43cda1c89b948da857a",
+  "correlationId": "6efad4b2-5f1b-409f-933d-37bceb82f987",
+  "osId": "b66f6a9b-b752-460c-9214-0f50867efc9e",
+  "numeroOs": "OS-2026-0003",
+  "messageIdValida": "cf4beb02-2d90-401b-af6a-695577569e3f",
+  "messageIdInvalida": "179abf45-94ae-4a5d-b48d-7893dacfbe26",
+  "trace": {
+    "traceID": "972b6139bbd2f43cda1c89b948da857a",
+    "spans": [
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "0c4b58ee3c241c08",
+        "operationName": "oficina_os",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "c1b22cc4343c16e0"
+          }
+        ],
+        "startTime": 1791467812165697,
+        "duration": 540,
+        "tags": [
+          {
+            "key": "db.name",
+            "type": "string",
+            "value": "oficina_os"
+          },
+          {
+            "key": "db.statement",
+            "type": "string",
+            "value": "SELECT f.\"Id\", f.\"Ativo\", f.\"AtualizadoEm\", f.\"Codigo\", f.\"CriadoEm\", f.\"Nome\"\nFROM \"Filiais\" AS f\nWHERE f.\"Id\" = @__p_0\nLIMIT ?"
+          },
+          {
+            "key": "db.system",
+            "type": "string",
+            "value": "postgresql"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OpenTelemetry.Instrumentation.EntityFrameworkCore"
+          },
+          {
+            "key": "otel.scope.version",
+            "type": "string",
+            "value": "1.19.1-beta.1"
+          },
+          {
+            "key": "peer.service",
+            "type": "string",
+            "value": "os-ev-postgres"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "client"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": null
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "76844a8757697f68",
+        "operationName": "oficina_os",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "c1b22cc4343c16e0"
+          }
+        ],
+        "startTime": 1791467812166481,
+        "duration": 324,
+        "tags": [
+          {
+            "key": "db.name",
+            "type": "string",
+            "value": "oficina_os"
+          },
+          {
+            "key": "db.statement",
+            "type": "string",
+            "value": "SELECT o.\"Numero\"\nFROM \"OrdensServico\" AS o\nWHERE o.\"Numero\" LIKE @__prefix_0_startswith"
+          },
+          {
+            "key": "db.system",
+            "type": "string",
+            "value": "postgresql"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OpenTelemetry.Instrumentation.EntityFrameworkCore"
+          },
+          {
+            "key": "otel.scope.version",
+            "type": "string",
+            "value": "1.19.1-beta.1"
+          },
+          {
+            "key": "peer.service",
+            "type": "string",
+            "value": "os-ev-postgres"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "client"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": null
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "b68f8889b93f6756",
+        "operationName": "oficina_os",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "c1b22cc4343c16e0"
+          }
+        ],
+        "startTime": 1791467812167377,
+        "duration": 3692,
+        "tags": [
+          {
+            "key": "db.name",
+            "type": "string",
+            "value": "oficina_os"
+          },
+          {
+            "key": "db.statement",
+            "type": "string",
+            "value": "INSERT INTO \"OrdensServico\" (\"Id\", \"AtualizadoEm\", \"ClienteId\", \"CriadoEm\", \"DataAbertura\", \"DataFechamento\", \"FilialId\", \"Numero\", \"Observacoes\", \"Status\", \"VeiculoId\")\nVALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10);\n"
+          },
+          {
+            "key": "db.system",
+            "type": "string",
+            "value": "postgresql"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OpenTelemetry.Instrumentation.EntityFrameworkCore"
+          },
+          {
+            "key": "otel.scope.version",
+            "type": "string",
+            "value": "1.19.1-beta.1"
+          },
+          {
+            "key": "peer.service",
+            "type": "string",
+            "value": "os-ev-postgres"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "client"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": null
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "79bc3f771a43b026",
+        "operationName": "saga-os.payment-approved.v1 process",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "31e756080f919a9b"
+          }
+        ],
+        "startTime": 1791467814190916,
+        "duration": 7098,
+        "tags": [
+          {
+            "key": "correlation_id",
+            "type": "string",
+            "value": "6efad4b2-5f1b-409f-933d-37bceb82f987"
+          },
+          {
+            "key": "error",
+            "type": "bool",
+            "value": true
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "messaging.destination.name",
+            "type": "string",
+            "value": "saga-os.payment-approved.v1"
+          },
+          {
+            "key": "messaging.message.id",
+            "type": "string",
+            "value": "179abf45-94ae-4a5d-b48d-7893dacfbe26"
+          },
+          {
+            "key": "messaging.operation.type",
+            "type": "string",
+            "value": "process"
+          },
+          {
+            "key": "messaging.system",
+            "type": "string",
+            "value": "rabbitmq"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OficinaMecanica.OS.Mensageria"
+          },
+          {
+            "key": "otel.status_code",
+            "type": "string",
+            "value": "ERROR"
+          },
+          {
+            "key": "otel.status_description",
+            "type": "string",
+            "value": "Payload fora do contrato PaymentApproved.v1: JSON deserialization for type 'OficinaMecanica.OS.Application.Contratos.Saga.PaymentApproved' was missing required properties including: 'amount'."
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "consumer"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": [
+          "invalid parent span IDs=31e756080f919a9b; skipping clock skew adjustment"
+        ]
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "97093c687f152029",
+        "operationName": "oficina_os",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "e646e08df0b6b20c"
+          }
+        ],
+        "startTime": 1791467812198002,
+        "duration": 7600,
+        "tags": [
+          {
+            "key": "db.name",
+            "type": "string",
+            "value": "oficina_os"
+          },
+          {
+            "key": "db.statement",
+            "type": "string",
+            "value": "INSERT INTO \"InboxMensagens\"\r\n    (\"MessageId\", \"MessageType\", \"Canal\", \"Producer\", \"CorrelationId\", \"CausationId\",\r\n     \"OsId\", \"FilialId\", \"OccurredAtUtc\", \"RecebidaEmUtc\", \"Payload\")\r\nVALUES (@messageId, @messageType, @canal, @producer, @correlationId, @causationId,\r\n        @osId, @filialId, @occurredAtUtc, @recebidaEmUtc, @payload)\r\nON CONFLICT (\"MessageId\") DO NOTHING"
+          },
+          {
+            "key": "db.system",
+            "type": "string",
+            "value": "postgresql"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OpenTelemetry.Instrumentation.EntityFrameworkCore"
+          },
+          {
+            "key": "otel.scope.version",
+            "type": "string",
+            "value": "1.19.1-beta.1"
+          },
+          {
+            "key": "peer.service",
+            "type": "string",
+            "value": "os-ev-postgres"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "client"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": null
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "b52fc72a2d76f65b",
+        "operationName": "oficina_os",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "c1b22cc4343c16e0"
+          }
+        ],
+        "startTime": 1791467812164264,
+        "duration": 693,
+        "tags": [
+          {
+            "key": "db.name",
+            "type": "string",
+            "value": "oficina_os"
+          },
+          {
+            "key": "db.statement",
+            "type": "string",
+            "value": "SELECT v.\"Id\", v.\"Ano\", v.\"AtualizadoEm\", v.\"ClienteId\", v.\"Cor\", v.\"CriadoEm\", v.\"Marca\", v.\"Modelo\", v.\"Placa\", c.\"Id\", c.\"Ativo\", c.\"AtualizadoEm\", c.\"CriadoEm\", c.\"Documento\", c.\"Email\", c.\"Endereco\", c.\"Nome\", c.\"Telefone\"\nFROM \"Veiculos\" AS v\nINNER JOIN \"Clientes\" AS c ON v.\"ClienteId\" = c.\"Id\"\nWHERE v.\"Id\" = @__id_0\nLIMIT ?"
+          },
+          {
+            "key": "db.system",
+            "type": "string",
+            "value": "postgresql"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OpenTelemetry.Instrumentation.EntityFrameworkCore"
+          },
+          {
+            "key": "otel.scope.version",
+            "type": "string",
+            "value": "1.19.1-beta.1"
+          },
+          {
+            "key": "peer.service",
+            "type": "string",
+            "value": "os-ev-postgres"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "client"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": null
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "c1b22cc4343c16e0",
+        "operationName": "POST os/ordens-servico",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "203c7a7aa1afcc02"
+          }
+        ],
+        "startTime": 1791467812162495,
+        "duration": 8981,
+        "tags": [
+          {
+            "key": "correlation_id",
+            "type": "string",
+            "value": "6efad4b2-5f1b-409f-933d-37bceb82f987"
+          },
+          {
+            "key": "http.request.method",
+            "type": "string",
+            "value": "POST"
+          },
+          {
+            "key": "http.response.status_code",
+            "type": "int64",
+            "value": 201
+          },
+          {
+            "key": "http.route",
+            "type": "string",
+            "value": "os/ordens-servico"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "network.protocol.version",
+            "type": "string",
+            "value": "1.1"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "Microsoft.AspNetCore"
+          },
+          {
+            "key": "server.address",
+            "type": "string",
+            "value": "localhost"
+          },
+          {
+            "key": "server.port",
+            "type": "int64",
+            "value": 8080
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "server"
+          },
+          {
+            "key": "url.path",
+            "type": "string",
+            "value": "/os/ordens-servico"
+          },
+          {
+            "key": "url.scheme",
+            "type": "string",
+            "value": "http"
+          },
+          {
+            "key": "user_agent.original",
+            "type": "string",
+            "value": "Python-urllib/3.14"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": [
+          "invalid parent span IDs=203c7a7aa1afcc02; skipping clock skew adjustment"
+        ]
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "e646e08df0b6b20c",
+        "operationName": "saga-os.payment-approved.v1 process",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "3cc23cc8df0575c9"
+          }
+        ],
+        "startTime": 1791467812184634,
+        "duration": 22096,
+        "tags": [
+          {
+            "key": "correlation_id",
+            "type": "string",
+            "value": "6efad4b2-5f1b-409f-933d-37bceb82f987"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "messaging.destination.name",
+            "type": "string",
+            "value": "saga-os.payment-approved.v1"
+          },
+          {
+            "key": "messaging.message.id",
+            "type": "string",
+            "value": "cf4beb02-2d90-401b-af6a-695577569e3f"
+          },
+          {
+            "key": "messaging.operation.type",
+            "type": "string",
+            "value": "process"
+          },
+          {
+            "key": "messaging.system",
+            "type": "string",
+            "value": "rabbitmq"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OficinaMecanica.OS.Mensageria"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "consumer"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": [
+          "invalid parent span IDs=3cc23cc8df0575c9; skipping clock skew adjustment"
+        ]
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "a84f4cfaa723e07c",
+        "operationName": "oficina_os",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "3421a1648ebeb37a"
+          }
+        ],
+        "startTime": 1791467813186880,
+        "duration": 585,
+        "tags": [
+          {
+            "key": "db.name",
+            "type": "string",
+            "value": "oficina_os"
+          },
+          {
+            "key": "db.statement",
+            "type": "string",
+            "value": "INSERT INTO \"InboxMensagens\"\r\n    (\"MessageId\", \"MessageType\", \"Canal\", \"Producer\", \"CorrelationId\", \"CausationId\",\r\n     \"OsId\", \"FilialId\", \"OccurredAtUtc\", \"RecebidaEmUtc\", \"Payload\")\r\nVALUES (@messageId, @messageType, @canal, @producer, @correlationId, @causationId,\r\n        @osId, @filialId, @occurredAtUtc, @recebidaEmUtc, @payload)\r\nON CONFLICT (\"MessageId\") DO NOTHING"
+          },
+          {
+            "key": "db.system",
+            "type": "string",
+            "value": "postgresql"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OpenTelemetry.Instrumentation.EntityFrameworkCore"
+          },
+          {
+            "key": "otel.scope.version",
+            "type": "string",
+            "value": "1.19.1-beta.1"
+          },
+          {
+            "key": "peer.service",
+            "type": "string",
+            "value": "os-ev-postgres"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "client"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": null
+      },
+      {
+        "traceID": "972b6139bbd2f43cda1c89b948da857a",
+        "spanID": "3421a1648ebeb37a",
+        "operationName": "saga-os.payment-approved.v1 process",
+        "references": [
+          {
+            "refType": "CHILD_OF",
+            "traceID": "972b6139bbd2f43cda1c89b948da857a",
+            "spanID": "ed0912f6f5c09957"
+          }
+        ],
+        "startTime": 1791467813185761,
+        "duration": 1866,
+        "tags": [
+          {
+            "key": "correlation_id",
+            "type": "string",
+            "value": "6efad4b2-5f1b-409f-933d-37bceb82f987"
+          },
+          {
+            "key": "internal.span.format",
+            "type": "string",
+            "value": "otlp"
+          },
+          {
+            "key": "messaging.destination.name",
+            "type": "string",
+            "value": "saga-os.payment-approved.v1"
+          },
+          {
+            "key": "messaging.message.id",
+            "type": "string",
+            "value": "cf4beb02-2d90-401b-af6a-695577569e3f"
+          },
+          {
+            "key": "messaging.operation.type",
+            "type": "string",
+            "value": "process"
+          },
+          {
+            "key": "messaging.system",
+            "type": "string",
+            "value": "rabbitmq"
+          },
+          {
+            "key": "otel.scope.name",
+            "type": "string",
+            "value": "OficinaMecanica.OS.Mensageria"
+          },
+          {
+            "key": "span.kind",
+            "type": "string",
+            "value": "consumer"
+          }
+        ],
+        "logs": [],
+        "processID": "p1",
+        "warnings": [
+          "invalid parent span IDs=ed0912f6f5c09957; skipping clock skew adjustment"
+        ]
+      }
+    ],
+    "processes": {
+      "p1": {
+        "serviceName": "OficinaMecanica.OS",
+        "tags": [
+          {
+            "key": "service.instance.id",
+            "type": "string",
+            "value": "d7630720-28e8-4299-992b-2eacf67d0784"
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "type": "string",
+            "value": "dotnet"
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "type": "string",
+            "value": "opentelemetry"
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "type": "string",
+            "value": "1.19.1"
+          }
+        ]
+      }
+    },
+    "warnings": null
+  }
+}

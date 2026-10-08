@@ -1,7 +1,7 @@
 # CARD-37 — Serviço OS independente
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-37a e CARD-37b implementados; fecha após PR do 37b, CI (CARD-41) e evidências pendentes
+**Status:** Em andamento — CARD-37a e CARD-37b concluídos; falta imagem/deploy independente e CI (CARD-41) e a filial nas mensagens publicadas (CARD-40)
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-os`
@@ -32,14 +32,14 @@ O atual Atendimento contém capacidades que passarão a pertencer a OS, Billing 
 
 ## Critérios de aceite
 
-- [ ] O serviço compila, inicia localmente/containerizado e é implantável independentemente.
-- [ ] O banco pertence exclusivamente ao serviço e usa somente a tecnologia aprovada no CARD-35.
-- [ ] Abertura, consulta de estado e histórico são cobertos por testes unitários e integração do serviço.
-- [ ] OS persiste apenas seu estado; dados externos chegam por contrato e são tratados de forma idempotente.
-- [ ] A API publicada corresponde ao OpenAPI e expõe os endpoints exigidos pelo fluxo.
-- [ ] Falha/duplicidade na entrega de evento não cria transições ou registros duplicados.
-- [ ] A filial da ordem é preservada nos registros e nas mensagens pertinentes.
-- [ ] Nenhuma connection string, senha ou token está versionado.
+- [ ] O serviço compila, inicia localmente/containerizado e é implantável independentemente. *(Compila e sobe em container do SDK; Dockerfile, manifests e workflow ficam no CARD-41.)*
+- [x] O banco pertence exclusivamente ao serviço e usa somente a tecnologia aprovada no CARD-35.
+- [x] Abertura, consulta de estado e histórico são cobertos por testes unitários e integração do serviço.
+- [x] OS persiste apenas seu estado; dados externos chegam por contrato e são tratados de forma idempotente.
+- [x] A API publicada corresponde ao OpenAPI e expõe os endpoints exigidos pelo fluxo.
+- [x] Falha/duplicidade na entrega de evento não cria transições ou registros duplicados.
+- [ ] A filial da ordem é preservada nos registros e nas mensagens pertinentes. *(OS e inbox gravam `FilialId`; as mensagens publicadas pelo OS ficam no CARD-40.)*
+- [x] Nenhuma connection string, senha ou token está versionado.
 
 ## Cenários de aceite (Gherkin)
 
@@ -73,3 +73,10 @@ Funcionalidade: Gerenciar o ciclo de vida da OS
 ## Dependências e evidências
 
 Subcards devem estar concluídos antes de fechar este card. Anexar link do repositório, workflow, testes, OpenAPI e execução dos cenários.
+
+Registradas até 2026-10-08:
+
+- Repositório: [tech-challenge-os](https://github.com/LucazDenadai/tech-challenge-os), PRs #1 (37a) e #2 (37b).
+- Testes e OpenAPI: tabela de evidências do [CARD-37b](CARD-37b-api-e-contratos-os.md#evidências).
+- Execução dos cenários: [collection Postman](../../postman/README.md) e [trace de exemplo](../../evidencias/fase4/README.md).
+- Workflow: pendente (CARD-41).
