@@ -1,7 +1,7 @@
 # CARD-38a — Estoque como capacidade do serviço Operações
 
 **Tipo:** Implementação / Domínio
-**Status:** Implementado — branch `feat/card-38a-estoque-operacoes` em `tech-challenge-operacoes`, testes verificados localmente em 2026-10-08; aguardando PR e CI (CARD-41)
+**Status:** Concluído — PR #1 mergeado em `tech-challenge-operacoes` e PR #3 em `tech-challenge-os` (2026-10-08); evidência de CI pendente (CARD-41)
 **Depende de:** CARD-35, CARD-36
 **Bloqueia:** CARD-38b, CARD-40
 **Repositório alvo:** `tech-challenge-operacoes`
@@ -49,7 +49,7 @@ O Estoque existente será incorporado ao serviço Operações junto à capacidad
 - **Conclusão da execução:** consome o usado e devolve a sobra ao disponível, porque a Saga termina em `Completed` sem pedir liberação. Na falha, consome o usado e mantém o restante reservado até o `InventoryReleaseRequested` (ADR-017).
 - **Execução (CARD-38b):** a porta `IEstoqueParaExecucao` é a única entrada da Execução no Estoque. Repetir a chamada não consome de novo, porque o agregado de execução fica no DynamoDB e não há transação entre os dois stores (ADR-016).
 - **API:** tudo sob `/operacoes/*`. Leitura para funcionários, escrita só para `Admin`, movimentações para `Admin` e `Atendente`. Token de cliente recebe `403`. Reserva, consumo e liberação não têm rota.
-- **OS:** a `FILIAL-DEMO` passou a ter `Id` fixo no seed do OS, na branch `feat/filial-demo-id-fixo` de `tech-challenge-os` (151 unitários e 33 de integração aprovados).
+- **OS:** a `FILIAL-DEMO` passou a ter `Id` fixo no seed do OS, no PR #3 de `tech-challenge-os` (151 unitários e 33 de integração aprovados).
 
 ### Pendências
 
