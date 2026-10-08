@@ -25,7 +25,8 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
 - Smoke/health checks e estratégia de rollback de release compatível com banco e eventos.
 - Pendências herdadas dos serviços:
   - Checagem de divergência entre a cópia `contratos/asyncapi-saga-os.yaml` de cada serviço e a spec deste repositório ([CARD-37b](CARD-37b-api-e-contratos-os.md), [CARD-38a](CARD-38a-estoque-em-operacoes.md)).
-  - Com mais de uma réplica de Operações, travar a leitura da outbox (`FOR UPDATE SKIP LOCKED`) para duas réplicas não publicarem o mesmo evento ([CARD-38a](CARD-38a-estoque-em-operacoes.md)).
+  - Com mais de uma réplica de Operações, travar a leitura das duas outboxes para duas réplicas não publicarem o mesmo evento: `FOR UPDATE SKIP LOCKED` no PostgreSQL ([CARD-38a](CARD-38a-estoque-em-operacoes.md)) e atualização condicional por item no DynamoDB ([CARD-38b](CARD-38b-fila-execucao.md)).
+  - Provisionar na IaC a tabela DynamoDB de Operações com o índice `GSI1`, no formato do `InicializadorTabelaDynamo` ([CARD-38b](CARD-38b-fila-execucao.md)). Na nuvem, `DynamoDb:CriarTabela` fica desligado.
 
 ## Critérios de aceite
 

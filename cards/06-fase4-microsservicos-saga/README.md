@@ -64,7 +64,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | [CARD-35](CARD-35-decisao-sql-nosql.md) | Decisão de alocação SQL/NoSQL e topologia dos bancos | Concluído — decisão registrada; implementação pendente |
 | [CARD-36](CARD-36-contratos-e-desenho-saga.md) | Contratos, eventos, Saga e compensações | Concluído — estratégia confirmada; implementação pendente |
 | [CARD-37](CARD-37-servico-os.md) | Serviço OS | Em andamento — 37a e 37b concluídos; deploy/CI (CARD-41) e publicação de mensagens (CARD-40) pendentes |
-| [CARD-38](CARD-38-servico-operacoes.md) | Operações: Estoque + Execução | Em andamento — 38a concluído; 38b com escopo definido |
+| [CARD-38](CARD-38-servico-operacoes.md) | Operações: Estoque + Execução | Em andamento — 38a e 38b concluídos; deploy/CI (CARD-41) e cancelamento de execução (CARD-40) pendentes |
 | [CARD-39](CARD-39-servico-billing-pagamentos.md) | Billing e Mercado Pago | To Do |
 | [CARD-40](CARD-40-saga-e-bdd-integrado.md) | Implementação da Saga e BDD ponta a ponta | To Do |
 | [CARD-41](CARD-41-cicd-kubernetes-por-servico.md) | CI/CD, qualidade, cobertura e deploy independente | To Do |
