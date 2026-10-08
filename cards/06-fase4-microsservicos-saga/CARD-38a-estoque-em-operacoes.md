@@ -4,7 +4,7 @@
 **Status:** To Do
 **Depende de:** CARD-35, CARD-36
 **Bloqueia:** CARD-38b, CARD-40
-**Repositório alvo:** Repositório exclusivo de Operações
+**Repositório alvo:** `tech-challenge-operacoes`
 **Decisão arquitetural:** ADR-004 permanece válido quanto à fonte única da verdade; ADR-014 define o serviço owner; [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md) define PostgreSQL
 
 ---
