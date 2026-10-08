@@ -1,7 +1,7 @@
 # CARD-38b — Fila e ciclo de execução da OS
 
 **Tipo:** Implementação / Domínio
-**Status:** To Do
+**Status:** To Do — escopo definido em 2026-10-08
 **Depende de:** CARD-36, CARD-38a
 **Bloqueia:** CARD-40
 **Repositório alvo:** `tech-challenge-operacoes`
@@ -24,6 +24,31 @@ O CARD-38a deixou pronto em `tech-challenge-operacoes`:
 - O catálogo de peças e serviços com preço de tabela, fonte do snapshot do `DiagnosisCompleted`.
 
 A outbox do PostgreSQL serve ao Estoque. Os eventos da execução saem da outbox do DynamoDB (`TransactWriteItems`, ADR-016).
+
+## Decisões de implementação (2026-10-08)
+
+- **Estados da execução:** `EmDiagnostico` → `Diagnosticada` (fora da fila) → `NaFila` → `EmReparo` → `Concluida` ou `Falhou`. `DiagnosticoRejeitado` encerra no início. Os nomes seguem o diagrama de sequência (Diagnosing, Diagnosed, Queued/Started). Transição fora dessa ordem é recusada pelo domínio.
+- **Uma execução por OS:** `DiagnosisRequested` cria a execução e gera o `executionId` usado nos contratos. Um segundo pedido para a mesma OS devolve a execução existente.
+- **Diagnóstico:** o técnico (`Mecanico` ou `Admin`) registra peças e serviços pela API. Operações busca o preço vigente no catálogo e publica `DiagnosisCompleted` com o snapshot (emenda "Catálogo de serviços" do ADR-015). Item inexistente ou inativo devolve `422`. O técnico também pode rejeitar o diagnóstico com motivo (`DiagnosisRejected`). Operações rejeita sozinho quando a filial não opera estoque.
+- **Início:** `ExecutionStartRequested` só move para `NaFila` uma execução `Diagnosticada` cuja reserva está ativa e é da mesma OS. Nesse caso publica `ExecutionStarted`. Em qualquer outro caso publica `ExecutionStartRejected` sem consumir peça. A porta `IEstoqueParaExecucao` ganha a consulta da reserva.
+- **Progresso:** início do reparo e etapas ficam no agregado e na API, sem evento para o OS (emenda "Progresso da execução" do ADR-015).
+- **Conclusão e falha:** primeiro consome a reserva pelo `IEstoqueParaExecucao` (PostgreSQL, idempotente). Depois grava o agregado e a outbox no DynamoDB. Se a segunda gravação falhar, a chamada pode ser repetida sem consumir de novo. Os eventos são `ExecutionCompleted` e `ExecutionFailed`, com as quantidades consumidas.
+- **Tabela DynamoDB:** uma tabela (`DynamoDb:Tabela`, padrão `operacoes-execucoes`) com chave `PK`/`SK`:
+
+  | Item | PK | SK | Para quê |
+  |---|---|---|---|
+  | Execução | `EXEC#<executionId>` | `EXEC` | Agregado, com `Versao` para concorrência otimista |
+  | Execução da OS | `OS#<osId>` | `EXEC` | Garante uma execução por OS e localiza pelo `osId` |
+  | Inbox | `INBOX#<messageId>` | `INBOX` | Deduplicação dos comandos de execução |
+  | Outbox | `OUTBOX#<messageId>` | `OUTBOX` | Evento a publicar |
+
+  O índice `GSI1` serve a fila por filial e estado (`FILIAL#<filialId>#STATUS#<status>`) e as mensagens pendentes da outbox (`OUTBOX#PENDENTE`). O atributo é removido quando a mensagem é publicada, e ela sai do índice.
+- **Atomicidade:** cada comando ou ação grava a inbox (quando há), o agregado e a outbox em um `TransactWriteItems`, com condições de existência e versão (ADR-016). Um segundo despachante publica a outbox do DynamoDB, com o mesmo publicador da outbox do PostgreSQL.
+- **Mensageria:** `DiagnosisRequested` e `ExecutionStartRequested` entram no catálogo de canais. O `ProcessarMensagemSagaUseCase` passa a escolher o store pelo canal: Estoque no PostgreSQL, Execução no DynamoDB.
+- **Timeout:** timeout ou erro transitório do DynamoDB sobe para o consumidor refazer a mensagem. Se a primeira tentativa chegou a gravar, a condição da inbox faz a nova tentativa sair como duplicata, sem segundo efeito.
+- **Local e testes:** `docker-compose.yml` no repositório com PostgreSQL, RabbitMQ e `amazon/dynamodb-local`. Endpoint, região e credenciais fictícias vêm de configuração. A tabela é criada no start só com `DynamoDb:CriarTabela=true` (desenvolvimento e testes). Na nuvem, ela vem da IaC do CARD-41. Os testes sobem DynamoDB Local pelo Testcontainers, com tabela própria por teste.
+- **API:** `/operacoes/execucoes`. Consultas (fila por filial e estado, detalhe, por OS) para funcionários. Diagnóstico, início do reparo, etapas, conclusão e falha para `Mecanico` e `Admin`.
+- **Cancelamento durante a execução:** o AsyncAPI não tem comando de cancelamento para Operações. Cancelar uma OS em `NaFila` ou `EmReparo` pela Saga fica com o CARD-40, que decide se cria um comando novo. Uma execução diagnosticada cujo orçamento não foi aprovado continua como histórico, sem entrar na fila (ADR-017).
 
 ## Critérios de aceite
 
