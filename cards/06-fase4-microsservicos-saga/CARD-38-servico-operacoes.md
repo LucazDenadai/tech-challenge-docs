@@ -1,7 +1,7 @@
 # CARD-38 — Serviço Operações (Estoque + Execução)
 
 **Tipo:** Implementação / Microsserviço
-**Status:** To Do — escopo definido em 2026-10-08
+**Status:** Em andamento — CARD-38a concluído; CARD-38b a fazer
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-operacoes` (ADR-015)

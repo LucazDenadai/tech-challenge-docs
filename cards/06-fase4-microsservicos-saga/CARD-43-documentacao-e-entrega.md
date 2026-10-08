@@ -18,6 +18,7 @@ O entregável precisa permitir que avaliadores reconstruam a arquitetura, execut
 - README autocontido em cada repositório de microsserviço com objetivo, ownership, arquitetura, tecnologias, pré-requisitos, configuração segura, teste, execução, deploy, Swagger e evidências.
 - Diagramas finais de contexto/componentes, bancos, comunicação, Saga/compensações e observabilidade.
 - Swagger/OpenAPI ou Postman atualizada cobrindo endpoints, autenticação, fluxo feliz e respostas de falha.
+  - Já existem a collection do OS ([CARD-37b](CARD-37b-api-e-contratos-os.md), `postman/`) e o OpenAPI de Operações (`docs/openapi/operacoes-v1.json`, [CARD-38a](CARD-38a-estoque-em-operacoes.md)). Falta a collection de Operações e a do fluxo completo.
 - Cobertura por serviço >=80%, workflow de qualidade e links/artefatos reproduzíveis.
 - Vídeo de até 15 minutos mostrando fluxo completo, Saga e compensação, deploy automático de ao menos um serviço com validação de testes, monitoramento e trace distribuído.
 - PDF único no portal com participantes, links dos três repositórios e docs, link do vídeo, diagrama geral, descrição/justificativa da Saga, divisão de serviços e tecnologias.

@@ -23,6 +23,9 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
 - Provisionamento de infraestrutura por ferramenta declarativa a escolher no CARD-34. Terraform pode ser reaproveitado da Fase 3, mas não é requisito explícito do enunciado da Fase 4.
 - Segurança de supply chain e secrets: OIDC onde suportado; nenhuma credencial AWS/Mercado Pago em código/log.
 - Smoke/health checks e estratégia de rollback de release compatível com banco e eventos.
+- Pendências herdadas dos serviços:
+  - Checagem de divergência entre a cópia `contratos/asyncapi-saga-os.yaml` de cada serviço e a spec deste repositório ([CARD-37b](CARD-37b-api-e-contratos-os.md), [CARD-38a](CARD-38a-estoque-em-operacoes.md)).
+  - Com mais de uma réplica de Operações, travar a leitura da outbox (`FOR UPDATE SKIP LOCKED`) para duas réplicas não publicarem o mesmo evento ([CARD-38a](CARD-38a-estoque-em-operacoes.md)).
 
 ## Critérios de aceite
 
