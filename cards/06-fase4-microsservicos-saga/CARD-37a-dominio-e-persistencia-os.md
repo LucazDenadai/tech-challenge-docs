@@ -1,7 +1,7 @@
 # CARD-37a — Extrair domínio e persistência de OS
 
 **Tipo:** Implementação / Dados
-**Status:** To Do
+**Status:** Implementado — PR #1 mergeado em `tech-challenge-os`; testes verificados localmente em 2026-10-07; evidência de CI pendente (CARD-41)
 **Depende de:** CARD-34, CARD-35
 **Bloqueia:** CARD-37b
 **Repositório alvo:** `tech-challenge-os`
@@ -24,13 +24,13 @@ O atual Atendimento precisa ser dividido sem manter dependência de implantaçã
 
 ## Critérios de aceite
 
-- [ ] O projeto OS tem camadas e dependências alinhadas ao padrão existente, sem dependência de código em repositório remoto compilado como atalho.
-- [ ] Agregado e regras de transição da OS residem em OS; dados de orçamento, pagamento, estoque ou execução não são modelados como dados gerenciáveis locais.
-- [ ] Status da OS segue o mapeamento do ADR-017 (`EmDiagnostico`, `AguardandoAprovacao`, `AguardandoPagamento`, `EmExecucao`, `Finalizada`, `Entregue`, `Cancelada`); `Recebida` sai e `AguardandoPagamento` entra.
-- [ ] Contexto e migrations apontam apenas para a instância PostgreSQL dedicada de OS e não criam schemas/tabelas de outros serviços.
-- [ ] Migrations podem ser aplicadas a banco vazio, e um seed idempotente cria filial, usuários (Admin, Atendente, Mecânico) e clientes/veículos de exemplo sem dados pessoais reais.
-- [ ] Entidades da Fase 3 que pertencem a outros serviços (`Servico`, `ItemPeca`, `ItemServico`, orçamento, tempo de execução) não são extraídas para o OS.
-- [ ] Testes cobrem regras de domínio, persistência, histórico e estados inválidos.
+- [x] O projeto OS tem camadas e dependências alinhadas ao padrão existente, sem dependência de código em repositório remoto compilado como atalho.
+- [x] Agregado e regras de transição da OS residem em OS; dados de orçamento, pagamento, estoque ou execução não são modelados como dados gerenciáveis locais.
+- [x] Status da OS segue o mapeamento do ADR-017 (`EmDiagnostico`, `AguardandoAprovacao`, `AguardandoPagamento`, `EmExecucao`, `Finalizada`, `Entregue`, `Cancelada`); `Recebida` sai e `AguardandoPagamento` entra.
+- [x] Contexto e migrations apontam apenas para a instância PostgreSQL dedicada de OS e não criam schemas/tabelas de outros serviços.
+- [x] Migrations podem ser aplicadas a banco vazio, e um seed idempotente cria filial, usuários (Admin, Atendente, Mecânico) e clientes/veículos de exemplo sem dados pessoais reais.
+- [x] Entidades da Fase 3 que pertencem a outros serviços (`Servico`, `ItemPeca`, `ItemServico`, orçamento, tempo de execução) não são extraídas para o OS.
+- [x] Testes cobrem regras de domínio, persistência, histórico e estados inválidos.
 
 ## Cenários de aceite (Gherkin)
 

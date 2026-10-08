@@ -23,6 +23,8 @@ Este card entregará o cenário BDD ponta a ponta obrigatório. Os cenários Ghe
 - Implementar idempotência, retry limitado, timeout, recuperação após restart e tratamento de mensagem inválida.
 - Executar compensações financeiras/operacionais quando possível e fornecer recuperação manual auditável quando não for possível.
 - Automatizar BDD integrado sem depender de ambiente cloud pago em cada execução.
+- Processar os eventos já registrados na inbox `InboxMensagens` do OS pelo CARD-37b (validação, deduplicação e DLQ já existem) e aplicar o efeito de negócio.
+- Levar o cancelamento manual da OS (`POST /os/ordens-servico/{id}/cancelamento`, CARD-37b) pela Saga: hoje, a partir de `AguardandoPagamento` ou `EmExecucao`, ele só muda o status, sem liberar reserva nem estornar.
 
 ## Critérios de aceite
 

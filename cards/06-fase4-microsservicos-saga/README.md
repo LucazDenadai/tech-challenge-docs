@@ -63,7 +63,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | [CARD-34](CARD-34-limites-e-propriedade-dados.md) | Limites, repositórios, infraestrutura e propriedade dos dados | Concluído — decisões registradas |
 | [CARD-35](CARD-35-decisao-sql-nosql.md) | Decisão de alocação SQL/NoSQL e topologia dos bancos | Concluído — decisão registrada; implementação pendente |
 | [CARD-36](CARD-36-contratos-e-desenho-saga.md) | Contratos, eventos, Saga e compensações | Concluído — estratégia confirmada; implementação pendente |
-| [CARD-37](CARD-37-servico-os.md) | Serviço OS | To Do |
+| [CARD-37](CARD-37-servico-os.md) | Serviço OS | Em andamento — 37a e 37b implementados; CI e evidências pendentes |
 | [CARD-38](CARD-38-servico-operacoes.md) | Operações: Estoque + Execução | To Do |
 | [CARD-39](CARD-39-servico-billing-pagamentos.md) | Billing e Mercado Pago | To Do |
 | [CARD-40](CARD-40-saga-e-bdd-integrado.md) | Implementação da Saga e BDD ponta a ponta | To Do |

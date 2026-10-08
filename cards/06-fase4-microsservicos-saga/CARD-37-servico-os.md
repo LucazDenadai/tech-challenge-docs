@@ -1,7 +1,7 @@
 # CARD-37 — Serviço OS independente
 
 **Tipo:** Implementação / Microsserviço
-**Status:** To Do
+**Status:** Em andamento — CARD-37a e CARD-37b implementados; fecha após PR do 37b, CI (CARD-41) e evidências pendentes
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-os`
