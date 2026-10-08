@@ -1,6 +1,6 @@
 # ADR-002 — Observabilidade de falhas de mensageria via tabela no banco de dados
 
-**Status:** Aceito  
+**Status:** Superseded por [ADR-018](ADR-018-contratos-assincronos-asyncapi-fase4.md) na Fase 4 — falhas de mensageria vão para a DLQ `<servico>.<canal>.dlq` com o motivo no cabeçalho (ADR-017, retentativas); Operações não porta a tabela `FalhaProcessamento`  
 **Data:** 2026-05-26  
 **Autores:** Time Tech Challenge — Fase 2
 
