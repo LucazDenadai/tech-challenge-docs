@@ -52,6 +52,7 @@ As APIs REST já têm formato decidido nos cards de serviço: Swagger/OpenAPI ge
 - Contrato único, legível por máquina e revisável em PR antes de qualquer implementação.
 - Serviços continuam independentes: cada um gera ou escreve seus DTOs a partir da spec.
 - A documentação navegável pode ser gerada pelo CLI do AsyncAPI para a entrega final (CARD-43).
+- Substitui na Fase 4 o [ADR-002](ADR-002-observabilidade-falhas-tabela-banco.md): a mensagem rejeitada fica na DLQ do canal com o motivo no cabeçalho, sem tabela de falhas no banco. *Registrado em 2026-10-08.*
 
 ### Negativas e riscos
 

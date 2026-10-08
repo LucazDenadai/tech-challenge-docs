@@ -4,7 +4,7 @@
 **Status:** To Do
 **Depende de:** CARD-36, CARD-38a
 **Bloqueia:** CARD-40
-**Repositório alvo:** Repositório exclusivo de Operações
+**Repositório alvo:** `tech-challenge-operacoes`
 **Decisão arquitetural:** [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md); contratos e máquina de estados no CARD-36
 
 ---

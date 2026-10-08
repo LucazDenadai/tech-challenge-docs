@@ -136,6 +136,14 @@ Manter a Lambda e o fluxo de CPF existentes como adaptador técnico para não re
 
 **Usuários funcionários:** OS passa a ser dono dos usuários funcionários (Admin, Atendente, Mecânico) e emite o JWT deles, mantendo o comportamento do Atendimento. Billing e Operações validam o token com o mesmo issuer e chave. A autenticação de clientes por CPF continua na Lambda.
 
+### 2026-10-08 — Filiais em Operações
+
+**Contexto:** o seed do OS cria a `FILIAL-DEMO` com um `Id` aleatório. Operações precisa desse `filialId` para semear saldos por `(filialId, pecaId)` e para rejeitar no diagnóstico uma filial onde não opera (`DiagnosisRejected`, ADR-017). Pelo item 4 da seção Filial, ele não pode consultar o banco do OS.
+
+**Decisão:** a `FILIAL-DEMO` tem `Id` fixo `378aeb39-37f6-43c1-9526-5b1a9fadd553`, igual nos seeds do OS e de Operações. Operações mantém a própria tabela das filiais onde opera estoque, só com `Id` (o `filialId` do OS), `Codigo` e `Ativo`. Não é cópia do cadastro mestre: nome, endereço e demais dados continuam só no OS. Uma filial nova entra em Operações por operação administrativa explícita, com o `Id` vindo do OS.
+
+**Alternativas não escolhidas:** aceitar qualquer `filialId` com saldo configurado (filial sem saldo e filial inexistente ficam indistinguíveis); cadastrar saldos só por API, sem seed (a demonstração passa a depender de passos manuais); Operações consultar filiais no OS por REST (dependência síncrona para um dado quase estático).
+
 ---
 
 ## Estado de implementação
