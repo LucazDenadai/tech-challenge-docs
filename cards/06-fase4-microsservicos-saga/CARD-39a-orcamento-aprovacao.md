@@ -1,7 +1,7 @@
 # CARD-39a — Orçamento e aprovação no Billing
 
 **Tipo:** Implementação / Domínio
-**Status:** To Do — escopo definido em 2026-10-12
+**Status:** Concluído — PR #1 mergeado em `tech-challenge-billing` (2026-10-12); evidência de CI pendente (CARD-41)
 **Depende de:** CARD-35, CARD-36
 **Bloqueia:** CARD-39b, CARD-40
 **Repositório alvo:** `tech-challenge-billing` ([ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
@@ -47,18 +47,36 @@ O enunciado inclui geração e envio de orçamento para aprovação. Billing dev
 - **Local e testes:** `docker-compose.yml` com PostgreSQL (porta `5434` no host, para não colidir com OS e Operações), RabbitMQ e Jaeger. JWT com o mesmo issuer e chave dos outros serviços. Os testes de integração sobem PostgreSQL e RabbitMQ pelo Testcontainers.
 - **Fora deste card:** pagamento, Mercado Pago e webhook (CARD-39b); consumo dos eventos de orçamento pelo OS (CARD-40); imagem, deploy e CI (CARD-41).
 
+## Implementação (2026-10-12)
+
+- **Repositório:** [tech-challenge-billing](https://github.com/LucazDenadai/tech-challenge-billing), criado público com um commit inicial em `main` e o card em 7 commits, um por passo: solução, domínio, contratos e casos de uso, persistência, mensageria, API e README.
+- **Decisão sem exceção:** `Orcamento.Decidir` devolve o resultado (`Registrada`, `JaRegistrada`, `VersaoDesatualizada`, `VersaoInexistente`, `DecisaoConflitante`, `Expirada`). A API traduz cada um em `200`, `404`, `409` ou `410`; o domínio não conhece HTTP. A resposta `409` traz `versaoVigente`.
+- **Recusa de negócio x contrato:** o leitor manda para a DLQ só o que impede identificar o pedido (envelope, `clienteId`, `itemId`, tipo, descrição). Item sem preço, preço fora do schema `Money`, lista vazia, quantidade menor que 1 e moeda ausente ou diferente de `BRL` chegam ao caso de uso e viram `QuoteRejected`, como pede o ADR-017. Os testes de contrato separam as duas listas: a spec rejeita as duas, o leitor só a primeira.
+- **Concorrência da decisão:** conflito no `xmin` descarta o que foi carregado e refaz a decisão até 3 vezes. Um teste com 6 decisões simultâneas (aprovar e recusar) grava 1 decisão e 1 evento; as demais respondem `JaRegistrada` ou `DecisaoConflitante`.
+- **Instantes em UTC:** o `priceSnapshotAtUtc` pode chegar com offset (`-03:00`); o domínio grava em UTC, porque o `timestamptz` do PostgreSQL não guarda o offset.
+- **Expiração:** `ExpiracaoOrcamentosHostedService` roda a cada `Orcamento:IntervaloExpiracaoSegundos` (padrão 60), sem depender do broker. O evento vai para a outbox; o despachante publica quando houver conexão.
+- **Compose:** PostgreSQL `5434`, RabbitMQ `5673` e Jaeger `4319` no host, para rodar junto com Operações.
+
+### Pendências
+
+- **Recusa repetida:** como no CARD-38a, o `QuoteRejected` não é gravado. Uma nova mensagem com a mesma `idempotencyKey` depois de uma recusa reavalia o pedido. A mesma mensagem reentregue continua deduplicada pela inbox.
+- **Réplicas do despachante:** duas réplicas podem publicar o mesmo evento; o OS deduplica. A trava da outbox (`FOR UPDATE SKIP LOCKED`) fica para o CARD-41, junto com Operações.
+- **Cópia da spec:** `contratos/asyncapi-saga-os.yaml` é sincronizada à mão; a checagem no CI fica no CARD-41.
+- **Broker do fluxo integrado:** cada Compose sobe o próprio RabbitMQ. O ambiente com um broker para os três serviços fica no CARD-40.
+- **Postman:** a collection de Billing fica para o CARD-43.
+
 ## Critérios de aceite
 
-- [ ] Orçamento tem versão, valor/moeda, itens referenciados, validade, filial e estado de aprovação.
-- [ ] Criação não lê tabelas de OS/Operações; os dados necessários chegam via contrato aprovado. O valor é calculado a partir do snapshot de preços do diagnóstico, sem consulta a Operações (ADR-017).
-- [ ] Aprovação/rejeição autenticada e repetida é idempotente e mantém histórico/auditoria.
-- [ ] Aprovação se aplica à versão exata apresentada ao cliente; decisão para versão antiga é rejeitada se o orçamento foi alterado.
-- [ ] Somente orçamento vigente e aprovado pode iniciar pagamento; orçamento pendente, rejeitado, cancelado ou expirado não pode gerar cobrança nem liberar execução.
-- [ ] Decisão sem autorização válida não altera o estado do orçamento nem publica evento de aprovação/rejeição.
-- [ ] Mudança de orçamento após aprovação é rejeitada no MVP; revisão de diagnóstico/orçamento fica fora do escopo inicial (ADR-017).
-- [ ] Aprovação/rejeição é exposta pelo Billing via REST síncrono (API Gateway, JWT existente), respondendo sucesso, versão desatualizada (`409`) ou orçamento expirado (`410`); o evento de decisão é publicado via outbox (ADR-017).
-- [ ] Resultado é publicado via evento conforme CARD-36 e não altera banco OS diretamente.
-- [ ] Testes cobrem validade, aprovação, rejeição, expiração e concorrência de decisão.
+- [x] Orçamento tem versão, valor/moeda, itens referenciados, validade, filial e estado de aprovação.
+- [x] Criação não lê tabelas de OS/Operações; os dados necessários chegam via contrato aprovado. O valor é calculado a partir do snapshot de preços do diagnóstico, sem consulta a Operações (ADR-017).
+- [x] Aprovação/rejeição autenticada e repetida é idempotente e mantém histórico/auditoria.
+- [x] Aprovação se aplica à versão exata apresentada ao cliente; decisão para versão antiga é rejeitada se o orçamento foi alterado.
+- [x] Somente orçamento vigente e aprovado pode iniciar pagamento; orçamento pendente, rejeitado, cancelado ou expirado não pode gerar cobrança nem liberar execução. *(A porta `IOrcamentoParaPagamento` só devolve versão `Aprovada`; a cobrança que a usa é do CARD-39b.)*
+- [x] Decisão sem autorização válida não altera o estado do orçamento nem publica evento de aprovação/rejeição.
+- [x] Mudança de orçamento após aprovação é rejeitada no MVP; revisão de diagnóstico/orçamento fica fora do escopo inicial (ADR-017).
+- [x] Aprovação/rejeição é exposta pelo Billing via REST síncrono (API Gateway, JWT existente), respondendo sucesso, versão desatualizada (`409`) ou orçamento expirado (`410`); o evento de decisão é publicado via outbox (ADR-017). *(Rota no API Gateway: CARD-41.)*
+- [x] Resultado é publicado via evento conforme CARD-36 e não altera banco OS diretamente.
+- [x] Testes cobrem validade, aprovação, rejeição, expiração e concorrência de decisão.
 
 ## Cenários de aceite (Gherkin)
 
@@ -110,3 +128,13 @@ Funcionalidade: Aprovar orçamento de uma OS
 ## Evidências
 
 - Testes unitários/integração, OpenAPI e amostra de evento versionado.
+
+Registradas em 2026-10-12, PR #1 de `tech-challenge-billing`:
+
+| Evidência | Onde | Resultado |
+|---|---|---|
+| OpenAPI gerado | `docs/openapi/billing-v1.json` | 5 rotas sob `/billing/orcamentos`, com `200`, `404`, `409` e `410` documentados; sem rota de criação |
+| Testes de domínio, casos de uso e contrato | `tests/OficinaMecanica.Billing.UnitTests` | 60 aprovados. Validade, aprovação, recusa, expiração, versões, idempotência. O contrato cobre o `QuoteRequested` e os 5 eventos de orçamento; os canais de pagamento ficam listados como pendentes do 39b |
+| Testes de persistência, mensageria e API (PostgreSQL e RabbitMQ via Testcontainers) | `tests/OficinaMecanica.Billing.IntegrationTests` | 27 aprovados. Atomicidade inbox/efeito/outbox, decisões simultâneas, DLQ, `QuoteExpired` pelo serviço de expiração, `403` para Admin/Atendente/Mecânico e `404` para outro cliente |
+| Amostra de evento versionado | `QuoteRequested_PublicaQuoteReadyCorrelacionadoNoMesmoTrace` | `QuoteReady.v1` com `causationId` do comando, mesmo `correlationId` e `traceparent` do mesmo trace |
+| Postman | — | Pendente (CARD-43) |
