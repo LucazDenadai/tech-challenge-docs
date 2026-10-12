@@ -24,8 +24,10 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
 - Segurança de supply chain e secrets: OIDC onde suportado; nenhuma credencial AWS/Mercado Pago em código/log.
 - Smoke/health checks e estratégia de rollback de release compatível com banco e eventos.
 - Pendências herdadas dos serviços:
-  - Checagem de divergência entre a cópia `contratos/asyncapi-saga-os.yaml` de cada serviço e a spec deste repositório ([CARD-37b](CARD-37b-api-e-contratos-os.md), [CARD-38a](CARD-38a-estoque-em-operacoes.md)).
+  - Checagem de divergência entre a cópia `contratos/asyncapi-saga-os.yaml` de cada serviço e a spec deste repositório ([CARD-37b](CARD-37b-api-e-contratos-os.md), [CARD-38a](CARD-38a-estoque-em-operacoes.md), [CARD-39a](CARD-39a-orcamento-aprovacao.md)).
   - Com mais de uma réplica de Operações, travar a leitura das duas outboxes para duas réplicas não publicarem o mesmo evento: `FOR UPDATE SKIP LOCKED` no PostgreSQL ([CARD-38a](CARD-38a-estoque-em-operacoes.md)) e atualização condicional por item no DynamoDB ([CARD-38b](CARD-38b-fila-execucao.md)).
+  - Com mais de uma réplica de Billing, a mesma trava `FOR UPDATE SKIP LOCKED` na outbox do PostgreSQL ([CARD-39a](CARD-39a-orcamento-aprovacao.md)). A expiração de orçamentos já tolera réplicas: o `xmin` deixa só uma gravar.
+  - Rotas `/billing/orcamentos/*` no API Gateway, com o mesmo JWT de clientes e funcionários ([CARD-39a](CARD-39a-orcamento-aprovacao.md)).
   - Provisionar na IaC a tabela DynamoDB de Operações com o índice `GSI1`, no formato do `InicializadorTabelaDynamo` ([CARD-38b](CARD-38b-fila-execucao.md)). Na nuvem, `DynamoDb:CriarTabela` fica desligado.
 
 ## Critérios de aceite

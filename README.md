@@ -14,6 +14,9 @@ Este repositório existe porque as decisões documentadas aqui atravessam múlti
 | [tech-challenge-lambda](https://github.com/LucazDenadai/tech-challenge-lambda) | Function Serverless de autenticação via CPF |
 | [tech-challenge-infra-k8s](https://github.com/LucazDenadai/tech-challenge-infra-k8s) | Terraform: cluster Kubernetes (EKS), VPC, API Gateway |
 | [tech-challenge-infra-db](https://github.com/LucazDenadai/tech-challenge-infra-db) | Terraform: banco de dados gerenciado (RDS PostgreSQL) |
+| [tech-challenge-os](https://github.com/LucazDenadai/tech-challenge-os) | Fase 4 — serviço OS: ordens de serviço, cadastros e orquestrador da Saga ([CARD-37](cards/06-fase4-microsservicos-saga/CARD-37-servico-os.md)) |
+| [tech-challenge-operacoes](https://github.com/LucazDenadai/tech-challenge-operacoes) | Fase 4 — serviço Operações: catálogo, estoque e execução ([CARD-38](cards/06-fase4-microsservicos-saga/CARD-38-servico-operacoes.md)) |
+| [tech-challenge-billing](https://github.com/LucazDenadai/tech-challenge-billing) | Fase 4 — serviço Billing: orçamento, aprovação e pagamentos ([CARD-39](cards/06-fase4-microsservicos-saga/CARD-39-servico-billing-pagamentos.md)) |
 
 ---
 
