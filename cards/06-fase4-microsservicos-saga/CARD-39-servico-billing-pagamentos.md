@@ -1,10 +1,10 @@
 # CARD-39 — Serviço Billing e pagamentos
 
 **Tipo:** Implementação / Microsserviço
-**Status:** To Do
+**Status:** To Do — escopo do CARD-39a definido em 2026-10-12
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
-**Repositório alvo:** Repositório exclusivo de Billing (nome definido no CARD-34)
+**Repositório alvo:** `tech-challenge-billing` (nome definido no CARD-34 / [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
 **Decisão arquitetural:** ADR-014, [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md) e contratos/Saga do CARD-36
 
 ---
