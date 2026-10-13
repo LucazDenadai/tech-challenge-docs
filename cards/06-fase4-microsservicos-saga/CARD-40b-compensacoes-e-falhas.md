@@ -22,6 +22,8 @@ O [CARD-40a](CARD-40a-orquestrador-saga-os.md) entrega o caminho normal e as rej
 - Timeouts e retries da tabela do ADR-017, com alerta ao esgotar.
 - Cancelamento manual da OS pela Saga (pendência do [CARD-37b](CARD-37b-api-e-contratos-os.md)): a partir de `AguardandoPagamento` ou `EmExecucao`, disparar liberação e estorno conforme o estado.
 - Cancelamento de execução já na fila ou em reparo (pendência do [CARD-38b](CARD-38b-fila-execucao.md)): decidir se entra um comando novo no AsyncAPI ou se o cancelamento fica bloqueado a partir de `EmExecucao`.
+- Diagnóstico só com serviços (pendência do [CARD-40a](CARD-40a-orquestrador-saga-os.md)): hoje para em `ManualActionRequired`, porque a reserva exige ao menos uma peça e o início da execução exige reserva. Decidir a mudança de contrato.
+- Saída de `ManualActionRequired`: hoje não há transição de saída; definir a recuperação auditável.
 
 ## Critérios de aceite
 
