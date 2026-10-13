@@ -17,7 +17,7 @@ O time precisa conseguir subir e testar toda a solução localmente sem consumir
 
 ## Decisão
 
-Cada serviço de negócio terá um recurso PostgreSQL gerenciado fisicamente dedicado. Operações, que combina Estoque e Execução, terá adicionalmente uma tabela DynamoDB exclusiva para a capacidade de Execução:
+Cada serviço de negócio terá um recurso PostgreSQL gerenciado fisicamente dedicado. *Emenda de 2026-10-13 ([ADR-021](ADR-021-kubernetes-local-sem-aws-fase4.md)): sem conta AWS, cada instância roda no cluster Kind, ainda exclusiva por serviço, mas não gerenciada; a tabela de Execução usa o DynamoDB Local.* Operações, que combina Estoque e Execução, terá adicionalmente uma tabela DynamoDB exclusiva para a capacidade de Execução:
 
 | Serviço | Store relacional | Store não relacional | Fonte da verdade |
 |---|---|---|---|
