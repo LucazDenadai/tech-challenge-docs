@@ -1,7 +1,7 @@
 # CARD-40 — Implementar Saga e validar fluxo integrado com BDD
 
 **Tipo:** Integração distribuída / Testes
-**Status:** Em andamento — dividido em 40a, 40b e 40c (2026-10-13); 40a e 40b concluídos (fluxo normal, compensações, cancelamento e prazos); 40c (ambiente integrado e BDD) pendente
+**Status:** Em andamento — dividido em 40a, 40b e 40c (2026-10-13); 40a e 40b concluídos (fluxo normal, compensações, cancelamento e prazos); 40c (ambiente integrado e BDD em Reqnroll) com escopo definido
 **Depende de:** CARD-36, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
