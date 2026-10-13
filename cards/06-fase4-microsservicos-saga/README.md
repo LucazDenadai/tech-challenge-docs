@@ -53,7 +53,7 @@ Subcards mantêm entregas limitadas dentro dos cards de serviço:
 - CARD-38a/38b: capacidade de Estoque e fluxo de Execução no serviço Operações.
 - CARD-39a/39b: orçamento/aprovação e integração de pagamentos.
 - CARD-40a/40b/40c: orquestrador com fluxo normal, compensações e falhas, ambiente integrado e BDD.
-- CARD-41a/41b: CI por serviço (testes, cobertura, qualidade, imagem) e Kubernetes por serviço (manifests, rollout, deploy).
+- CARD-41a/41b: CI por serviço (testes, cobertura, qualidade, imagem) e Kubernetes por serviço no Kind (manifests, rollout, demonstração).
 
 ## Cards
 
@@ -69,7 +69,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | [CARD-38](CARD-38-servico-operacoes.md) | Operações: Estoque + Execução | Em andamento — 38a e 38b concluídos; cancelamento de execução entregue no CARD-40b; deploy/CI (CARD-41) pendente |
 | [CARD-39](CARD-39-servico-billing-pagamentos.md) | Billing e Mercado Pago | Em andamento — 39a concluído; 39b implementado; sandbox validado em parte (criação do Pix bloqueada por `500` do provedor); deploy/CI (CARD-41) pendente |
 | [CARD-40](CARD-40-saga-e-bdd-integrado.md) | Implementação da Saga e BDD ponta a ponta | Concluído — 40a, 40b e 40c; BDD verde no CI; trace como evidência no CARD-42 |
-| [CARD-41](CARD-41-cicd-kubernetes-por-servico.md) | CI/CD, qualidade, cobertura e deploy independente | Em andamento — 41a (CI, gate de linhas e branches ≥80%) concluído; 41b (Kubernetes) pendente |
+| [CARD-41](CARD-41-cicd-kubernetes-por-servico.md) | CI/CD, qualidade, cobertura e deploy independente | Em andamento — 41a (CI, gate de linhas e branches ≥80%) concluído; 41b (Kubernetes no Kind, ADR-021) com escopo definido |
 | [CARD-42](CARD-42-observabilidade-distribuida.md) | Observabilidade do fluxo entre serviços | To Do |
 | [CARD-43](CARD-43-documentacao-e-entrega.md) | Swagger/Postman, vídeo e PDF final | To Do |
 

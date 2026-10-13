@@ -5,7 +5,7 @@
 **Depende de:** CARD-34, CARD-35, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** Três repositórios de serviço e repositórios de infraestrutura necessários
-**Decisão arquitetural:** ADR-014; ADR/RFC de stores CARD-35; convenções de CI/CD existentes em CARD-27
+**Decisão arquitetural:** ADR-014; ADR/RFC de stores CARD-35; convenções de CI/CD existentes em CARD-27; [ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md) (Kind, sem AWS)
 
 ---
 
@@ -41,7 +41,7 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
 - [ ] Cada serviço tem Dockerfile e manifests Kubernetes versionados em seu repositório, com recursos suficientes para deploy e health check independentes.
 - [ ] Merge aprovado implanta somente a unidade de serviço correspondente no cluster Kubernetes e aguarda rollout/health.
 - [x] Branch principal exige PR e checks de build/testes/qualidade, conforme proteção configurada.
-- [ ] Se Terraform for escolhido para provisionamento, pipelines de plan/apply têm aprovação/permissões adequadas e state remoto/locking seguem ADR-011 quando aplicável; a ausência de Terraform não reprova o card por si só.
+- [x] Se Terraform for escolhido para provisionamento, pipelines de plan/apply têm aprovação/permissões adequadas e state remoto/locking seguem ADR-011 quando aplicável; a ausência de Terraform não reprova o card por si só. *(Não se aplica: sem nuvem, sem Terraform na Fase 4, [ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md).)*
 - [ ] Secrets vêm de secret store/ambiente seguro e são mascarados nos logs.
 - [ ] Falha de rollout impede conclusão do deploy e há procedimento de rollback/redeploy documentado.
 
@@ -74,7 +74,7 @@ Funcionalidade: Entregar cada microsserviço de forma independente
 Divisão de 2026-10-13, no padrão dos CARD-37 a 40:
 
 - [CARD-41a — CI por serviço: testes, cobertura, qualidade e imagem](CARD-41a-ci-por-servico.md). Cobertura de linhas e branches ≥80% e SonarCloud, decididos pelo time.
-- [CARD-41b — Kubernetes por serviço: manifests, rollout e deploy](CARD-41b-kubernetes-por-servico.md). Rollout validado em Kind no CI; deploy no EKS na janela de demonstração, decidido pelo time.
+- [CARD-41b — Kubernetes por serviço: manifests, rollout no Kind e demonstração](CARD-41b-kubernetes-por-servico.md). Sem conta AWS, Kubernetes é Kind no CI e na demonstração ([ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md)).
 
 ## Passos
 
