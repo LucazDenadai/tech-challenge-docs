@@ -1,7 +1,7 @@
 # CARD-40 — Implementar Saga e validar fluxo integrado com BDD
 
 **Tipo:** Integração distribuída / Testes
-**Status:** To Do
+**Status:** Em andamento — dividido em 40a, 40b e 40c (2026-10-13); 40a com escopo definido
 **Depende de:** CARD-36, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
@@ -107,6 +107,14 @@ Funcionalidade: Coordenar uma OS distribuída por Saga
     Então a Saga não avança duas vezes
     E nenhum evento de autorização de execução é duplicado
 ```
+
+## Subcards
+
+Divisão decidida pelo time em 2026-10-13, no padrão dos CARD-37 a 39:
+
+- [CARD-40a — Orquestrador da Saga no OS: fluxo normal](CARD-40a-orquestrador-saga-os.md)
+- [CARD-40b — Saga: compensações, falhas e cancelamento](CARD-40b-compensacoes-e-falhas.md)
+- [CARD-40c — Ambiente integrado e BDD ponta a ponta](CARD-40c-ambiente-integrado-e-bdd.md) (no repositório do OS, pasta `e2e/`)
 
 ## Passos
 
