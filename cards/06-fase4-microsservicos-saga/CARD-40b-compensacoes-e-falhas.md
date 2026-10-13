@@ -1,7 +1,7 @@
 # CARD-40b — Saga: compensações, falhas e cancelamento
 
 **Tipo:** Implementação / Integração distribuída
-**Status:** To Do — escopo e decisões definidos (2026-10-13)
+**Status:** Concluído — PRs mergeados em `tech-challenge-os` (#5), `tech-challenge-operacoes` (#3), `tech-challenge-billing` (#4) e AsyncAPI (#37) em 2026-10-13; evidência de CI pendente (CARD-41)
 **Depende de:** CARD-40a
 **Bloqueia:** CARD-40c
 **Repositórios alvo:** `tech-challenge-os` (Saga, API), `tech-challenge-operacoes` (início sem reserva e cancelamento de execução) e `tech-challenge-docs` (AsyncAPI)
@@ -72,17 +72,32 @@ As decisões de negócio e de contrato estão no [ADR-020](../../adr/ADR-020-sag
 - Cancelamento manual pela Saga e resolução de ação manual pelo Admin.
 - Mudanças de contrato no AsyncAPI e em Operações.
 
+## Implementação (2026-10-13)
+
+- **Repositórios:** `tech-challenge-docs` PR #37 (AsyncAPI), `tech-challenge-operacoes` PR #3 (3 commits), `tech-challenge-os` PR #5 (7 commits: domínio, contratos, orquestrador, casos de uso e API, correções, testes pelo broker, README/OpenAPI) e `tech-challenge-billing` PR #4 (só a cópia da spec).
+- **Comandos por etapa:** o domínio informa os comandos de cada estado (`ComandosDaEtapa`). A transição por mensagem, o reenvio por prazo, a retomada pelo Admin e o cancelamento manual usam a mesma regra, e por isso geram a mesma `idempotencyKey`.
+- **Efeito depois do encerramento (decisão de implementação):** `InventoryReserved` ou `PaymentApproved` que chega com a Saga já cancelada gera `InventoryReleaseRequested` ou `PaymentRefundRequested`. Sem isso, um prazo esgotado seguido de cancelamento podia deixar reserva presa ou pagamento sem estorno.
+- **`CompensationPending`:** fica no enum, sem uso. Estorno pendente fica em `Compensating` com a marca de pendência; liberação não confirmada cai no prazo e, esgotado, em ação manual.
+- **Retomada depois de estorno recusado:** reenvia o pedido, mas o Billing republica o resultado gravado (`PaymentRefundFailed`). Na prática, a resolução é `Cancelar` depois de tratar o estorno fora do sistema.
+- **Correções no caminho:** no C# 14, `array.Contains` dentro de expressão LINQ vira a sobrecarga de `ReadOnlySpan`, que o EF não traduz; a consulta de prazos usa `Enumerable.Contains`. Atributos de validação de um record ficam no parâmetro do construtor, não em `[property:]`.
+
+### Pendências
+
+- **Multa e estorno parcial:** evolução no ADR-020.
+- **E-mail de mudança de status:** as transições pela Saga não enviam o e-mail que a rota manual da Fase 3 enviava. Fica para o CARD-42/43, se o vídeo pedir.
+- **Vários réplicas do serviço de prazos:** duas réplicas podem reenviar o mesmo comando ao mesmo tempo; é seguro pela `idempotencyKey` e pelo `xmin`. A trava da outbox continua no CARD-41.
+
 ## Critérios de aceite
 
-- [ ] Cada linha da tabela de compensações do ADR-017 tem caminho implementado e teste de integração; itens marcados como evolução no Escopo do MVP não são implementados.
-- [ ] Pagamento aprovado não é marcado como desfeito até a confirmação do estorno; estorno pendente fica explícito.
-- [ ] Resultado de pagamento desconhecido mantém a Saga em reconciliação, sem recusar, cobrar de novo ou liberar a reserva.
-- [ ] Falha após aprovação do pagamento aciona liberação da reserva não consumida e estorno total.
-- [ ] Toda etapa tem timeout e retry explícitos; ao esgotar, a Saga vai para estado de ação manual com alerta.
-- [ ] Cancelamento manual passa pela Saga e não deixa reserva presa nem pagamento sem estorno.
-- [ ] Decisão sobre cancelamento de execução registrada (ADR ou card) e refletida no AsyncAPI, se houver comando novo. *(Decisão: [ADR-020](../../adr/ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md).)*
-- [ ] OS só com serviços vai da abertura à conclusão sem reserva.
-- [ ] `ManualActionRequired` tem saída pelo Admin, com motivo no histórico.
+- [x] Cada linha da tabela de compensações do ADR-017 tem caminho implementado e teste de integração; itens marcados como evolução no Escopo do MVP não são implementados.
+- [x] Pagamento aprovado não é marcado como desfeito até a confirmação do estorno; estorno pendente fica explícito.
+- [x] Resultado de pagamento desconhecido mantém a Saga em reconciliação, sem recusar, cobrar de novo ou liberar a reserva.
+- [x] Falha após aprovação do pagamento aciona liberação da reserva não consumida e estorno total.
+- [x] Toda etapa tem timeout e retry explícitos; ao esgotar, a Saga vai para estado de ação manual com alerta. *(Etapas que esperam participante. Diagnóstico e reparo são trabalho humano; aprovação e pagamento têm prazo no Billing.)*
+- [x] Cancelamento manual passa pela Saga e não deixa reserva presa nem pagamento sem estorno.
+- [x] Decisão sobre cancelamento de execução registrada (ADR ou card) e refletida no AsyncAPI, se houver comando novo. *(Decisão: [ADR-020](../../adr/ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md).)*
+- [x] OS só com serviços vai da abertura à conclusão sem reserva.
+- [x] `ManualActionRequired` tem saída pelo Admin, com motivo no histórico.
 
 ## Cenários de aceite (Gherkin)
 
@@ -147,3 +162,12 @@ Funcionalidade: Compensar falhas da Saga
 
 - Testes de integração por linha da tabela de compensações do ADR-017.
 - Trace correlacionado de uma compensação completa.
+
+Registradas em 2026-10-13:
+
+| Evidência | Onde | Resultado |
+|---|---|---|
+| Domínio das compensações | `tech-challenge-os`, `SagaCompensacaoTests` | Pagamento recusado e desconhecido, falha e cancelamento com duas confirmações, estorno pendente e falho, cancelamento por estado, efeito atrasado, prazo, retomada e cancelamento pelo Admin |
+| Fluxos pelo broker (PostgreSQL e RabbitMQ via Testcontainers) | `tech-challenge-os`, `SagaCompensacaoFluxoTests` | Recusa → liberação → `Cancelled`; desconhecido sem comando; falha → `Compensated`; cancelamento na fila (`202`) → `Compensated`; recusa em reparo; serviço sem peça até `Completed`; prazo com reenvio da mesma chave e retomada pelo Admin; pagamento divergente só cancelável |
+| Operações | `tech-challenge-operacoes`, `ExecucaoUseCasesTests` e `MensageriaSagaTests` | Início sem reserva só sem peças; cancelamento na fila, recusa em reparo, repetição com a mesma chave, gravação no DynamoDB Local |
+| Totais | | OS: 249 unitários e 50 de integração; Operações: 141 e 53; Billing: 137 unitários com a spec nova |

@@ -1,7 +1,7 @@
 # CARD-38b — Fila e ciclo de execução da OS
 
 **Tipo:** Implementação / Domínio
-**Status:** Concluído — PR #2 mergeado em `tech-challenge-operacoes` (2026-10-08); cancelamento de execução em andamento (CARD-40) e evidência de CI (CARD-41) pendentes
+**Status:** Concluído — PR #2 mergeado em `tech-challenge-operacoes` (2026-10-08); cancelamento de execução entregue no [CARD-40b](CARD-40b-compensacoes-e-falhas.md) (PR #3); evidência de CI (CARD-41) pendente
 **Depende de:** CARD-36, CARD-38a
 **Bloqueia:** CARD-40
 **Repositório alvo:** `tech-challenge-operacoes`
@@ -72,7 +72,7 @@ A outbox do PostgreSQL serve ao Estoque. Os eventos da execução saem da outbox
 - [x] Início depende de comando/evento aceito pelo contrato e não ocorre antes das condições de aprovação definidas.
 - [x] Atualizações incluem filial, timestamps e correlation ID conforme modelo aprovado.
 - [x] Evento de conclusão/falha só é publicado depois de persistência confirmada.
-- [ ] Cancelamento/repetição não deixa execução órfã e segue compensações do CARD-36. *(Repetição coberta; cancelamento de execução em andamento depende de comando novo, decidido no CARD-40.)*
+- [x] Cancelamento/repetição não deixa execução órfã e segue compensações do CARD-36. *(Repetição coberta; cancelamento antes do reparo pelo `ExecutionCancelRequested` no [CARD-40b](CARD-40b-compensacoes-e-falhas.md); em reparo, recusado (ADR-020).)*
 - [x] API ou interface de operação oferece consulta de fila, detalhe e atualização autorizada.
 - [x] DynamoDB Local pode ser iniciado pelo Compose sem configurar uma conta/credencial AWS.
 - [x] A fila pode ser consultada por filial e estado, e a execução por identificador, segundo as chaves/índices definidos e testados.

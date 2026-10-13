@@ -30,7 +30,7 @@ OS é a autoridade sobre a ordem e precisa expor operações síncronas necessá
 ### Pendências
 
 - **Lambda:** ainda consulta o RDS. Nenhum card cobre a troca dela para o endpoint interno (repositório `tech-challenge-lambda`). Decidir se entra no CARD-41 ou em card próprio.
-- **Cancelamento manual:** cancelar a partir de `AguardandoPagamento` ou `EmExecucao` só muda o status; não dispara liberação de reserva nem estorno. O CARD-40 precisa levar o cancelamento manual pela Saga, com compensação.
+- **Cancelamento manual:** cancelar a partir de `AguardandoPagamento` ou `EmExecucao` só muda o status; não dispara liberação de reserva nem estorno. O CARD-40 precisa levar o cancelamento manual pela Saga, com compensação. *Resolvido no [CARD-40b](CARD-40b-compensacoes-e-falhas.md): o cancelamento passa pela Saga (`204`/`202`).*
 - **Cópia da spec:** a cópia em `tech-challenge-os/contratos/` é sincronizada à mão. Uma checagem de divergência no CI cabe no CARD-41.
 - **Evidências:** collection Postman e trace de exemplo registrados em 2026-10-08 (ver Evidências).
 

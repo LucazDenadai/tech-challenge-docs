@@ -1,7 +1,7 @@
 # CARD-38 — Serviço Operações (Estoque + Execução)
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-38a e CARD-38b concluídos; falta deploy independente e CI (CARD-41) e o cancelamento de execução (CARD-40)
+**Status:** Em andamento — CARD-38a e CARD-38b concluídos; falta deploy independente e CI (CARD-41); cancelamento de execução e início sem reserva entregues no [CARD-40b](CARD-40b-compensacoes-e-falhas.md)
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-operacoes` (ADR-015)
