@@ -1,7 +1,7 @@
 # CARD-40a — Orquestrador da Saga no OS: fluxo normal
 
 **Tipo:** Implementação / Integração distribuída
-**Status:** To Do — escopo e decisões definidos (2026-10-13)
+**Status:** Concluído — PR #4 mergeado em `tech-challenge-os` (2026-10-13); evidência de CI pendente (CARD-41)
 **Depende de:** CARD-36, CARD-37b, CARD-38b, CARD-39b
 **Bloqueia:** CARD-40b, CARD-40c
 **Repositório alvo:** `tech-challenge-os` ([ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
@@ -54,16 +54,35 @@ Os três serviços já existem, mas não conversam. Operações e Billing proces
 - **Consulta:** `GET /os/ordens-servico/{id}/saga` (`Admin`, `Atendente`) devolve estado, referências e histórico de transições, sem dados do cliente.
 - **Fora deste card:** compensações, pagamento desconhecido, timeouts, cancelamento manual pela Saga e cancelamento de execução ([CARD-40b](CARD-40b-compensacoes-e-falhas.md)); broker único e BDD ([CARD-40c](CARD-40c-ambiente-integrado-e-bdd.md)).
 
+## Implementação (2026-10-13)
+
+- **Repositório:** [tech-challenge-os](https://github.com/LucazDenadai/tech-challenge-os), PR #4, em 10 commits, um por passo: correção do consumidor, domínio, contratos, persistência, abertura, orquestrador, outbox, rota de consulta, teste pelo broker e README/OpenAPI.
+- **Orquestrador:** `ProcessarMensagemSagaUseCase` substitui o `RegistrarMensagemRecebidaUseCase` do CARD-37b. Mensagem de OS sem Saga, ou com `correlationId` diferente do Id da Saga, vai para a DLQ; a transação é desfeita, então nem a inbox fica e a mensagem pode ser reprocessada da DLQ.
+- **Diagnóstico sem peças:** o `InventoryReservationRequested` exige ao menos um item (`minItems: 1`) e o `ExecutionStartRequested` exige uma reserva ativa em Operações. Um diagnóstico só com serviços não tem caminho no contrato; a Saga para em `ManualActionRequired` com o motivo.
+- **Pagamento divergente:** `PaymentApproved` com valor ou moeda diferentes do `QuoteReady` também vai para `ManualActionRequired`, sem pedir o início da execução.
+- **Status da OS:** `StatusDaSaga.Sincronizar` aplica o status da tabela do ADR-017 a cada transição. Estados de desvio mantêm o status anterior.
+- **Cancelamento manual:** `POST .../cancelamento` também encerra a Saga em `Cancelled` (causa `CancelamentoManual`), para que eventos atrasados fiquem fora do fluxo. Ainda não libera reserva nem estorna.
+- **E-mail do cliente:** validado no domínio `Cliente` (criação, atualização e reativação: `400`). A abertura recusa com `422` um cadastro antigo sem e-mail.
+- **Concorrência:** `xmin` da Saga como token (mesmo padrão de Billing). Conflito sobe como exceção, e o consumidor refaz a mensagem com escopo novo.
+- **Correção no consumidor:** o desligamento passou a tolerar `ObjectDisposedException` do RabbitMQ.Client 7 ao fechar o canal. A corrida derrubava de forma intermitente o teste de DLQ do CARD-37b.
+
+### Pendências
+
+- **Diagnóstico sem peças:** decidir no CARD-40b se o contrato ganha início de execução sem reserva ou se a reserva aceita lista vazia.
+- **Compensações:** `PaymentDeclined`, `PaymentOutcomeUnknown`, `ExecutionStartRejected`, `ExecutionFailed`, `InventoryReleased` e estornos ficam fora do fluxo até o CARD-40b.
+- **Cancelamento manual com efeito confirmado:** cancelar depois da reserva ou do pagamento ainda não compensa (CARD-40b).
+- **Teste intermitente:** `ConsultarSaga_AberturaEmDiagnosingECancelamentoEncerraASaga` falhou uma vez durante o desenvolvimento e passou nas seis execuções seguintes. A causa não foi identificada; observar no CI (CARD-41).
+
 ## Critérios de aceite
 
-- [ ] A abertura da OS cria a Saga e publica `DiagnosisRequested` pela outbox no mesmo commit.
-- [ ] Cada transição da tabela grava estado da Saga, status e histórico da OS e o comando seguinte em uma transação.
-- [ ] O estado da Saga sobrevive a restart e pode ser consultado pela API do OS, sem acesso aos bancos de Billing e Operações.
-- [ ] Mensagem duplicada não gera segunda transição nem segundo comando; replay gera o mesmo `idempotencyKey`.
-- [ ] Mensagem válida fora do fluxo não muda estado e fica visível em log e métrica.
-- [ ] Rejeição de diagnóstico, orçamento ou reserva encerra a Saga em `Cancelled` sem pedir pagamento.
-- [ ] `PaymentCreationRequested` leva o valor, a moeda e a versão aprovados e o `payerEmail` do cliente.
-- [ ] Os comandos publicados passam no teste de contrato contra o AsyncAPI.
+- [x] A abertura da OS cria a Saga e publica `DiagnosisRequested` pela outbox no mesmo commit.
+- [x] Cada transição da tabela grava estado da Saga, status e histórico da OS e o comando seguinte em uma transação.
+- [x] O estado da Saga sobrevive a restart e pode ser consultado pela API do OS, sem acesso aos bancos de Billing e Operações. *(O teste pelo broker reinicia o OS no meio do fluxo.)*
+- [x] Mensagem duplicada não gera segunda transição nem segundo comando; replay gera o mesmo `idempotencyKey`.
+- [x] Mensagem válida fora do fluxo não muda estado e fica visível em log e métrica. *(`os_saga_mensagens{resultado="ForaDoFluxo"}`.)*
+- [x] Rejeição de diagnóstico, orçamento ou reserva encerra a Saga em `Cancelled` sem pedir pagamento.
+- [x] `PaymentCreationRequested` leva o valor, a moeda e a versão aprovados e o `payerEmail` do cliente.
+- [x] Os comandos publicados passam no teste de contrato contra o AsyncAPI.
 
 ## Cenários de aceite (Gherkin)
 
@@ -115,3 +134,15 @@ Funcionalidade: Orquestrar o fluxo normal da OS
 - Testes unitários da máquina de estados e de idempotência.
 - Testes de integração com PostgreSQL e RabbitMQ: abertura → conclusão com os participantes simulados por mensagens, duplicata, fora do fluxo e restart.
 - Teste de contrato dos comandos publicados contra o AsyncAPI.
+
+Registradas em 2026-10-13, PR #4 de `tech-challenge-os`:
+
+| Evidência | Onde | Resultado |
+|---|---|---|
+| Máquina de estados e status derivado | `tests/OficinaMecanica.OS.UnitTests/Dominio/SagaOrdemServicoTests.cs` | Fluxo normal, mensagens fora do estado, versão/pagamento/execução de outro Id, ação manual, rejeições, tabela de status do ADR-017 |
+| Orquestrador | `ProcessarMensagemSagaUseCaseTests` | Duplicata, OS sem Saga, `correlationId` divergente, comando seguinte com `causationId`, fora do fluxo, eventos do CARD-40b |
+| Contrato dos comandos | `ComandosPublicadosTests` | Catálogo publicado igual ao da spec; os 5 comandos do fluxo normal válidos pelo JSON Schema; mesma `idempotencyKey` por etapa |
+| Persistência | `SagaPersistenciaTests`, `OrdemServicoPersistenciaTests` | Transições em contextos diferentes, conflito pelo `xmin`, abertura grava Saga e outbox juntas |
+| Fluxo pelo broker (PostgreSQL e RabbitMQ via Testcontainers) | `Mensageria/SagaFluxoTests` | Abertura → conclusão com o OS reiniciado no meio; reentrega e cópia de `QuoteApproved` sem comando duplicado; orçamento recusado sem reserva nem pagamento |
+| Totais | `tech-challenge-os` | 208 testes unitários e 42 de integração aprovados |
+| OpenAPI | `docs/openapi/os-v1.json` | Inclui `GET /os/ordens-servico/{id}/saga` |

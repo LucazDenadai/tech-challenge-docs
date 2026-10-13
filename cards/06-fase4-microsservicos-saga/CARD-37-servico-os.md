@@ -1,7 +1,7 @@
 # CARD-37 — Serviço OS independente
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-37a e CARD-37b concluídos; falta imagem/deploy independente e CI (CARD-41) e a filial nas mensagens publicadas (CARD-40)
+**Status:** Em andamento — CARD-37a e CARD-37b concluídos; falta imagem/deploy independente e CI (CARD-41); mensagens publicadas com a filial desde o [CARD-40a](CARD-40a-orquestrador-saga-os.md)
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-os`
@@ -38,7 +38,7 @@ O atual Atendimento contém capacidades que passarão a pertencer a OS, Billing 
 - [x] OS persiste apenas seu estado; dados externos chegam por contrato e são tratados de forma idempotente.
 - [x] A API publicada corresponde ao OpenAPI e expõe os endpoints exigidos pelo fluxo.
 - [x] Falha/duplicidade na entrega de evento não cria transições ou registros duplicados.
-- [ ] A filial da ordem é preservada nos registros e nas mensagens pertinentes. *(OS e inbox gravam `FilialId`; as mensagens publicadas pelo OS ficam no CARD-40.)*
+- [x] A filial da ordem é preservada nos registros e nas mensagens pertinentes. *(OS e inbox gravam `FilialId`; os comandos publicados pelo OS levam o `filialId` da Saga desde o [CARD-40a](CARD-40a-orquestrador-saga-os.md).)*
 - [x] Nenhuma connection string, senha ou token está versionado.
 
 ## Cenários de aceite (Gherkin)
