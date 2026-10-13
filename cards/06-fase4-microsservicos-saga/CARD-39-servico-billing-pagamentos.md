@@ -1,7 +1,7 @@
 # CARD-39 — Serviço Billing e pagamentos
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-39a concluído; CARD-39b (Mercado Pago) em andamento, decisões no [ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md); deploy e CI no CARD-41
+**Status:** Em andamento — CARD-39a concluído; CARD-39b implementado com provedor simulado ([ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md)), sandbox pendente de credenciais; deploy e CI no CARD-41
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-billing` (nome definido no CARD-34 / [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
@@ -30,20 +30,20 @@ Billing é owner de orçamento, aprovação e estado financeiro. Deve integrar-s
 
 ## Critérios de aceite
 
-- [ ] Billing persiste orçamentos, pagamentos e reconciliação em sua instância PostgreSQL dedicada e não consulta tabelas de outros serviços. *(Orçamento persistido no PostgreSQL de Billing; pagamento e reconciliação no CARD-39b.)*
+- [x] Billing persiste orçamentos, pagamentos e reconciliação em sua instância PostgreSQL dedicada e não consulta tabelas de outros serviços.
 - [x] Orçamento pode ser criado, consultado, aprovado ou recusado com histórico e filial/correlation ID.
-- [ ] Integração Mercado Pago funciona em sandbox, usando credenciais em secret store/variáveis seguras.
-- [ ] Webhook valida autenticidade e consulta/valida estado conforme fluxo oficial adotado, sem confiar cegamente no payload recebido.
-- [ ] Notificação duplicada ou fora de ordem não duplica cobrança, evento nem transição financeira.
-- [ ] Sucesso, recusa, cancelamento, timeout e erro do provedor são estados distintos e observáveis.
-- [ ] Uma cobrança só pode ser criada para a versão vigente de orçamento aprovada e não expirada. *(Porta `IOrcamentoParaPagamento` pronta no CARD-39a; a cobrança é do CARD-39b.)*
-- [ ] A confirmação do provedor só aprova o pagamento quando referência, OS, orçamento, valor e moeda correspondem à tentativa persistida.
-- [ ] Recusa de negócio do provedor é distinguida de indisponibilidade/timeout; falha técnica não é registrada como pagamento recusado.
-- [ ] Notificação atrasada ou fora de ordem não regride estado terminal nem autoriza a execução depois de uma recusa/cancelamento.
-- [ ] Existe regra aprovada para múltiplas tentativas de pagamento; não é possível liquidar mais de uma cobrança para o mesmo orçamento sem decisão explícita.
-- [ ] Operação de compensação está implementada ou há procedimento manual auditável para situação não compensável.
-- [ ] Testes não dependem de chamadas pagas/live; sandbox e doubles são isolados e o contrato real tem teste de integração controlado.
-- [ ] Swagger explica endpoints e exemplos, sem segredos ou dados reais. *(Feito para o orçamento; endpoints de pagamento e webhook no CARD-39b.)*
+- [ ] Integração Mercado Pago funciona em sandbox, usando credenciais em secret store/variáveis seguras. *(Credenciais por variável de ambiente prontas; execução no sandbox pendente; Secret no CARD-41.)*
+- [x] Webhook valida autenticidade e consulta/valida estado conforme fluxo oficial adotado, sem confiar cegamente no payload recebido.
+- [x] Notificação duplicada ou fora de ordem não duplica cobrança, evento nem transição financeira.
+- [x] Sucesso, recusa, cancelamento, timeout e erro do provedor são estados distintos e observáveis. *(Estado, status original do provedor, `PaymentOutcomeUnknown` e métricas.)*
+- [x] Uma cobrança só pode ser criada para a versão vigente de orçamento aprovada e não expirada.
+- [x] A confirmação do provedor só aprova o pagamento quando referência, OS, orçamento, valor e moeda correspondem à tentativa persistida.
+- [x] Recusa de negócio do provedor é distinguida de indisponibilidade/timeout; falha técnica não é registrada como pagamento recusado.
+- [x] Notificação atrasada ou fora de ordem não regride estado terminal nem autoriza a execução depois de uma recusa/cancelamento.
+- [x] Existe regra aprovada para múltiplas tentativas de pagamento; não é possível liquidar mais de uma cobrança para o mesmo orçamento sem decisão explícita. *(Uma tentativa por versão de orçamento, por índice único; nova tentativa depois de recusa fica fora do MVP.)*
+- [x] Operação de compensação está implementada ou há procedimento manual auditável para situação não compensável. *(Estorno total; `PaymentRefundFailed` e ação manual quando não confirma.)*
+- [ ] Testes não dependem de chamadas pagas/live; sandbox e doubles são isolados e o contrato real tem teste de integração controlado. *(Sem chamadas live; o cliente HTTP é testado com respostas gravadas no formato da API. Teste controlado no sandbox pendente.)*
+- [x] Swagger explica endpoints e exemplos, sem segredos ou dados reais.
 
 ## Cenários de aceite (Gherkin)
 
@@ -118,9 +118,10 @@ Funcionalidade: Orçar e cobrar uma ordem
 - Execução em sandbox documentada com identificadores anonimizados e sem chaves.
 - Prova de webhook duplicado/inválido e cenário de compensação/recuperação.
 
-Registradas até 2026-10-12:
+Registradas até 2026-10-13:
 
-- Repositório: [tech-challenge-billing](https://github.com/LucazDenadai/tech-challenge-billing), PR #1 (39a).
+- Repositório: [tech-challenge-billing](https://github.com/LucazDenadai/tech-challenge-billing), PR #1 (39a) e PR #2 (39b).
 - Testes e OpenAPI do orçamento: tabela de evidências do [CARD-39a](CARD-39a-orcamento-aprovacao.md#evidências).
-- Sandbox Mercado Pago, webhook e compensação: pendentes (CARD-39b).
+- Webhook duplicado/inválido e compensação: tabela de evidências do [CARD-39b](CARD-39b-mercado-pago-webhook.md#evidências).
+- Sandbox Mercado Pago: pendente de credenciais e URL pública (CARD-39b).
 - Workflow e manifests: pendentes (CARD-41).
