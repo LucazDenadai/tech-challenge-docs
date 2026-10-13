@@ -23,7 +23,7 @@ As APIs REST já têm formato decidido nos cards de serviço: Swagger/OpenAPI ge
 - O broker continua RabbitMQ (ADR-001). Convenções:
   - canal `saga-os.<mensagem-em-kebab>.v<N>` = exchange `fanout` durável com esse nome;
   - cada consumidor declara a fila `<servico>.<canal>` e a DLQ `<servico>.<canal>.dlq`.
-- Mudança compatível (campo opcional novo) mantém a versão. Mudança incompatível cria `.v2` em canal próprio, e a versão anterior continua publicada até todos os consumidores migrarem.
+- Mudança compatível (campo opcional novo) mantém a versão. Mudança incompatível cria `.v2` em canal próprio, e a versão anterior continua publicada até todos os consumidores migrarem. *Exceção até o primeiro deploy da Fase 4: [ADR-020](ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md).*
 - Toda alteração no arquivo passa por PR neste repositório e é validada com `asyncapi validate` (CLI oficial, via Docker) antes do merge.
 - REST continua documentado pelo OpenAPI gerado em cada serviço.
 
