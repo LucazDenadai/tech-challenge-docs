@@ -55,6 +55,7 @@ evidencias/   ← Evidências de execução real (traces, prints) usadas na entr
 | [ADR-017](adr/ADR-017-saga-orquestrada-os-fase4.md) | Saga orquestrada pelo serviço OS, contratos e compensações (Fase 4) |
 | [ADR-018](adr/ADR-018-contratos-assincronos-asyncapi-fase4.md) | Contratos assíncronos em AsyncAPI 3.0 neste repositório (Fase 4) |
 | [ADR-019](adr/ADR-019-integracao-mercado-pago-fase4.md) | Integração do Billing com o Mercado Pago: Pix pela API de Pagamentos, webhook assinado e reconciliação (Fase 4) |
+| [ADR-020](adr/ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md) | Saga: serviço sem peça, cancelamento antes do reparo e resolução manual pelo Admin (Fase 4) |
 
 ## Contratos
 
