@@ -28,6 +28,7 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
   - Com mais de uma réplica de Operações, travar a leitura das duas outboxes para duas réplicas não publicarem o mesmo evento: `FOR UPDATE SKIP LOCKED` no PostgreSQL ([CARD-38a](CARD-38a-estoque-em-operacoes.md)) e atualização condicional por item no DynamoDB ([CARD-38b](CARD-38b-fila-execucao.md)).
   - Com mais de uma réplica de Billing, a mesma trava `FOR UPDATE SKIP LOCKED` na outbox do PostgreSQL ([CARD-39a](CARD-39a-orcamento-aprovacao.md)). A expiração de orçamentos já tolera réplicas: o `xmin` deixa só uma gravar.
   - Rotas `/billing/orcamentos/*` no API Gateway, com o mesmo JWT de clientes e funcionários ([CARD-39a](CARD-39a-orcamento-aprovacao.md)).
+  - Billing com Mercado Pago ([CARD-39b](CARD-39b-mercado-pago-webhook.md)): `MercadoPago__AccessToken` e `MercadoPago__WebhookSecret` em Secret; `MercadoPago__Modo=MercadoPago` só onde houver credenciais. Rotas `/billing/pagamentos/*` no API Gateway; o webhook `/billing/pagamentos/webhook/mercadopago` fica público (sem JWT, autenticado pelo `x-signature`) e a URL vai para o painel do Mercado Pago. A rota `/billing/simulador/*` não deve ser exposta fora do ambiente de demonstração.
   - Provisionar na IaC a tabela DynamoDB de Operações com o índice `GSI1`, no formato do `InicializadorTabelaDynamo` ([CARD-38b](CARD-38b-fila-execucao.md)). Na nuvem, `DynamoDb:CriarTabela` fica desligado.
 
 ## Critérios de aceite
