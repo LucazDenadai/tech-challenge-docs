@@ -1,7 +1,7 @@
 # CARD-39b — Mercado Pago: cobrança e webhook
 
 **Tipo:** Integração externa / Pagamentos
-**Status:** Implementado — PR #2 mergeado em `tech-challenge-billing` (2026-10-13); validação em sandbox pendente (credenciais e URL pública) e evidência de CI pendente (CARD-41)
+**Status:** Implementado — PR #2 mergeado em `tech-challenge-billing` (2026-10-13); sandbox validado em parte (token, webhook assinado e consulta) e criação do Pix bloqueada por erro `500` do sandbox ([validação](#validação-em-sandbox-2026-10-13)); evidência de CI pendente (CARD-41)
 **Depende de:** CARD-36, CARD-39a
 **Bloqueia:** CARD-40
 **Repositório alvo:** `tech-challenge-billing` ([ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
@@ -48,11 +48,45 @@ As decisões de integração (produto, autenticação, estados, idempotência, r
 
 ### Pendências
 
-- **Sandbox:** sem credenciais do Mercado Pago ainda. Falta rodar criação, consulta, webhook assinado e estorno contra o sandbox e registrar a evidência anonimizada (passo 6). Precisa de uma URL pública para o webhook (túnel local ou o deploy do CARD-41). Sem webhook, a reconciliação por consulta já funciona.
+- **Sandbox:** *atualizado em 2026-10-13, ver [Validação em sandbox](#validação-em-sandbox-2026-10-13).* Token, webhook assinado e consulta validados. Falta a criação do Pix (bloqueada por `500` do sandbox) e, com ela, o estorno.
 - **Estorno de pagamento não aprovado:** o comando vai para a DLQ com o motivo, sem chamar o provedor. O contrato não tem evento para "nada a estornar"; o OS só pede estorno depois de `PaymentApproved` (ADR-017). Se o CARD-40 precisar de resposta, o contrato ganha o evento.
 - **Estorno em processamento sem prazo:** enquanto o provedor responde, um estorno `in_process` é consultado a cada verificação sem limite. A reconciliação dedicada de estorno pendente está como evolução no ADR-017.
 - **Pix pendente quando a Saga cancela:** não há comando para cancelar a cobrança; o Pix expira sozinho em 30 minutos e vira `PaymentDeclined`.
 - **Réplicas:** a reconciliação tolera réplicas (`xmin` e chave idempotente). A trava da outbox continua no CARD-41.
+
+## Validação em sandbox (2026-10-13)
+
+Passo 6, feito em parte. Identificadores e segredos foram omitidos.
+
+**Ambiente**
+
+- Aplicação no painel do Mercado Pago: Checkout Transparente, API de Pagamentos (ADR-019). Credenciais de teste (`TEST-`).
+- Billing no Docker, modo `MercadoPago`: PR #3 de `tech-challenge-billing` (`Dockerfile`, profile `api` e `docker-compose.sandbox.yml`).
+- URL pública: Quick Tunnel da Cloudflare (`cloudflared`), sem conta. A URL muda a cada start; o painel aponta para `<túnel>/billing/pagamentos/webhook/mercadopago`, evento **Pagamentos**.
+- Token e assinatura secreta vêm do ambiente do host. O Compose recusa subir sem eles. Nada versionado.
+
+**Resultados**
+
+| Verificação | Requisição | Resultado |
+|---|---|---|
+| Readiness pelo túnel | `GET /billing/ready` | `200` |
+| Webhook sem `x-request-id` | `POST .../webhook/mercadopago` | `400`, como o controller exige |
+| Assinatura inválida | `x-signature: ts=1,v1=abc` | `401`, log `assinatura Malformada` |
+| Assinatura válida (HMAC calculado fora do código) | recurso inexistente | `200`; Billing consultou `GET /v1/payments/{id}`, recebeu `404` e gravou `Desconhecido`. O `404` (e não `401`) confirma que o token é aceito. |
+| Notificação real do Mercado Pago (simulação do painel) | `x-request-id` gerado pelo provedor | Assinatura aceita; consulta `404`; `Desconhecido`. Prova entrega pelo túnel e segredo correto. |
+| Criação de Pix direto na API, sem Billing | `POST /v1/payments`, `payment_method_id=pix` | **`500`** em 4 tentativas: `transport: circuit breaker open` e `http is unavailable for request create_ti` |
+
+**Leitura**
+
+- O `500` vem de um serviço interno de staging do Mercado Pago, não de token, corpo ou Billing. Token errado daria `401`; corpo errado, `400`.
+- Pelo ADR-019, `5xx` é falha técnica, nunca recusa. Se o Billing receber esse erro, o pagamento fica com resultado desconhecido e a reconciliação tenta de novo.
+- A documentação oficial só descreve como **aprovar** um Pix de teste na API de Orders (`payer.first_name = "APRO"`). Pela API de Pagamentos, o Pix de teste deve ficar em `pending`. O caminho esperado no sandbox é criar → webhook → `Pendente`; a aprovação continua demonstrada no modo `Simulado` (CARD-40).
+
+**Falta**
+
+1. Repetir a criação quando o sandbox voltar. Se o erro continuar, cadastrar uma chave Pix na conta (exigência da documentação para Pix) e testar de novo; depois, avaliar credenciais de um vendedor de teste.
+2. Com a criação funcionando: Pix criado pelo comando da Saga, webhook `payment.created` com resultado `Aplicada`/`SemMudanca` e pagamento em `Pendente`.
+3. Estorno no sandbox só é possível com pagamento aprovado; fica dependente do item anterior e da aprovação de Pix no sandbox.
 
 ## Critérios de aceite
 
@@ -67,7 +101,7 @@ As decisões de integração (produto, autenticação, estados, idempotência, r
 - [x] Falha temporária do provedor gera retry limitado e observável; falha persistente é encaminhada para reconciliação/DLQ conforme decisão. *(Ação manual com log de erro e métrica, ADR-019.)*
 - [x] Aprovação publicada só ocorre após confirmação autoritativa do pagamento.
 - [x] Caminho de cancelamento/estorno ou recuperação manual está exercitado para falha posterior na Saga. *(Com o provedor simulado e o HTTP com respostas gravadas; no sandbox, pendente.)*
-- [ ] Testes cobrem sandbox e cenários simulados sem expor tokens em log. *(Simulados e respostas gravadas cobertos; sandbox pendente de credenciais.)*
+- [ ] Testes cobrem sandbox e cenários simulados sem expor tokens em log. *(Simulados e respostas gravadas cobertos. Sandbox: token, webhook assinado e consulta validados; criação do Pix bloqueada por `500` do provedor.)*
 
 ## Cenários de aceite (Gherkin)
 
@@ -166,4 +200,5 @@ Registradas em 2026-10-13, PR #2 de `tech-challenge-billing`:
 | Testes de persistência, adapters, API e mensageria (PostgreSQL e RabbitMQ via Testcontainers) | `tests/OficinaMecanica.Billing.IntegrationTests` | 83 aprovados (56 novos). Comandos e reconciliações simultâneos, mesma notificação em várias réplicas, `401` para assinatura ausente/adulterada/antiga, cliente HTTP com retry e respostas gravadas, fluxo cobrança → aprovação → estorno pelo broker |
 | Assinatura do webhook | `ValidadorAssinaturaTests` | HMAC igual ao calculado fora do código; recurso, requisição, segredo ou `ts` trocados são recusados |
 | OpenAPI gerado | `docs/openapi/billing-v1.json` | 9 rotas: as 5 do orçamento, consulta do pagamento, webhook e simulador |
-| Sandbox Mercado Pago | — | Pendente: credenciais e URL pública |
+| Billing no Docker e túnel para o webhook | `tech-challenge-billing`, PR #3 | API no Compose; override do sandbox com `cloudflared` |
+| Sandbox Mercado Pago | [Validação em sandbox](#validação-em-sandbox-2026-10-13) | Parcial: token, webhook real assinado, `401` e consulta validados; criação do Pix com `500` do provedor |
