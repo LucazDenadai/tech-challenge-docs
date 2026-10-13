@@ -1,7 +1,7 @@
 # CARD-40c — Ambiente integrado e BDD ponta a ponta
 
 **Tipo:** Testes / Integração distribuída
-**Status:** To Do — escopo e decisões definidos (2026-10-13)
+**Status:** Concluído — PR #6 mergeado em `tech-challenge-os` (2026-10-13); BDD verde no CI; trace como evidência no CARD-42
 **Depende de:** CARD-40a, CARD-40b
 **Bloqueia:** CARD-42, CARD-43
 **Repositório alvo:** `tech-challenge-os`, pasta `e2e/` (decidido pelo time em 2026-10-13)
@@ -38,12 +38,27 @@ O enunciado exige pelo menos um fluxo completo em BDD. Hoje cada serviço tem o 
 - O pagamento é confirmado pela rota do simulador de Billing, como faria o webhook.
 - Execução no CI do OS com dependências isoladas, com checkout dos três repositórios.
 
+## Implementação (2026-10-13)
+
+- **Repositórios:** `tech-challenge-os` PR #6 (Dockerfile, Compose integrado, projeto Reqnroll, workflow e README, em 6 commits), `tech-challenge-operacoes` PR #4 (Dockerfile) e `tech-challenge-billing` PR #5.
+- **Billing expõe `referenciaProvedor`:** a rota do simulador recebe a referência do provedor, que a consulta de pagamento não devolvia; os testes do Billing a liam do banco. A consulta (`/billing/pagamentos/meus` e `/os/{osId}`) passou a trazer o campo, que é o ID da cobrança no Mercado Pago e não é dado do pagador. Assim o BDD usa só APIs públicas.
+- **Estoque independente de ordem:** as verificações de estoque comparam com o saldo lido no início de cada cenário. Os cenários passaram duas vezes seguidas sobre o mesmo ambiente.
+- **Esperas por condição:** os efeitos chegam por mensagem; cada step espera a condição (até 60 s) em vez de dormir um tempo fixo.
+- **Script executável no CI:** o bit de execução do `e2e/executar.sh` não entra no Git pelo Windows; foi marcado no índice (`git update-index --chmod=+x`).
+- **CI:** [execução do workflow](https://github.com/LucazDenadai/tech-challenge-os/actions/runs/38448697151) com os três repositórios: 5 de 5 cenários aprovados; relatório `bdd.trx` como artefato.
+
+### Pendências
+
+- **Trace correlacionado:** o Jaeger sobe no ambiente; a captura do trace como evidência fica no CARD-42.
+- **Imagens publicadas:** quando o CARD-41 publicar imagens, o Compose troca `build` por `image`.
+- **Runner:** o GitHub avisa que `ubuntu-latest` migra para Ubuntu 26 a partir de 2026-10-19; acompanhar no CARD-41.
+
 ## Critérios de aceite
 
-- [ ] Fluxo completo executável: abrir OS → diagnosticar → gerar/aprovar orçamento → reservar estoque por filial → cobrar/confirmar → executar → concluir → status e histórico da OS.
-- [ ] Cenários Gherkin automatizados rodam em CI com broker e bancos isolados.
-- [ ] Logs/traces identificam a Saga completa; dados pessoais e segredos não aparecem na evidência.
-- [ ] O BDD não depende de ambiente cloud pago nem do sandbox do Mercado Pago.
+- [x] Fluxo completo executável: abrir OS → diagnosticar → gerar/aprovar orçamento → reservar estoque por filial → cobrar/confirmar → executar → concluir → status e histórico da OS.
+- [x] Cenários Gherkin automatizados rodam em CI com broker e bancos isolados.
+- [ ] Logs/traces identificam a Saga completa; dados pessoais e segredos não aparecem na evidência. *(Jaeger no ambiente; captura no CARD-42.)*
+- [x] O BDD não depende de ambiente cloud pago nem do sandbox do Mercado Pago.
 
 ## Cenários de aceite (Gherkin)
 
@@ -61,3 +76,11 @@ Os cenários são os do [CARD-40](CARD-40-saga-e-bdd-integrado.md#cenários-bdd-
 
 - Arquivos Gherkin executáveis e relatório do CI.
 - Trace correlacionado do fluxo completo e de uma compensação.
+
+Registradas em 2026-10-13:
+
+| Evidência | Onde | Resultado |
+|---|---|---|
+| Cenários Gherkin executáveis | `tech-challenge-os/e2e/OficinaMecanica.E2E/Features/SagaOrdemServico.feature` | 5 cenários, o obrigatório marcado `@obrigatorio` |
+| Execução local | `e2e/executar.sh` | 5 de 5 aprovados, duas vezes seguidas sobre o mesmo ambiente |
+| Execução no CI | [GitHub Actions](https://github.com/LucazDenadai/tech-challenge-os/actions/runs/38448697151) | 5 de 5 aprovados com os três repositórios; `bdd.trx` como artefato |
