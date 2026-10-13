@@ -1,7 +1,7 @@
 # CARD-41 — CI/CD, gates de qualidade e deploy independente
 
 **Tipo:** Plataforma / CI-CD
-**Status:** Em andamento — dividido em 41a (CI) e 41b (Kubernetes) em 2026-10-13; 41a com escopo definido
+**Status:** Em andamento — 41a (CI) concluído; 41b (Kubernetes) pendente
 **Depende de:** CARD-34, CARD-35, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** Três repositórios de serviço e repositórios de infraestrutura necessários
@@ -33,14 +33,14 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
 
 ## Critérios de aceite
 
-- [ ] Existem três workflows verificáveis, um por serviço, e alteração em um serviço não publica/deploya os outros.
-- [ ] Cada pipeline executa restore, build, testes, análise de qualidade e gate de cobertura próprio.
-- [ ] O relatório mostra cobertura por serviço e mede o mesmo escopo (linhas/branches) declarado na política; limite mínimo >=80% falha o workflow se não atingido.
+- [x] Existem três workflows verificáveis, um por serviço, e alteração em um serviço não publica/deploya os outros. *(Publicação: [CARD-41a](CARD-41a-ci-por-servico.md); deploy: CARD-41b.)*
+- [x] Cada pipeline executa restore, build, testes, análise de qualidade e gate de cobertura próprio. *(SonarCloud depende dos segredos; ver CARD-41a.)*
+- [x] O relatório mostra cobertura por serviço e mede o mesmo escopo (linhas/branches) declarado na política; limite mínimo >=80% falha o workflow se não atingido.
 - [x] Ao menos um teste BDD integrado requerido por CARD-40 roda em workflow adequado e evidencia dependências usadas. *(Workflow `e2e.yml` do OS, [CARD-40c](CARD-40c-ambiente-integrado-e-bdd.md).)*
-- [ ] Imagens são tagueadas por commit/digest e deployment usa artefato imutável, não `latest`.
+- [ ] Imagens são tagueadas por commit/digest e deployment usa artefato imutável, não `latest`. *(Imagens por commit no CARD-41a; deployment no CARD-41b.)*
 - [ ] Cada serviço tem Dockerfile e manifests Kubernetes versionados em seu repositório, com recursos suficientes para deploy e health check independentes.
 - [ ] Merge aprovado implanta somente a unidade de serviço correspondente no cluster Kubernetes e aguarda rollout/health.
-- [ ] Branch principal exige PR e checks de build/testes/qualidade, conforme proteção configurada.
+- [x] Branch principal exige PR e checks de build/testes/qualidade, conforme proteção configurada.
 - [ ] Se Terraform for escolhido para provisionamento, pipelines de plan/apply têm aprovação/permissões adequadas e state remoto/locking seguem ADR-011 quando aplicável; a ausência de Terraform não reprova o card por si só.
 - [ ] Secrets vêm de secret store/ambiente seguro e são mascarados nos logs.
 - [ ] Falha de rollout impede conclusão do deploy e há procedimento de rollback/redeploy documentado.

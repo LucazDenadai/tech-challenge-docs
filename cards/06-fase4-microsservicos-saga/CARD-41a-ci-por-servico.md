@@ -1,7 +1,7 @@
 # CARD-41a — CI por serviço: testes, cobertura, qualidade e imagem
 
 **Tipo:** Plataforma / CI
-**Status:** To Do — escopo e decisões definidos (2026-10-13)
+**Status:** Concluído — PRs mergeados nos três serviços (2026-10-13); SonarCloud pendente de projetos e segredos do dono da conta
 **Depende de:** CARD-37, CARD-38, CARD-39, CARD-40c
 **Bloqueia:** CARD-41b, CARD-43
 **Repositórios alvo:** `tech-challenge-os`, `tech-challenge-billing`, `tech-challenge-operacoes`
@@ -36,15 +36,31 @@ O enunciado exige pipeline independente por microsserviço, cobertura mínima de
 - **Independência:** cada workflow só lê o próprio repositório (e o `tech-challenge-docs`, para a spec). Alterar um serviço não dispara o pipeline dos outros.
 - **Proteção de branch (autorizada pelo time):** `main` dos três repositórios exige PR e o check `build-e-testes` verde; no OS também o `bdd`.
 
+## Implementação (2026-10-13)
+
+- **Repositórios:** `tech-challenge-os` PR #7, `tech-challenge-billing` PR #6 e `tech-challenge-operacoes` PR #5. Cada um ganhou `coverlet.runsettings` (a política de cobertura) e `.github/workflows/ci.yml`.
+- **Testes novos para o gate de branches:**
+  - OS: guardas da Saga (evento no estado errado ou de outra execução, pagamento ou reserva) e validadores de senha forte, CPF, CNPJ e placa. O `SenhaForteAttribute` estava com 0% dos branches cobertos.
+  - Operações: os eventos que Operações publica passam no próprio validador e são recusados quando malformados (Operações não lê o que publica, então esses validadores nunca rodavam); regras de borda de execução e catálogo. `ExigirValor`, copiado do OS e sem uso, foi removido.
+- **Bug encontrado pelo CI:** no runner do GitHub, `ExecutionCompleted` foi processado antes de `ExecutionStarted` (filas diferentes) e a Saga parou em `InExecution`. A Saga passou a aceitar conclusão e falha também em `StartingExecution`, com teste de integração que publica na ordem invertida.
+- **YAML:** um `echo` com `: ` em escalar simples quebrou o parse do workflow; os três arquivos passam no `actionlint`.
+- **Proteção de branch:** `main` dos três exige PR, check `build-e-testes` verde (no OS também `bdd`), vale para administradores, sem force push. Aprovações obrigatórias: 0, porque o GitHub não deixa aprovar o próprio PR.
+- **SonarCloud:** o passo existe e roda quando `SONAR_TOKEN` e `SONAR_ORGANIZATION` estiverem nos repositórios; até lá, o job registra aviso. Chave do projeto: variável `SONAR_PROJECT_KEY` ou `<organização>_<repositório>`.
+
+### Pendências
+
+- **SonarCloud (ação do dono da conta):** criar os três projetos no SonarCloud (importando os repositórios) e cadastrar `SONAR_TOKEN` e `SONAR_ORGANIZATION` em cada repositório.
+- **Runner:** `ubuntu-latest` migra para Ubuntu 26 a partir de 2026-10-19 (aviso do GitHub).
+
 ## Critérios de aceite
 
-- [ ] Existem três workflows verificáveis, um por serviço, e alteração em um serviço não publica os outros.
-- [ ] Cada pipeline executa restore, build, testes, análise de qualidade (quando configurada) e gate de cobertura próprio.
-- [ ] O relatório mostra linhas e branches por serviço; abaixo de 80% em qualquer uma, o workflow falha.
-- [ ] Imagens tagueadas por commit, sem `latest`.
-- [ ] A cópia da spec é verificada contra o `tech-challenge-docs`.
-- [ ] Branch principal exige PR e checks verdes.
-- [ ] Segredos ficam no GitHub e não aparecem nos logs.
+- [x] Existem três workflows verificáveis, um por serviço, e alteração em um serviço não publica os outros.
+- [x] Cada pipeline executa restore, build, testes, análise de qualidade (quando configurada) e gate de cobertura próprio.
+- [x] O relatório mostra linhas e branches por serviço; abaixo de 80% em qualquer uma, o workflow falha.
+- [x] Imagens tagueadas por commit, sem `latest`.
+- [x] A cópia da spec é verificada contra o `tech-challenge-docs`.
+- [x] Branch principal exige PR e checks verdes.
+- [x] Segredos ficam no GitHub e não aparecem nos logs.
 
 ## Cenários de aceite (Gherkin)
 
@@ -75,3 +91,17 @@ Funcionalidade: CI independente por serviço
 
 - URLs das execuções dos três workflows e do relatório de cobertura por serviço.
 - Configuração de proteção de branch.
+
+Registradas em 2026-10-13:
+
+| Serviço | Linhas | Branches | Execução na `main` | Imagem |
+|---|---|---|---|---|
+| OS | 94% | 86,7% | [CI](https://github.com/LucazDenadai/tech-challenge-os/actions/runs/38463664642) | `ghcr.io/lucazdenadai/tech-challenge-os:sha-4fa79a3…` |
+| Billing | 94,6% | 81,9% | [CI](https://github.com/LucazDenadai/tech-challenge-billing/actions/runs/38463680728) | `ghcr.io/lucazdenadai/tech-challenge-billing:sha-9cfd2f5…` |
+| Operações | 97% | 83,8% | [CI](https://github.com/LucazDenadai/tech-challenge-operacoes/actions/runs/38463695178) | `ghcr.io/lucazdenadai/tech-challenge-operacoes:sha-4588717…` |
+
+| Evidência | Resultado |
+|---|---|
+| Gate abaixo do mínimo | PR de teste no Billing com mínimo de 99%: [CI falhou](https://github.com/LucazDenadai/tech-challenge-billing/actions/runs/38464576256) com `Cobertura de linhas 94.6% abaixo de 99%` e o GitHub recusou o merge; PR fechado sem merge |
+| Push direto na `main` | Recusado: `GH006: Protected branch update failed` |
+| Independência | Cada workflow publica só a imagem do próprio repositório |
