@@ -1,49 +1,64 @@
-# CARD-41b — Kubernetes por serviço: manifests, rollout e deploy
+# CARD-41b — Kubernetes por serviço: manifests, rollout no Kind e demonstração
 
 **Tipo:** Plataforma / CD
-**Status:** To Do — decisões parciais (2026-10-13); restantes no início do card
+**Status:** To Do — escopo e decisões definidos (2026-10-13)
 **Depende de:** CARD-41a
 **Bloqueia:** CARD-42, CARD-43
-**Repositórios alvo:** `tech-challenge-os`, `tech-challenge-billing`, `tech-challenge-operacoes`; `tech-challenge-infra-k8s` para a plataforma compartilhada
-**Decisão arquitetural:** [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md) (EKS compartilhado, deploy independente), ADR-009/ADR-011 (EKS desligado fora das janelas, OIDC)
+**Repositórios alvo:** `tech-challenge-os`, `tech-challenge-billing`, `tech-challenge-operacoes`; `tech-challenge-infra-k8s` (plataforma compartilhada)
+**Decisão arquitetural:** [ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md) (Kind, sem AWS), [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md) (deploy independente por serviço), [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md)
 
 ---
 
 ## Contexto
 
-Cada serviço precisa de Dockerfile, manifests e deploy próprios em Kubernetes. O EKS da Fase 3 (`tech-challenge-infra-k8s`) é a plataforma compartilhada, mas fica destruído fora das janelas de demonstração por custo (ADR-009). Os repositórios da Fase 4 ainda não têm `AWS_ROLE_ARN`.
+Cada serviço precisa de manifests e deploy automatizado próprios em Kubernetes (R-14). Sem conta AWS, a plataforma é o Kind: efêmero no CI de cada serviço e local para a demonstração ([ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md)).
 
-## Decisões já tomadas (2026-10-13)
+## Decisões de implementação (2026-10-13)
 
-- **Validação do deploy (decidido pelo time):** cada pipeline sobe um cluster **Kind** no CI, aplica os manifests do serviço com as dependências mínimas e espera rollout e health. O job de deploy no EKS fica pronto e só roda quando houver `AWS_ROLE_ARN` no repositório e o cluster estiver ligado, na janela de demonstração.
-- **Imagem:** a do CARD-41a, tag `sha-<commit>`; o manifest aponta para ela, nunca para `latest`.
-
-## Escopo
-
-- Manifests por serviço (Deployment, Service, ConfigMap, referência a Secret, probes de liveness/readiness, recursos).
-- Job de rollout no Kind e job de deploy no EKS por serviço, com `kubectl rollout status` e procedimento de rollback.
-- IaC dos bancos de cada serviço e da tabela DynamoDB de Operações com o `GSI1` (`DynamoDb:CriarTabela` desligado na nuvem).
-- Travas da outbox para mais de uma réplica: `FOR UPDATE SKIP LOCKED` em Billing e Operações e atualização condicional no DynamoDB de Operações.
-- Rotas no API Gateway e Ingress; webhook do Mercado Pago público; simulador do Billing fora da exposição pública.
-- Segredos do Mercado Pago e do JWT em Secret.
+- **Plataforma compartilhada (`tech-challenge-infra-k8s`, pasta `kind/`):** namespace `oficina-mecanica`, RabbitMQ e Jaeger em manifests Kustomize; configuração do cluster Kind com as portas da demonstração; script `kind/subir.sh` que cria o cluster, aplica a plataforma e os três serviços a partir dos repositórios lado a lado. O Terraform do EKS fica como histórico da Fase 3.
+- **Por serviço (`k8s/` com Kustomize):** `base/` com Deployment (1 réplica, probes em `/<servico>/health` e `/<servico>/ready`, limites de recursos), Service, ConfigMap e o PostgreSQL próprio (Operações também com DynamoDB Local). A senha do banco, a chave JWT e outros segredos vêm de um Secret criado fora do Kustomize (no CI e no script), nunca versionado com valor real.
+- **Imagem:** na `main`, o deploy usa a imagem do GHCR com a tag `sha-<commit>` (imutável); no PR, a imagem é construída no runner e carregada no Kind (`kind load`), sem publicar.
+- **Job `deploy-kind` no CI de cada serviço:** depois de `build-e-testes`, sobe o Kind, aplica a plataforma do `tech-challenge-infra-k8s` e o serviço, espera `kubectl rollout status` e o readiness. Falha de rollout falha o job e publica eventos e logs do pod. Só o serviço do repositório é implantado.
+- **Rollback:** documentado com `kubectl rollout undo` e com reaplicar o overlay apontando para a tag anterior.
+- **Travas da outbox para mais de uma réplica:** `FOR UPDATE SKIP LOCKED` na leitura das outboxes PostgreSQL (OS, Billing e Operações) e atualização condicional por item na outbox DynamoDB de Operações. Os manifests usam 1 réplica, mas os serviços ficam prontos para escalar.
+- **Fora (ADR-021):** EKS, Terraform dos bancos, API Gateway e Lambda.
 
 ## Critérios de aceite
 
-- [ ] Cada serviço tem Dockerfile e manifests Kubernetes versionados em seu repositório, com deploy e health check independentes.
-- [ ] Merge aprovado implanta somente a unidade de serviço correspondente e aguarda rollout/health (Kind no CI; EKS na janela de demonstração).
-- [ ] Se Terraform for escolhido para provisionamento, plan/apply têm aprovação/permissões adequadas e state remoto/locking seguem ADR-011.
-- [ ] Secrets vêm de secret store/ambiente seguro e são mascarados nos logs.
-- [ ] Falha de rollout impede conclusão do deploy e há procedimento de rollback/redeploy documentado.
+- [ ] Cada serviço tem Dockerfile e manifests Kubernetes versionados no próprio repositório, com deploy e health check independentes.
+- [ ] Cada pipeline implanta só o próprio serviço em Kubernetes e aguarda rollout e readiness; falha de rollout falha o pipeline.
+- [ ] Na `main`, o deployment usa a imagem com tag do commit, não `latest`.
+- [ ] Segredos não ficam versionados nos manifests.
+- [ ] A plataforma compartilhada está versionada no `tech-challenge-infra-k8s`, e um script sobe os três serviços no Kind local.
+- [ ] Procedimento de rollback documentado.
+- [ ] Outboxes seguras com mais de uma réplica.
+
+## Cenários de aceite (Gherkin)
+
+```gherkin
+Funcionalidade: Deploy independente em Kubernetes
+
+  Cenário: Implantar só o serviço alterado
+    Dado que um PR altera somente Operações
+    Quando o pipeline de Operações roda
+    Então só o Deployment de Operações é aplicado no cluster
+    E o job espera o rollout e o readiness
+
+  Cenário: Falhar quando o rollout não fica pronto
+    Dado um manifest com probe que nunca responde
+    Quando o job de deploy roda
+    Então o rollout estoura o prazo e o pipeline falha com os eventos do pod
+```
 
 ## Passos
 
-1. Definir ferramenta de IaC dos bancos e o formato dos manifests (Kustomize ou YAML puro).
-2. Manifests por serviço e job de rollout no Kind.
-3. Travas da outbox para réplicas.
-4. Job de deploy no EKS condicionado a `AWS_ROLE_ARN`, e rotas/Ingress.
-5. Deploy real na janela de demonstração e documentação de ligar/desligar.
+1. Plataforma compartilhada no `tech-challenge-infra-k8s` (Kind, RabbitMQ, Jaeger, script).
+2. Manifests Kustomize de cada serviço.
+3. Job `deploy-kind` em cada pipeline.
+4. Travas das outboxes para réplicas.
+5. Demonstração local com os três serviços e documentação de rollback.
 
 ## Evidências
 
-- Execução do rollout no Kind por serviço.
-- Deploy no EKS na janela de demonstração, com prova de que só o serviço alterado foi implantado.
+- Execução do `deploy-kind` por serviço.
+- Ambiente local com os três serviços prontos pelo script.

@@ -23,6 +23,10 @@ O entregável precisa permitir que avaliadores reconstruam a arquitetura, execut
 - Vídeo de até 15 minutos mostrando fluxo completo, Saga e compensação, deploy automático de ao menos um serviço com validação de testes, monitoramento e trace distribuído.
 - PDF único no portal com participantes, links dos três repositórios e docs, link do vídeo, diagrama geral, descrição/justificativa da Saga, divisão de serviços e tecnologias.
 
+## Pendências vindas de outros cards
+
+- **Sem AWS ([ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md)):** a Lambda de CPF não roda na Fase 4. Definir como o vídeo obtém o token de cliente (mesmo formato da Lambda, como no BDD) e explicar a decisão.
+
 ## Critérios de aceite
 
 - [ ] Os READMEs dos três serviços explicam propriedade de dados, contrato e como executar testes sem acesso a produção.
