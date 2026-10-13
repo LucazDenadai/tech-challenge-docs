@@ -1,7 +1,7 @@
 # CARD-40 — Implementar Saga e validar fluxo integrado com BDD
 
 **Tipo:** Integração distribuída / Testes
-**Status:** Em andamento — dividido em 40a, 40b e 40c (2026-10-13); 40a e 40b concluídos (fluxo normal, compensações, cancelamento e prazos); 40c (ambiente integrado e BDD em Reqnroll) com escopo definido
+**Status:** Em andamento — dividido em 40a, 40b e 40c (2026-10-13); 40a, 40b e 40c concluídos; BDD ponta a ponta verde no CI; trace correlacionado como evidência no CARD-42
 **Depende de:** CARD-36, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
@@ -34,17 +34,17 @@ Este card entregará o cenário BDD ponta a ponta obrigatório. Os cenários Ghe
 ## Critérios de aceite
 
 - [x] Estratégia Saga foi confirmada pelo time no CARD-36 antes da implementação deste card.
-- [ ] Fluxo completo documentado e executável: abrir OS → diagnosticar em Operações → gerar/aprovar orçamento → reservar estoque por filial → cobrar/confirmar → autorizar execução → concluir → atualizar estado/histórico da OS.
-- [ ] Estado da Saga sobrevive a restart e pode ser consultado sem acesso cruzado aos bancos dos serviços.
-- [ ] Toda etapa tem timeout/retry explícitos; redelivery não duplica pagamento, reserva, execução ou transição de OS.
-- [ ] Falha em cada fronteira crítica tem teste para rejeição, retry ou compensação apropriada.
-- [ ] Pagamento aprovado não é marcado como desfeito até confirmação de estorno; estado pendente de estorno permanece explícito.
-- [ ] Falha de reserva antes da cobrança cancela sem criar pagamento; falha após aprovação do pagamento (início rejeitado ou execução falhou) aciona liberação da reserva não consumida e estorno total conforme ADR-017.
-- [ ] Cada etapa da tabela de compensações do ADR-017 tem caminho de falha implementado e teste de integração; itens marcados como evolução no Escopo do MVP do ADR-017 não são implementados.
-- [ ] Resultado de pagamento desconhecido mantém Saga em reconciliação, sem marcar como recusado, cobrar de novo ou liberar reserva indevidamente.
-- [ ] Eventos publicados após persistência local seguem a garantia transacional decidida e não são perdidos silenciosamente.
-- [ ] Cenários Gherkin automatizados rodam em CI com dependências isoladas, incluindo broker e bancos necessários.
-- [ ] Logs/traces permitem identificar a Saga completa; dados pessoais e segredos não aparecem na evidência.
+- [x] Fluxo completo documentado e executável: abrir OS → diagnosticar em Operações → gerar/aprovar orçamento → reservar estoque por filial → cobrar/confirmar → autorizar execução → concluir → atualizar estado/histórico da OS.
+- [x] Estado da Saga sobrevive a restart e pode ser consultado sem acesso cruzado aos bancos dos serviços.
+- [x] Toda etapa tem timeout/retry explícitos; redelivery não duplica pagamento, reserva, execução ou transição de OS.
+- [x] Falha em cada fronteira crítica tem teste para rejeição, retry ou compensação apropriada.
+- [x] Pagamento aprovado não é marcado como desfeito até confirmação de estorno; estado pendente de estorno permanece explícito.
+- [x] Falha de reserva antes da cobrança cancela sem criar pagamento; falha após aprovação do pagamento (início rejeitado ou execução falhou) aciona liberação da reserva não consumida e estorno total conforme ADR-017.
+- [x] Cada etapa da tabela de compensações do ADR-017 tem caminho de falha implementado e teste de integração; itens marcados como evolução no Escopo do MVP do ADR-017 não são implementados.
+- [x] Resultado de pagamento desconhecido mantém Saga em reconciliação, sem marcar como recusado, cobrar de novo ou liberar reserva indevidamente.
+- [x] Eventos publicados após persistência local seguem a garantia transacional decidida e não são perdidos silenciosamente.
+- [x] Cenários Gherkin automatizados rodam em CI com dependências isoladas, incluindo broker e bancos necessários.
+- [ ] Logs/traces permitem identificar a Saga completa; dados pessoais e segredos não aparecem na evidência. *(Captura no CARD-42.)*
 
 ## Cenários BDD obrigatórios
 

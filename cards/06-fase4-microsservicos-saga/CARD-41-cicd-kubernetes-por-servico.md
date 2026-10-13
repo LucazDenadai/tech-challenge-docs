@@ -36,7 +36,7 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
 - [ ] Existem três workflows verificáveis, um por serviço, e alteração em um serviço não publica/deploya os outros.
 - [ ] Cada pipeline executa restore, build, testes, análise de qualidade e gate de cobertura próprio.
 - [ ] O relatório mostra cobertura por serviço e mede o mesmo escopo (linhas/branches) declarado na política; limite mínimo >=80% falha o workflow se não atingido.
-- [ ] Ao menos um teste BDD integrado requerido por CARD-40 roda em workflow adequado e evidencia dependências usadas.
+- [x] Ao menos um teste BDD integrado requerido por CARD-40 roda em workflow adequado e evidencia dependências usadas. *(Workflow `e2e.yml` do OS, [CARD-40c](CARD-40c-ambiente-integrado-e-bdd.md).)*
 - [ ] Imagens são tagueadas por commit/digest e deployment usa artefato imutável, não `latest`.
 - [ ] Cada serviço tem Dockerfile e manifests Kubernetes versionados em seu repositório, com recursos suficientes para deploy e health check independentes.
 - [ ] Merge aprovado implanta somente a unidade de serviço correspondente no cluster Kubernetes e aguarda rollout/health.
