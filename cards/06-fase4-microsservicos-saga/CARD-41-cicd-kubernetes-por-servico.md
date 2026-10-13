@@ -1,7 +1,7 @@
 # CARD-41 — CI/CD, gates de qualidade e deploy independente
 
 **Tipo:** Plataforma / CI-CD
-**Status:** Em andamento — 41a (CI) concluído; 41b (Kubernetes) pendente
+**Status:** Concluído — 41a (CI) e 41b (Kubernetes no Kind) em 2026-10-13; SonarCloud pendente dos segredos do dono da conta
 **Depende de:** CARD-34, CARD-35, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** Três repositórios de serviço e repositórios de infraestrutura necessários
@@ -37,13 +37,13 @@ Fase 3 já possui pipelines independentes para os repositórios de aplicação/i
 - [x] Cada pipeline executa restore, build, testes, análise de qualidade e gate de cobertura próprio. *(SonarCloud depende dos segredos; ver CARD-41a.)*
 - [x] O relatório mostra cobertura por serviço e mede o mesmo escopo (linhas/branches) declarado na política; limite mínimo >=80% falha o workflow se não atingido.
 - [x] Ao menos um teste BDD integrado requerido por CARD-40 roda em workflow adequado e evidencia dependências usadas. *(Workflow `e2e.yml` do OS, [CARD-40c](CARD-40c-ambiente-integrado-e-bdd.md).)*
-- [ ] Imagens são tagueadas por commit/digest e deployment usa artefato imutável, não `latest`. *(Imagens por commit no CARD-41a; deployment no CARD-41b.)*
-- [ ] Cada serviço tem Dockerfile e manifests Kubernetes versionados em seu repositório, com recursos suficientes para deploy e health check independentes.
-- [ ] Merge aprovado implanta somente a unidade de serviço correspondente no cluster Kubernetes e aguarda rollout/health.
+- [x] Imagens são tagueadas por commit/digest e deployment usa artefato imutável, não `latest`.
+- [x] Cada serviço tem Dockerfile e manifests Kubernetes versionados em seu repositório, com recursos suficientes para deploy e health check independentes.
+- [x] Merge aprovado implanta somente a unidade de serviço correspondente no cluster Kubernetes e aguarda rollout/health. *(Kind no CI, ADR-021.)*
 - [x] Branch principal exige PR e checks de build/testes/qualidade, conforme proteção configurada.
 - [x] Se Terraform for escolhido para provisionamento, pipelines de plan/apply têm aprovação/permissões adequadas e state remoto/locking seguem ADR-011 quando aplicável; a ausência de Terraform não reprova o card por si só. *(Não se aplica: sem nuvem, sem Terraform na Fase 4, [ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md).)*
-- [ ] Secrets vêm de secret store/ambiente seguro e são mascarados nos logs.
-- [ ] Falha de rollout impede conclusão do deploy e há procedimento de rollback/redeploy documentado.
+- [x] Secrets vêm de secret store/ambiente seguro e são mascarados nos logs. *(Secrets do Kubernetes gerados a cada subida; segredos do GitHub mascarados.)*
+- [x] Falha de rollout impede conclusão do deploy e há procedimento de rollback/redeploy documentado. *(README do `tech-challenge-infra-k8s`.)*
 
 ## Cenários de aceite (Gherkin)
 
