@@ -45,7 +45,7 @@ Os repositórios existentes `tech-challenge-infra-k8s`, `tech-challenge-infra-db
 | Catálogo de serviços (mão de obra) e preços de tabela de peças e serviços | Operações | Preço vigente enviado como snapshot no `DiagnosisCompleted` (ADR-017); nenhum outro serviço mantém tabela de preços. *Emenda de 2026-10-05.* |
 | Fila, diagnóstico, reparo e progresso da execução | Operações / módulo Execução | Referência por `osId`; OS recebe início, conclusão e falha por evento; progresso intermediário é consultado na API de Operações. *Emenda de 2026-10-05.* |
 
-Billing pode receber por contrato os dados mínimos de pagador necessários ao Mercado Pago, mas não se torna fonte da verdade do cadastro do cliente. Retenção, minimização e tratamento de PII devem ser definidos no desenho da integração do CARD-39.
+Billing pode receber por contrato os dados mínimos de pagador necessários ao Mercado Pago, mas não se torna fonte da verdade do cadastro do cliente. Retenção, minimização e tratamento de PII devem ser definidos no desenho da integração do CARD-39. *Definido em 2026-10-13 no [ADR-019](ADR-019-integracao-mercado-pago-fase4.md): só o e-mail do pagador trafega, e Billing o apaga ao criar a cobrança.*
 
 ### Filial
 

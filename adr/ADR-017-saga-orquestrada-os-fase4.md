@@ -186,7 +186,7 @@ Testes: o fluxo completo (caminho feliz) é o cenário BDD obrigatório do PDF; 
 | Risco | Mitigação |
 |---|---|
 | OS concentra coordenação e pode acumular lógica | Implementar Saga como módulo interno isolado, com máquina de estados/testes próprios; não mover regras de Billing/Operações para OS. |
-| API do Mercado Pago tem estados/limites específicos | Confirmar no CARD-39b o produto selecionado, assinatura de webhook, idempotência, cancelamento/estorno e expiração suportados. |
+| API do Mercado Pago tem estados/limites específicos | Confirmar no CARD-39b o produto selecionado, assinatura de webhook, idempotência, cancelamento/estorno e expiração suportados. *Resolvido em 2026-10-13 pelo [ADR-019](ADR-019-integracao-mercado-pago-fase4.md): Pix pela API de Pagamentos, expiração de 30 minutos.* |
 | Execução pode produzir efeitos físicos irreversíveis | Registrar consumo real e distinguir compensação técnica de recuperação manual/decisão financeira. |
 | Retry e DLQ podem deixar Saga parada | Métricas/alertas no CARD-42, DLQ com replay auditado e cenário de falha automatizado no CARD-40. |
 
