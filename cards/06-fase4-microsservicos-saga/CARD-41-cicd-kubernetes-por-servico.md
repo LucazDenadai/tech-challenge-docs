@@ -1,7 +1,7 @@
 # CARD-41 — CI/CD, gates de qualidade e deploy independente
 
 **Tipo:** Plataforma / CI-CD
-**Status:** To Do
+**Status:** Em andamento — dividido em 41a (CI) e 41b (Kubernetes) em 2026-10-13; 41a com escopo definido
 **Depende de:** CARD-34, CARD-35, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** Três repositórios de serviço e repositórios de infraestrutura necessários
@@ -68,6 +68,13 @@ Funcionalidade: Entregar cada microsserviço de forma independente
     Então nenhum deployment é atualizado
     E o resultado da etapa que bloqueou é visível no PR
 ```
+
+## Subcards
+
+Divisão de 2026-10-13, no padrão dos CARD-37 a 40:
+
+- [CARD-41a — CI por serviço: testes, cobertura, qualidade e imagem](CARD-41a-ci-por-servico.md). Cobertura de linhas e branches ≥80% e SonarCloud, decididos pelo time.
+- [CARD-41b — Kubernetes por serviço: manifests, rollout e deploy](CARD-41b-kubernetes-por-servico.md). Rollout validado em Kind no CI; deploy no EKS na janela de demonstração, decidido pelo time.
 
 ## Passos
 
