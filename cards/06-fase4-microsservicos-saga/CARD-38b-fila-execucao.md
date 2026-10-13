@@ -62,7 +62,7 @@ A outbox do PostgreSQL serve ao Estoque. Os eventos da execução saem da outbox
 
 ### Pendências
 
-- **Cancelamento durante a execução:** continua sem comando no AsyncAPI; está no escopo do [CARD-40](CARD-40-saga-e-bdd-integrado.md).
+- **Cancelamento durante a execução:** continua sem comando no AsyncAPI; está no escopo do [CARD-40](CARD-40-saga-e-bdd-integrado.md). *Decidido em 2026-10-13 ([ADR-020](../../adr/ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md)): `ExecutionCancelRequested` cancela execução `Diagnosticada` ou `NaFila` e é recusado em `EmReparo`; implementação no [CARD-40b](CARD-40b-compensacoes-e-falhas.md).*
 - **Réplicas do despachante do DynamoDB:** a mesma questão do 38a. Duas réplicas podem publicar o mesmo pendente, e o consumidor deduplica. Uma trava por item (atualização condicional antes de publicar) fica para o CARD-41.
 - **Postman:** a collection de Operações, já com execução, fica para o CARD-43.
 

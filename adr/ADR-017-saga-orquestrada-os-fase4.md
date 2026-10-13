@@ -92,7 +92,7 @@ O preço do orçamento é o snapshot do `DiagnosisCompleted`: mudanças posterio
 
 `Diagnosing` → `RequestingQuote` → `AwaitingApproval` → `ReservingInventory` → `CreatingPayment` → `AwaitingPayment` → `ReconcilingPayment` (quando resultado técnico incerto) → `StartingExecution` → `InExecution` → `Completed`.
 
-Estados de desvio não terminais: `ReleasingReservation`, `Compensating`, `CompensationPending` e `ManualActionRequired`. Estados terminais: `Completed`, `Cancelled` e `Compensated`. Cada transição grava versão/estado e outbox na mesma transação PostgreSQL OS. Cada serviço persiste localmente o próprio efeito antes de emitir seu evento de resultado.
+Estados de desvio não terminais: `ReleasingReservation`, `Compensating`, `CompensationPending` e `ManualActionRequired`. *Emenda de 2026-10-13 ([ADR-020](ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md)): `CancellingExecution`, enquanto Operações decide um pedido de cancelamento de execução.* Estados terminais: `Completed`, `Cancelled` e `Compensated`. Cada transição grava versão/estado e outbox na mesma transação PostgreSQL OS. Cada serviço persiste localmente o próprio efeito antes de emitir seu evento de resultado.
 
 ### Status da OS visível ao cliente
 
@@ -142,8 +142,8 @@ Compensação é uma nova ação de negócio, não rollback ACID distribuído. S
 O PDF exige "rollback e compensação no caso de falha em qualquer etapa". O MVP implementa um caminho de falha para **cada** etapa da tabela acima, sempre com a compensação mais simples: cancelamento quando nada foi efetivado, liberação de reserva, estorno total. Ficam documentados como evolução, sem implementação no MVP:
 
 - Lease da reserva de estoque com expiração e renovação durante a reconciliação do pagamento.
-- Replay auditado a partir de `ManualActionRequired` via endpoint administrativo; no MVP o estado é persistido e alertado, e a saída é manual.
-- Estorno parcial proporcional ao trabalho/peças já consumidos quando a execução falha.
+- ~~Replay auditado a partir de `ManualActionRequired` via endpoint administrativo; no MVP o estado é persistido e alertado, e a saída é manual.~~ *Trazido para o MVP em 2026-10-13 pelo [ADR-020](ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md): resolução pelo Admin com `Cancelar` ou `Retomar`.*
+- Estorno parcial proporcional ao trabalho/peças já consumidos quando a execução falha. O mesmo vale para multa por desistência durante o reparo ([ADR-020](ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md)).
 - Reconciliação dedicada de estorno pendente; no MVP vale a política genérica de retry/DLQ.
 - Revisão de diagnóstico/orçamento após aprovação.
 

@@ -1,11 +1,11 @@
 # CARD-40 — Implementar Saga e validar fluxo integrado com BDD
 
 **Tipo:** Integração distribuída / Testes
-**Status:** Em andamento — dividido em 40a, 40b e 40c (2026-10-13); 40a concluído (fluxo normal no OS); 40b e 40c pendentes
+**Status:** Em andamento — dividido em 40a, 40b e 40c (2026-10-13); 40a concluído (fluxo normal no OS); 40b com escopo definido ([ADR-020](../../adr/ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md)); 40c pendente
 **Depende de:** CARD-36, CARD-37, CARD-38, CARD-39
 **Bloqueia:** CARD-42, CARD-43
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
-**Decisão arquitetural:** [ADR-017 — Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md)
+**Decisão arquitetural:** [ADR-017 — Saga orquestrada pelo serviço OS](../../adr/ADR-017-saga-orquestrada-os-fase4.md) e [ADR-020](../../adr/ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md) (serviço sem peça, cancelamento e resolução manual)
 
 ---
 
