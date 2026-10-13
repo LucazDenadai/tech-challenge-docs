@@ -1,17 +1,40 @@
 # CARD-39b — Mercado Pago: cobrança e webhook
 
 **Tipo:** Integração externa / Pagamentos
-**Status:** To Do
+**Status:** Em andamento — escopo e decisões registrados em 2026-10-13 ([ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md))
 **Depende de:** CARD-36, CARD-39a
 **Bloqueia:** CARD-40
-**Repositório alvo:** Repositório exclusivo de Billing
-**Decisão arquitetural:** Contrato e compensação aprovados no CARD-36
+**Repositório alvo:** `tech-challenge-billing` ([ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
+**Decisão arquitetural:** [ADR-017](../../adr/ADR-017-saga-orquestrada-os-fase4.md), [ADR-018](../../adr/ADR-018-contratos-assincronos-asyncapi-fase4.md) e [ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md); contratos do CARD-36
 
 ---
 
 ## Contexto
 
 Pagamento é uma fronteira assíncrona: criação de preferência/intenção não confirma liquidação e o retorno do navegador não é fonte confiável. Billing deve integrar-se à API atual do Mercado Pago, validar notificações e reconciliar o estado consultando o provedor conforme documentação oficial selecionada. A integração começa em sandbox.
+
+## Ponto de partida (2026-10-13)
+
+- O CARD-39a deixou a porta `IOrcamentoParaPagamento`: responde se uma `(quoteId, versao)` está `Aprovada` e devolve valor, moeda, `ClienteId`, OS e filial. Inbox, outbox, consumidor com DLQ e despachante já existem em `tech-challenge-billing`.
+- O AsyncAPI já tem os canais de pagamento e estorno. Billing consome `PaymentCreationRequested` e `PaymentRefundRequested`; publica `PaymentPending`, `PaymentApproved`, `PaymentDeclined`, `PaymentOutcomeUnknown`, `PaymentRefunded`, `PaymentRefundPending` e `PaymentRefundFailed`.
+- O time ainda não tem credenciais do Mercado Pago. A implementação usa a porta do provedor com um provedor simulado; a validação em sandbox (passo 6) fica pendente até haver credenciais e uma URL pública para o webhook.
+
+## Decisões de implementação (2026-10-13)
+
+As decisões de integração (produto, autenticação, estados, idempotência, retry, dados do pagador) estão no [ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md). Resumo e decisões de código:
+
+- **Produto:** Pix pela API de Pagamentos (`POST /v1/payments`), sem dados de cartão em Billing. `external_reference` = `paymentId`; expiração de 30 minutos (`MercadoPago:ExpiracaoMinutos`).
+- **Contrato:** `PaymentCreationRequested.v1` ganha `payerEmail` opcional (mudança compatível, ADR-018). Billing manda para a DLQ o comando sem e-mail, para orçamento não aprovado ou com valor/moeda diferentes da versão aprovada: nenhum desses casos cria cobrança.
+- **Agregado:** `Pagamento` (`Id` = `paymentId`, `OsId`, `FilialId`, `CorrelationId`, `ClienteId`, `QuoteId`, `QuoteVersion`, `Valor`, `Moeda`, `IdempotencyKey` único, `ReferenciaProvedor`, `CodigoPix`, `UrlPagamento`, `Status`, dados do estorno e contagem de falhas de reconciliação).
+- **Estados:** `Solicitado` → `Pendente` → `Aprovado` ou `Recusado`; `Aprovado` → `EstornoPendente` → `Estornado` ou `EstornoFalhou`. Só avançam. Cada evento sai uma vez, na transição, pela outbox.
+- **Chamada externa fora da transação:** o comando grava inbox e `Pagamento` em `Solicitado` em uma transação. A chamada ao provedor acontece depois do commit, e o resultado é gravado com o evento em outra transação. Se o processo cair entre as duas, a reconciliação refaz a criação com a mesma chave idempotente.
+- **Webhook:** `POST /billing/pagamentos/webhook/mercadopago`, anônimo, com `x-signature` validada. Notificação válida dispara `GET /v1/payments/{id}`; o corpo não muda estado. Cada notificação autenticada é gravada com o resultado (`Aplicada`, `SemMudanca`, `Desconhecido`, `Divergente`, `FalhaTecnica`) para auditoria; assinatura inválida responde `401` e vai só para log e métrica.
+- **Reconciliação:** serviço em segundo plano (`MercadoPago:IntervaloReconciliacaoSegundos`, padrão 60) refaz `Solicitado`, consulta `Pendente` e `EstornoPendente`. Depois de 10 falhas técnicas seguidas, marca `ReconciliacaoManual`.
+- **Estorno:** total, com `X-Idempotency-Key = estorno-<paymentId>`. Pedido repetido republica o resultado gravado sem chamar o provedor. Estorno recusado pelo provedor ou falha técnica além do limite → `EstornoFalhou` e `PaymentRefundFailed` (a Saga vai para `ManualActionRequired`).
+- **API para o cliente pagar:** `GET /billing/pagamentos/meus` (`Cliente`) e `GET /billing/pagamentos/os/{osId}` (`Admin`, `Atendente`) devolvem estado, código Pix e URL de pagamento.
+- **Provedor:** `MercadoPago:Modo` = `Simulado` (padrão local e testes) ou `MercadoPago`. No modo `Simulado`, `POST /billing/simulador/pagamentos/{referencia}/status` muda o status no provedor em memória e reconcilia, para o BDD e o vídeo. A rota não existe no modo `MercadoPago`.
+- **Observabilidade:** métricas `billing_mercadopago_chamadas` (operação, resultado), `billing_webhook_notificacoes` (resultado) e `billing_pagamentos_reconciliacao_manual`. Token, segredo e e-mail nunca entram em log.
+- **Fora deste card:** o OS enviar `payerEmail` e consumir os eventos de pagamento (CARD-40); Secret do token e URL pública do webhook (CARD-41); cancelar Pix pendente quando a Saga é cancelada (o Pix expira sozinho em 30 minutos; ver pendências).
 
 ## Critérios de aceite
 

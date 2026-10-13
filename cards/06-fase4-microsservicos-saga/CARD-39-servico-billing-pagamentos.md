@@ -1,11 +1,11 @@
 # CARD-39 — Serviço Billing e pagamentos
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-39a concluído; CARD-39b (Mercado Pago) a fazer; deploy e CI no CARD-41
+**Status:** Em andamento — CARD-39a concluído; CARD-39b (Mercado Pago) em andamento, decisões no [ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md); deploy e CI no CARD-41
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-billing` (nome definido no CARD-34 / [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
-**Decisão arquitetural:** ADR-014, [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md) e contratos/Saga do CARD-36
+**Decisão arquitetural:** ADR-014, [ADR-016](../../adr/ADR-016-bancos-sql-nosql-fase4.md), [ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md) e contratos/Saga do CARD-36
 
 ---
 
