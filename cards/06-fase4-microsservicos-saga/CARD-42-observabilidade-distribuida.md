@@ -1,17 +1,21 @@
 # CARD-42 — Observabilidade do fluxo distribuído
 
 **Tipo:** Observabilidade / Operação
-**Status:** To Do
+**Status:** To Do — escopo dividido em 42a e 42b (2026-10-13)
 **Depende de:** CARD-36, CARD-40, CARD-41
 **Bloqueia:** CARD-43
 **Repositórios:** Três serviços, infraestrutura/observabilidade e `tech-challenge-docs`
-**Decisão arquitetural:** Reaproveitar ADR-008 e ADR-012; registrar ajustes de instrumentação se necessários
+**Decisão arquitetural:** [ADR-022](../../adr/ADR-022-observabilidade-fase4-stack-otel-local.md) (stack OTel da Fase 2/3 no Kind; Datadog fora da Fase 4), ADR-008
 
 ---
 
 ## Contexto
 
 O enunciado pede uso das ferramentas de monitoramento e observabilidade implementadas na Fase 3. A instrumentação existente (OpenTelemetry e stack/Datadog conforme ambiente) é reutilizável, mas precisa cobrir os três serviços, pagamentos e Saga. Deploy anterior ou dashboard configurado não prova que traces/alertas do novo fluxo funcionam; a validação deve usar uma demonstração real e dados sintéticos.
+
+## Decisão (2026-10-13)
+
+Sem conta AWS (ADR-021) e sem acesso à conta Datadog da Fase 3, o time escolheu a stack OpenTelemetry que a Fase 3 manteve em paralelo ao Datadog: Prometheus, Grafana, Loki com Promtail e Jaeger, no Kind ([ADR-022](../../adr/ADR-022-observabilidade-fase4-stack-otel-local.md)). Onde o escopo abaixo fala em Datadog ou "stack aprovada da Fase 3", vale essa stack.
 
 ## Escopo
 
@@ -54,6 +58,11 @@ Funcionalidade: Rastrear uma Saga entre microsserviços
     Quando logs e traces são emitidos
     Então os valores sensíveis não aparecem nos atributos exportados
 ```
+
+## Subcards
+
+- [CARD-42a — Instrumentação dos serviços: identidade, métricas de negócio e logs ligados ao trace](CARD-42a-instrumentacao-servicos.md)
+- [CARD-42b — Stack de observabilidade no Kind: dashboards, alertas, runbooks e evidências](CARD-42b-plataforma-dashboards-alertas.md)
 
 ## Passos
 
