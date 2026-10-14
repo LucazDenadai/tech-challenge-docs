@@ -73,7 +73,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | [CARD-40](CARD-40-saga-e-bdd-integrado.md) | Implementação da Saga e BDD ponta a ponta | Concluído — 40a, 40b e 40c; BDD verde no CI; trace como evidência no CARD-42 |
 | [CARD-41](CARD-41-cicd-kubernetes-por-servico.md) | CI/CD, qualidade, cobertura e deploy independente | Concluído — 41a (CI, gate ≥80%) e 41b (deploy no Kind, ADR-021); SonarCloud pendente dos segredos |
 | [CARD-42](CARD-42-observabilidade-distribuida.md) | Observabilidade do fluxo entre serviços | Concluído — 42a (instrumentação) e 42b (Prometheus, Grafana, Loki e alertas no Kind, ADR-022); span do Mercado Pago não verificado ao vivo |
-| [CARD-43](CARD-43-documentacao-e-entrega.md) | Swagger/Postman, vídeo e PDF final | Em andamento — 43a (Postman) e 43b (roteiro) concluídos; 43c (PDF, padrão da Fase 2) e 43d (READMEs e revisão) pendentes |
+| [CARD-43](CARD-43-documentacao-e-entrega.md) | Swagger/Postman, vídeo e PDF final | Em andamento — 43a (Postman) e 43b (roteiro) concluídos; 43c (PDF gerado, falta o link do vídeo); 43d (READMEs e revisão) pendente |
 
 ## Critérios globais da Fase 4
 
