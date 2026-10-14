@@ -1,7 +1,7 @@
 # CARD-43 — Documentação e entrega final da Fase 4
 
 **Tipo:** Documentação / Entrega
-**Status:** To Do
+**Status:** To Do — dividido em 43a, 43b, 43c e 43d (2026-10-13)
 **Depende de:** CARD-33, CARD-37, CARD-38, CARD-39, CARD-40, CARD-41, CARD-42
 **Bloqueia:** Submissão no portal
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
@@ -23,9 +23,16 @@ O entregável precisa permitir que avaliadores reconstruam a arquitetura, execut
 - Vídeo de até 15 minutos mostrando fluxo completo, Saga e compensação, deploy automático de ao menos um serviço com validação de testes, monitoramento e trace distribuído.
 - PDF único no portal com participantes, links dos três repositórios e docs, link do vídeo, diagrama geral, descrição/justificativa da Saga, divisão de serviços e tecnologias.
 
+## Subcards
+
+- [CARD-43a — Postman da Fase 4: fluxo da Saga nos três serviços](CARD-43a-postman-fase4.md)
+- [CARD-43b — Roteiro do vídeo da Fase 4](CARD-43b-roteiro-video.md)
+- [CARD-43c — PDF de entrega da Fase 4](CARD-43c-pdf-entrega.md) (padrão visual da Fase 2)
+- [CARD-43d — READMEs dos serviços e revisão final da entrega](CARD-43d-readmes-revisao-final.md)
+
 ## Pendências vindas de outros cards
 
-- **Sem AWS ([ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md)):** a Lambda de CPF não roda na Fase 4. Definir como o vídeo obtém o token de cliente (mesmo formato da Lambda, como no BDD) e explicar a decisão.
+- **Sem AWS ([ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md)):** a Lambda de CPF não roda na Fase 4. Definir como o vídeo obtém o token de cliente (mesmo formato da Lambda, como no BDD) e explicar a decisão. *(Decidido no CARD-43a: pré-request do Postman assina o JWT no formato da Lambda.)*
 
 ## Critérios de aceite
 
