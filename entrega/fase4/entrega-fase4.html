@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrega Fase 4</title>
+<!-- Documento de entrega da Fase 4 (CARD-43c), no padrão visual do PDF da Fase 2.
+     Gerar o PDF: msedge --headless --no-pdf-header-footer --print-to-pdf=Tech_Challenge_Fase4_Entrega.pdf entrega-fase4.html -->
+<style>
+  :root {
+    --azul: #1d4ed8;
+    --azul-claro: #3b82f6;
+    --ciano: #38bdf8;
+    --texto: #1f2937;
+    --suave: #6b7280;
+    --painel: #0f141c;
+    --painel-borda: #1f2937;
+    --os: #3b82f6;
+    --billing: #f59e0b;
+    --operacoes: #22c55e;
+    --broker: #f97316;
+    --obs: #a855f7;
+    --banco: #38bdf8;
+  }
+  @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+  @page capa { margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--texto); font-size: 10.5pt; line-height: 1.5; }
+
+  /* ── Capa ── */
+  .capa {
+    page: capa;
+    width: 210mm; height: 297mm; position: relative; color: #e5e7eb;
+    background: radial-gradient(ellipse at 15% 10%, #16233a 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 95%, #2a1010 0%, transparent 55%), #07090d;
+    page-break-after: always; overflow: hidden;
+  }
+  .capa .marca { position: absolute; top: 22mm; right: 20mm; font-weight: 700; letter-spacing: 4px; font-size: 11pt; color: #fff; }
+  .capa .bloco { position: absolute; top: 108mm; left: 20mm; right: 20mm; }
+  .capa .sobre { color: var(--ciano); letter-spacing: 4px; font-weight: 700; font-size: 9.5pt; }
+  .capa h1 { font-size: 38pt; font-weight: 900; letter-spacing: 1px; margin: 4mm 0 0; color: #fff; display: inline-block; border-bottom: 2.2mm solid var(--azul-claro); padding-bottom: 3mm; }
+  .capa .sub { margin: 9mm 0 9mm; font-size: 12.5pt; color: #cbd5e1; max-width: 150mm; }
+  .capa table { border: 1px solid #2563eb; border-radius: 3mm; border-collapse: separate; border-spacing: 0; padding: 5mm 7mm; background: rgba(10, 14, 22, 0.85); width: 140mm; }
+  .capa td { padding: 1.6mm 0; vertical-align: top; color: #e5e7eb; font-size: 10.5pt; }
+  .capa td:first-child { color: var(--ciano); font-weight: 700; width: 42mm; }
+  .capa .rodape { position: absolute; bottom: 14mm; left: 0; right: 0; text-align: center; font-size: 8.5pt; color: #94a3b8; border-top: 1px solid #334155; margin: 0 20mm; padding-top: 4mm; }
+
+  /* ── Conteúdo ── */
+  main { padding: 0; }
+  h2 { color: var(--azul); font-size: 18pt; margin: 0 0 4mm; padding-bottom: 2mm; border-bottom: 0.8mm solid var(--azul); page-break-after: avoid; }
+  h3 { color: #1e3a8a; font-size: 12pt; margin: 6mm 0 2mm; page-break-after: avoid; }
+  section { margin-bottom: 9mm; }
+  .quebra { page-break-before: always; }
+  p { margin: 0 0 3mm; }
+  ul { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin-bottom: 1mm; }
+  code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 9pt; background: #f1f5f9; padding: 0 1mm; border-radius: 1mm; }
+  pre { font-family: Consolas, "Cascadia Mono", monospace; font-size: 9pt; background: #f1f5f9; padding: 3mm 4mm; border-radius: 2mm; margin: 0 0 3mm; white-space: pre-wrap; }
+  table.dados { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9.5pt; page-break-inside: avoid; }
+  table.dados th { background: #eff6ff; color: #1e3a8a; text-align: left; padding: 2mm; border-bottom: 0.4mm solid #bfdbfe; }
+  table.dados td { padding: 2mm; border-bottom: 0.2mm solid #e5e7eb; vertical-align: top; }
+  .legenda { color: var(--suave); font-size: 9pt; margin-top: 2mm; }
+  .figura { background: var(--painel); border: 1px solid var(--painel-borda); border-radius: 2mm; padding: 3mm; page-break-inside: avoid; }
+  .figura svg { width: 100%; height: auto; display: block; }
+  .link { background: #eff6ff; border-left: 1.2mm solid var(--azul); border-radius: 1.5mm; padding: 3mm 4mm; margin-bottom: 3mm; page-break-inside: avoid; }
+  .link b { display: block; color: #111827; }
+  .link a { color: var(--azul); text-decoration: none; word-break: break-all; }
+  .pendente { color: #b45309; font-weight: 700; }
+  .fim { text-align: center; color: var(--suave); font-size: 8.5pt; margin-top: 10mm; }
+  .tag { display: inline-block; font-size: 8.5pt; padding: 0 2mm; border-radius: 1mm; color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ═══ Capa ═══ -->
+<div class="capa">
+  <div class="marca">POSTECH</div>
+  <div class="bloco">
+    <div class="sobre">POSTECH</div>
+    <h1>TECH CHALLENGE</h1>
+    <div class="sub">Sistema Integrado de Atendimento e Execução de Serviços — Microsserviços, Saga Pattern e Automação de Build, Testes e Deploy</div>
+    <table>
+      <tr><td>Projeto:</td><td>Sistema de Oficina Mecânica</td></tr>
+      <tr><td>Fase:</td><td>Fase 4 — Microsserviços, Saga e CI/CD (SOAT)</td></tr>
+      <tr><td>Participante:</td><td>Lucaz Gabriel Teixeira Denadai — RM37376</td></tr>
+      <tr><td>Arquitetura:</td><td>Microsserviços (OS, Billing e Operações) + Saga orquestrada</td></tr>
+      <tr><td>Data de Entrega:</td><td>13/10/2026</td></tr>
+      <tr><td>Backend:</td><td>.NET 10 / C#</td></tr>
+      <tr><td>Bancos de Dados:</td><td>PostgreSQL 16 (SQL) e DynamoDB (NoSQL)</td></tr>
+    </table>
+  </div>
+  <div class="rodape">© POSTECH — Programa de Especialização em Software Architecture · Tech Challenge — SOAT — Fase 4</div>
+</div>
+
+<main>
+
+<!-- ═══ Descrição ═══ -->
+<section>
+  <h2>Descrição da solução e objetivos da fase</h2>
+  <p>A oficina mecânica passou a operar em escala nacional, com várias filiais. Na Fase 3, Atendimento e Estoque rodavam na AWS. Nesta Fase 4, a aplicação foi refatorada para <b>três microsserviços independentes</b>, cada um com repositório, banco de dados e pipeline próprios: <b>OS</b> (ordens de serviço), <b>Billing</b> (orçamento e pagamento) e <b>Operações</b> (estoque e execução).</p>
+  <p>Abrir uma OS, aprovar o orçamento, pagar e executar o reparo agora atravessa três serviços, e cada um grava no próprio banco. Uma transação única não é mais possível. A consistência vem do <b>Saga Pattern</b>: cada etapa confirma o próprio efeito, e uma falha posterior dispara compensações que desfazem o que já foi feito (liberar a reserva de estoque, estornar o pagamento).</p>
+  <h3>Objetivos alcançados nesta fase</h3>
+  <ul>
+    <li>Três microsserviços com bancos próprios: PostgreSQL no OS, no Billing e no estoque de Operações; DynamoDB na execução de Operações. Nenhum serviço acessa o banco de outro.</li>
+    <li>Comunicação assíncrona por RabbitMQ com contrato AsyncAPI, outbox transacional e inbox para deduplicação; REST para as ações de usuários.</li>
+    <li>Saga <b>orquestrada</b> pelo serviço OS, com compensações, prazos com reenvio e resolução manual pelo Admin.</li>
+    <li>Pagamento Pix pela API de Pagamentos do Mercado Pago, com webhook assinado e reconciliação.</li>
+    <li>Testes unitários e de integração (Testcontainers) nos três serviços, com cobertura de linhas e de branches ≥80% exigida no CI, e o fluxo completo testado em BDD (Gherkin, Reqnroll).</li>
+    <li>Pipeline independente por serviço: build, testes, gate de cobertura, qualidade (SonarCloud), imagem por commit e deploy automatizado em Kubernetes, com a <code>main</code> protegida.</li>
+    <li>Observabilidade da Fase 3 reaproveitada: traces, métricas, logs, dashboards e alertas do fluxo distribuído.</li>
+  </ul>
+</section>
+
+<!-- ═══ Diagrama geral ═══ -->
+<section class="quebra">
+  <h2>Diagrama geral da arquitetura</h2>
+  <div class="figura">
+    <svg viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, sans-serif">
+      <defs>
+        <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#93c5fd"/></marker>
+        <marker id="setaL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fb923c"/></marker>
+        <marker id="setaC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker>
+      </defs>
+      <!-- Cluster -->
+      <rect x="150" y="20" width="830" height="600" rx="10" fill="none" stroke="#2563eb" stroke-dasharray="6 5"/>
+      <text x="166" y="42" fill="#60a5fa" font-size="13" font-weight="700">KUBERNETES (KIND) · namespace oficina-mecanica</text>
+
+      <!-- Entrada -->
+      <rect x="15" y="230" width="120" height="110" rx="8" fill="#1a1530" stroke="#8b5cf6"/>
+      <text x="75" y="258" text-anchor="middle" fill="#c4b5fd" font-size="10">ENTRADA</text>
+      <text x="75" y="282" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Funcionários</text>
+      <text x="75" y="300" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">e cliente</text>
+      <text x="75" y="322" text-anchor="middle" fill="#a1a1aa" font-size="10">REST + JWT</text>
+
+      <!-- OS -->
+      <rect x="190" y="70" width="230" height="130" rx="8" fill="#0c1a33" stroke="#3b82f6"/>
+      <text x="305" y="94" text-anchor="middle" fill="#93c5fd" font-size="10">MICROSSERVIÇO · :8090</text>
+      <text x="305" y="120" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">OS</text>
+      <text x="305" y="142" text-anchor="middle" fill="#cbd5e1" font-size="11">Abertura, status, histórico</text>
+      <text x="305" y="160" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="700">Orquestrador da Saga</text>
+      <text x="305" y="180" text-anchor="middle" fill="#94a3b8" font-size="10">Login de funcionários · JWT</text>
+
+      <!-- Billing -->
+      <rect x="190" y="245" width="230" height="120" rx="8" fill="#2a1d06" stroke="#f59e0b"/>
+      <text x="305" y="269" text-anchor="middle" fill="#fcd34d" font-size="10">MICROSSERVIÇO · :8091</text>
+      <text x="305" y="295" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">Billing</text>
+      <text x="305" y="317" text-anchor="middle" fill="#cbd5e1" font-size="11">Orçamento e aprovação</text>
+      <text x="305" y="335" text-anchor="middle" fill="#cbd5e1" font-size="11">Pagamento Pix · webhook</text>
+
+      <!-- Operações -->
+      <rect x="190" y="410" width="230" height="130" rx="8" fill="#062414" stroke="#22c55e"/>
+      <text x="305" y="434" text-anchor="middle" fill="#86efac" font-size="10">MICROSSERVIÇO · :8092</text>
+      <text x="305" y="460" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">Operações</text>
+      <text x="305" y="482" text-anchor="middle" fill="#cbd5e1" font-size="11">Estoque e reservas</text>
+      <text x="305" y="500" text-anchor="middle" fill="#cbd5e1" font-size="11">Diagnóstico, fila e execução</text>
+
+      <!-- Bancos -->
+      <rect x="470" y="95" width="150" height="80" rx="8" fill="#071c26" stroke="#38bdf8"/>
+      <text x="545" y="121" text-anchor="middle" fill="#7dd3fc" font-size="10">BANCO · SQL</text>
+      <text x="545" y="143" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">PostgreSQL OS</text>
+      <text x="545" y="161" text-anchor="middle" fill="#94a3b8" font-size="9.5">OS · Saga · outbox · inbox</text>
+
+      <rect x="470" y="265" width="150" height="80" rx="8" fill="#071c26" stroke="#38bdf8"/>
+      <text x="545" y="291" text-anchor="middle" fill="#7dd3fc" font-size="10">BANCO · SQL</text>
+      <text x="545" y="313" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">PostgreSQL Billing</text>
+      <text x="545" y="331" text-anchor="middle" fill="#94a3b8" font-size="9.5">orçamentos · pagamentos</text>
+
+      <rect x="470" y="400" width="150" height="70" rx="8" fill="#071c26" stroke="#38bdf8"/>
+      <text x="545" y="424" text-anchor="middle" fill="#7dd3fc" font-size="10">BANCO · SQL</text>
+      <text x="545" y="445" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="700">PostgreSQL Estoque</text>
+      <text x="545" y="461" text-anchor="middle" fill="#94a3b8" font-size="9.5">saldos · reservas</text>
+
+      <rect x="470" y="485" width="150" height="70" rx="8" fill="#1d0f2b" stroke="#c084fc"/>
+      <text x="545" y="509" text-anchor="middle" fill="#d8b4fe" font-size="10">BANCO · NoSQL</text>
+      <text x="545" y="530" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">DynamoDB</text>
+      <text x="545" y="546" text-anchor="middle" fill="#94a3b8" font-size="9.5">execuções · fila por filial</text>
+
+      <!-- RabbitMQ -->
+      <rect x="680" y="250" width="180" height="110" rx="8" fill="#2b1206" stroke="#f97316"/>
+      <text x="770" y="275" text-anchor="middle" fill="#fdba74" font-size="10">MESSAGE BROKER</text>
+      <text x="770" y="302" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">RabbitMQ</text>
+      <text x="770" y="323" text-anchor="middle" fill="#cbd5e1" font-size="10.5">comandos e eventos da Saga</text>
+      <text x="770" y="341" text-anchor="middle" fill="#94a3b8" font-size="9.5">contrato AsyncAPI · DLQ por fila</text>
+
+      <!-- Observabilidade -->
+      <rect x="680" y="440" width="280" height="115" rx="8" fill="#170d24" stroke="#a855f7"/>
+      <text x="820" y="464" text-anchor="middle" fill="#d8b4fe" font-size="10">OBSERVABILIDADE · namespace observabilidade</text>
+      <text x="820" y="490" text-anchor="middle" fill="#fff" font-size="13.5" font-weight="700">Jaeger · Prometheus · Grafana · Loki</text>
+      <text x="820" y="512" text-anchor="middle" fill="#cbd5e1" font-size="10.5">traces OTLP · métricas · logs JSON</text>
+      <text x="820" y="532" text-anchor="middle" fill="#94a3b8" font-size="10">dashboards da Saga · alertas · runbooks</text>
+
+      <!-- Mercado Pago -->
+      <rect x="680" y="80" width="200" height="90" rx="8" fill="#0b1724" stroke="#64748b" stroke-dasharray="4 3"/>
+      <text x="780" y="104" text-anchor="middle" fill="#94a3b8" font-size="10">EXTERNO</text>
+      <text x="780" y="128" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Mercado Pago</text>
+      <text x="780" y="150" text-anchor="middle" fill="#94a3b8" font-size="10">Pix · webhook assinado</text>
+
+      <!-- Setas: entrada → serviços -->
+      <path d="M135,270 L188,140" stroke="#93c5fd" stroke-width="1.8" fill="none" marker-end="url(#seta)"/>
+      <path d="M135,290 L188,300" stroke="#93c5fd" stroke-width="1.8" fill="none" marker-end="url(#seta)"/>
+      <path d="M135,315 L188,470" stroke="#93c5fd" stroke-width="1.8" fill="none" marker-end="url(#seta)"/>
+      <!-- Serviços → bancos -->
+      <path d="M420,135 L468,135" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#setaC)"/>
+      <path d="M420,305 L468,305" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#setaC)"/>
+      <path d="M420,450 L468,438" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#setaC)"/>
+      <path d="M420,500 L468,515" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#setaC)"/>
+      <!-- Serviços ↔ RabbitMQ -->
+      <path d="M420,185 C540,225 640,235 700,256" stroke="#fb923c" stroke-width="2" fill="none" marker-end="url(#setaL)" marker-start="url(#setaL)"/>
+      <path d="M420,355 C520,380 600,330 678,315" stroke="#fb923c" stroke-width="2" fill="none" marker-end="url(#setaL)" marker-start="url(#setaL)"/>
+      <path d="M420,420 C520,385 620,385 700,350" stroke="#fb923c" stroke-width="2" fill="none" marker-end="url(#setaL)" marker-start="url(#setaL)"/>
+      <!-- Billing ↔ Mercado Pago -->
+      <path d="M420,255 C520,230 600,140 678,125" stroke="#94a3b8" stroke-width="1.6" fill="none" marker-end="url(#setaC)" marker-start="url(#setaC)"/>
+
+      <!-- Legenda -->
+      <rect x="166" y="565" width="480" height="45" rx="6" fill="#0b1018" stroke="#1f2937"/>
+      <line x1="180" y1="582" x2="210" y2="582" stroke="#93c5fd" stroke-width="2"/><text x="216" y="586" fill="#cbd5e1" font-size="10">REST síncrono (JWT)</text>
+      <line x1="340" y1="582" x2="370" y2="582" stroke="#fb923c" stroke-width="2"/><text x="376" y="586" fill="#cbd5e1" font-size="10">Mensagens da Saga (outbox → RabbitMQ → inbox)</text>
+      <line x1="180" y1="600" x2="210" y2="600" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/><text x="216" y="604" fill="#cbd5e1" font-size="10">Banco exclusivo do serviço</text>
+      <line x1="340" y1="600" x2="370" y2="600" stroke="#94a3b8" stroke-width="1.6"/><text x="376" y="604" fill="#cbd5e1" font-size="10">Integração HTTP externa</text>
+    </svg>
+  </div>
+  <p class="legenda">Cada serviço tem banco exclusivo e conversa com os outros só por mensagens no RabbitMQ. Os três serviços exportam traces, métricas e logs para a stack de observabilidade. No CI de cada serviço, o mesmo Kind sobe só com a plataforma e aquele serviço.</p>
+
+  <h3>Divisão dos microsserviços e bancos</h3>
+  <table class="dados">
+    <tr><th>Serviço</th><th>Responsabilidade</th><th>Banco</th><th>Por que é um serviço próprio</th></tr>
+    <tr><td><b>OS</b></td><td>Abertura, status e histórico da OS; cadastro de clientes, veículos e filiais; login de funcionários; orquestra a Saga.</td><td>PostgreSQL</td><td>A OS é o processo de negócio que atravessa as áreas: quem coordena a Saga precisa ser dono do estado dela.</td></tr>
+    <tr><td><b>Billing</b></td><td>Orçamento a partir do diagnóstico, aprovação pelo cliente, cobrança Pix, webhook, reconciliação e estorno.</td><td>PostgreSQL</td><td>Integra um provedor externo de pagamento, com regras e falhas próprias (webhook, reconciliação), e precisa de transação ACID para dinheiro.</td></tr>
+    <tr><td><b>Operações</b></td><td>Catálogo, estoque por filial e reservas; diagnóstico, fila e execução do reparo.</td><td>PostgreSQL (estoque) e DynamoDB (execução)</td><td>Estoque e execução são o trabalho da oficina: escalam com o volume de reparos, não com o de pagamentos.</td></tr>
+  </table>
+  <p><b>Por que SQL e NoSQL:</b> estoque e pagamentos precisam de consistência forte (reserva e baixa de saldo, valores), então ficam em PostgreSQL. A execução é um documento por OS, consultado por chave e pela fila de cada filial, sem junções: um modelo chave-valor no DynamoDB atende e cumpre o NoSQL exigido (ADR-016). Na demonstração, o DynamoDB roda como DynamoDB Local no cluster.</p>
+</section>
+
+<!-- ═══ Saga ═══ -->
+<section>
+  <h2>Saga Pattern: estratégia escolhida</h2>
+  <p><b>Orquestração</b>, com o serviço OS como orquestrador (ADR-017). Para cada OS existe uma Saga no banco do OS. A Saga guarda a etapa atual e o que já foi confirmado (reserva, pagamento, execução). Cada evento recebido muda a etapa e gera os comandos da próxima, gravados na outbox na mesma transação.</p>
+  <h3>Por que orquestração e não coreografia</h3>
+  <ul>
+    <li><b>Um lugar só sabe o estado da OS.</b> Com coreografia, a pergunta "em que etapa está esta OS e o que falta desfazer?" exigiria juntar eventos de três serviços.</li>
+    <li><b>Compensações explícitas.</b> O fluxo tem compensações que dependem do que já aconteceu: liberar a reserva, estornar o pagamento, cancelar uma execução ainda na fila. No orquestrador, isso é uma regra só, testável.</li>
+    <li><b>Prazos e ação manual.</b> Sem resposta de um participante, a Saga reenvia o comando (mesma <code>idempotencyKey</code>) e, esgotados os reenvios, para em ação manual para o Admin decidir Cancelar ou Retomar (ADR-020).</li>
+    <li><b>Custo aceito:</b> o OS conhece a sequência das etapas. Os participantes continuam donos das próprias regras e só respondem a comandos.</li>
+  </ul>
+
+  <h3>Fluxo normal</h3>
+  <div class="figura">
+    <svg viewBox="0 0 1000 150" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, sans-serif">
+      <defs><marker id="s2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93c5fd"/></marker></defs>
+      <g font-size="11" text-anchor="middle">
+        <rect x="10" y="40" width="120" height="60" rx="6" fill="#0c1a33" stroke="#3b82f6"/><text x="70" y="65" fill="#fff" font-weight="700">Abrir OS</text><text x="70" y="83" fill="#93c5fd" font-size="9.5">OS</text>
+        <rect x="150" y="40" width="120" height="60" rx="6" fill="#062414" stroke="#22c55e"/><text x="210" y="65" fill="#fff" font-weight="700">Diagnóstico</text><text x="210" y="83" fill="#86efac" font-size="9.5">Operações</text>
+        <rect x="290" y="40" width="120" height="60" rx="6" fill="#2a1d06" stroke="#f59e0b"/><text x="350" y="65" fill="#fff" font-weight="700">Orçamento</text><text x="350" y="83" fill="#fcd34d" font-size="9.5">Billing · cliente aprova</text>
+        <rect x="430" y="40" width="120" height="60" rx="6" fill="#062414" stroke="#22c55e"/><text x="490" y="65" fill="#fff" font-weight="700">Reserva</text><text x="490" y="83" fill="#86efac" font-size="9.5">Operações · estoque</text>
+        <rect x="570" y="40" width="120" height="60" rx="6" fill="#2a1d06" stroke="#f59e0b"/><text x="630" y="65" fill="#fff" font-weight="700">Pagamento Pix</text><text x="630" y="83" fill="#fcd34d" font-size="9.5">Billing · Mercado Pago</text>
+        <rect x="710" y="40" width="120" height="60" rx="6" fill="#062414" stroke="#22c55e"/><text x="770" y="65" fill="#fff" font-weight="700">Execução</text><text x="770" y="83" fill="#86efac" font-size="9.5">Operações · reparo</text>
+        <rect x="850" y="40" width="140" height="60" rx="6" fill="#0c1a33" stroke="#3b82f6"/><text x="920" y="65" fill="#fff" font-weight="700">Completed</text><text x="920" y="83" fill="#93c5fd" font-size="9.5">OS Finalizada</text>
+      </g>
+      <g stroke="#93c5fd" stroke-width="1.8" marker-end="url(#s2)">
+        <line x1="130" y1="70" x2="148" y2="70"/><line x1="270" y1="70" x2="288" y2="70"/><line x1="410" y1="70" x2="428" y2="70"/>
+        <line x1="550" y1="70" x2="568" y2="70"/><line x1="690" y1="70" x2="708" y2="70"/><line x1="830" y1="70" x2="848" y2="70"/>
+      </g>
+      <text x="500" y="130" text-anchor="middle" fill="#94a3b8" font-size="10.5">Cada seta é um comando do OS e um evento de resposta pelo RabbitMQ. A Saga só avança quando o participante confirma.</text>
+    </svg>
+  </div>
+
+  <h3>Falhas e compensações</h3>
+  <table class="dados">
+    <tr><th>Falha</th><th>O que a Saga faz</th><th>Estado final</th></tr>
+    <tr><td>Cliente recusa o orçamento, ou o orçamento expira</td><td>Encerra sem cobrar nem reservar.</td><td><code>Cancelled</code></td></tr>
+    <tr><td>Falta estoque na filial</td><td>Encerra antes de cobrar.</td><td><code>Cancelled</code></td></tr>
+    <tr><td>Pagamento recusado ou expirado</td><td>Libera a reserva de estoque.</td><td><code>Cancelled</code></td></tr>
+    <tr><td>Reparo falha depois do pagamento</td><td>Estorna o pagamento e libera a reserva.</td><td><code>Compensated</code></td></tr>
+    <tr><td>Cancelamento pedido com a OS na fila</td><td>Pede o cancelamento a Operações; se aceito, estorna e libera.</td><td><code>Compensated</code> ou <code>Cancelled</code></td></tr>
+    <tr><td>Participante não responde</td><td>Reenvia o comando a cada prazo; depois de 3 reenvios, para para o Admin.</td><td><code>ManualActionRequired</code></td></tr>
+    <tr><td>Efeito chega depois do encerramento (pagamento ou reserva atrasados)</td><td>Desfaz o efeito: estorna ou libera.</td><td>mantém o final</td></tr>
+  </table>
+  <p><b>Garantias de mensageria:</b> outbox na mesma transação do dado (nenhum evento se perde se o broker cair), inbox por <code>messageId</code> (mensagem repetida não aplica duas vezes), <code>idempotencyKey</code> por etapa nos comandos e DLQ com o motivo para mensagens fora do contrato. As outboxes são seguras com mais de uma réplica (<code>FOR UPDATE SKIP LOCKED</code> no PostgreSQL e reserva condicional no DynamoDB).</p>
+</section>
+
+<!-- ═══ Tecnologias ═══ -->
+<section>
+  <h2>Tecnologias utilizadas</h2>
+  <table class="dados">
+    <tr><th>Área</th><th>Tecnologia</th><th>Uso</th></tr>
+    <tr><td>Serviços</td><td>.NET 10, ASP.NET Core, Arquitetura Hexagonal</td><td>APIs REST com Swagger; domínio sem dependências externas</td></tr>
+    <tr><td>Bancos</td><td>PostgreSQL 16 (EF Core), DynamoDB (AWS SDK; DynamoDB Local no cluster)</td><td>Um banco por serviço; SQL e NoSQL</td></tr>
+    <tr><td>Mensageria</td><td>RabbitMQ 3.13, AsyncAPI 3.0</td><td>Comandos e eventos da Saga, contrato versionado no <code>tech-challenge-docs</code></td></tr>
+    <tr><td>Pagamento</td><td>Mercado Pago (API de Pagamentos, Pix)</td><td>Cobrança, webhook com assinatura, reconciliação e estorno; provedor simulado na demonstração</td></tr>
+    <tr><td>Segurança</td><td>JWT (login do OS), roles Admin, Atendente, Mecânico e Cliente</td><td>Mesmo token aceito nos três serviços; token de cliente no formato da Lambda de CPF</td></tr>
+    <tr><td>Testes</td><td>xUnit, Testcontainers, Reqnroll (BDD), Coverlet, ReportGenerator</td><td>Unitários e de integração por serviço; fluxo completo em Gherkin</td></tr>
+    <tr><td>CI/CD</td><td>GitHub Actions, GHCR, SonarCloud, Kind, Kustomize</td><td>Pipeline por serviço com gate de cobertura e deploy automatizado</td></tr>
+    <tr><td>Observabilidade</td><td>OpenTelemetry, Jaeger, Prometheus, Grafana, Loki/Promtail</td><td>Traces entre serviços, métricas da Saga, logs por <code>correlationId</code>, alertas</td></tr>
+  </table>
+
+  <h3>CI/CD e deploy automatizado</h3>
+  <div class="figura">
+    <svg viewBox="0 0 1000 150" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, sans-serif">
+      <defs><marker id="s3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#93c5fd"/></marker></defs>
+      <g text-anchor="middle">
+        <rect x="20" y="25" width="170" height="85" rx="6" fill="#0c1a33" stroke="#3b82f6"/><text x="105" y="48" fill="#93c5fd" font-size="10">GATILHO</text><text x="105" y="72" fill="#fff" font-size="15" font-weight="700">PR / main</text><text x="105" y="92" fill="#94a3b8" font-size="10">main exige PR e check</text>
+        <rect x="230" y="25" width="230" height="85" rx="6" fill="#1a1530" stroke="#8b5cf6"/><text x="345" y="48" fill="#c4b5fd" font-size="10">JOB 1</text><text x="345" y="72" fill="#fff" font-size="15" font-weight="700">build-e-testes</text><text x="345" y="92" fill="#94a3b8" font-size="10">unit + integração · cobertura ≥80% · Sonar</text>
+        <rect x="500" y="25" width="200" height="85" rx="6" fill="#2b1206" stroke="#f97316"/><text x="600" y="48" fill="#fdba74" font-size="10">JOB 2 · só na main</text><text x="600" y="72" fill="#fff" font-size="15" font-weight="700">imagem</text><text x="600" y="92" fill="#94a3b8" font-size="10">GHCR · tag sha-&lt;commit&gt;</text>
+        <rect x="740" y="25" width="240" height="85" rx="6" fill="#062414" stroke="#22c55e"/><text x="860" y="48" fill="#86efac" font-size="10">JOB 3</text><text x="860" y="72" fill="#fff" font-size="15" font-weight="700">deploy-kind</text><text x="860" y="92" fill="#94a3b8" font-size="10">só este serviço · rollout · /ready</text>
+      </g>
+      <g stroke="#93c5fd" stroke-width="1.8" marker-end="url(#s3)"><line x1="190" y1="67" x2="228" y2="67"/><line x1="460" y1="67" x2="498" y2="67"/><line x1="700" y1="67" x2="738" y2="67"/></g>
+      <text x="500" y="135" text-anchor="middle" fill="#94a3b8" font-size="10.5">Um workflow por repositório. No PR, a imagem é construída no runner; na main, o Kind recebe a imagem publicada do commit.</text>
+    </svg>
+  </div>
+  <p>Cada serviço implanta só a si mesmo: o job sobe um Kind no runner com a plataforma compartilhada (RabbitMQ, Jaeger) do <code>tech-challenge-infra-k8s</code>, aplica os manifests do próprio repositório e falha se o rollout ou o readiness não ficarem prontos. No OS, um workflow separado roda o BDD com os três serviços de verdade.</p>
+
+  <h3>Monitoramento e rastreamento</h3>
+  <p>As ferramentas da Fase 3 — Jaeger, Prometheus, Grafana e Loki — rodam no Kind, sem custo (ADR-022). O <code>traceparent</code> vai na outbox e no cabeçalho da mensagem, então o trace continua entre os serviços. Os logs JSON levam o <code>CorrelationId</code> da Saga e o <code>TraceId</code>. O dashboard <b>Saga da OS</b> mostra Sagas por estado, duração, etapa mais antiga, reenvios, ações manuais e DLQs. Seis alertas têm runbook: Saga em ação manual, pagamento pendente, Saga parada, DLQ com mensagens, deploy indisponível e serviço fora do ar.</p>
+</section>
+
+<!-- ═══ Decisões ═══ -->
+<section class="quebra">
+  <h2>Principais decisões arquiteturais</h2>
+  <h3>Onde passam as fronteiras dos serviços</h3>
+  <p>Os exemplos do enunciado foram seguidos, com um ajuste: Estoque não virou um quarto serviço. A reserva e a baixa de peças acontecem dentro da execução do reparo, então ficaram em Operações com a execução (ADR-014). Isso evita uma Saga a mais entre "reservar" e "executar".</p>
+  <h3>Por que a outbox e a inbox</h3>
+  <p>Gravar no banco e publicar no RabbitMQ são duas operações que podem falhar separadamente. Com a outbox, o evento é gravado na mesma transação do dado e um despachante o publica depois. Se o broker cair, o evento espera. Do outro lado, a inbox registra cada <code>messageId</code>: a entrega "ao menos uma vez" do RabbitMQ não aplica o mesmo efeito duas vezes.</p>
+  <h3>Pagamento: o resultado pode ser desconhecido</h3>
+  <p>Um timeout na chamada ao Mercado Pago não quer dizer "recusado". O Billing trata como resultado desconhecido e reconcilia, consultando o provedor até saber, e o webhook assinado também traz o resultado. A Saga espera em <code>ReconcilingPayment</code> em vez de cancelar uma cobrança que pode ter sido paga (ADR-019).</p>
+  <h3>Kubernetes sem AWS nesta fase</h3>
+  <p>Sem conta AWS disponível na Fase 4, o deploy automatizado roda em Kind: um cluster efêmero no CI de cada serviço e o mesmo cluster na demonstração (ADR-021). Os manifests de cada serviço não dependem do provedor; trocar o Kind por um cluster gerenciado muda só a plataforma. A Lambda de autenticação por CPF não roda nesta fase; o token de cliente é gerado no mesmo formato para a demonstração.</p>
+  <h3>Qualidade como condição de merge</h3>
+  <p>A <code>main</code> dos três serviços exige PR e o check verde, também para administradores. O gate mede linhas <b>e</b> branches (≥80% nos dois), porque linhas sozinhas deixavam caminhos de erro sem teste. O SonarCloud roda quando os segredos do projeto estão configurados.</p>
+  <div class="link"><b>Todos os ADRs, com contexto, alternativas consideradas e consequências</b><a href="https://github.com/LucazDenadai/tech-challenge-docs/tree/main/adr">https://github.com/LucazDenadai/tech-challenge-docs/tree/main/adr</a></div>
+</section>
+
+<!-- ═══ Execução e links ═══ -->
+<section class="quebra">
+  <h2>Instruções de execução</h2>
+  <h3>Demonstração completa no Kind</h3>
+  <pre>git clone https://github.com/LucazDenadai/tech-challenge-infra-k8s.git
+git clone https://github.com/LucazDenadai/tech-challenge-os.git
+git clone https://github.com/LucazDenadai/tech-challenge-billing.git
+git clone https://github.com/LucazDenadai/tech-challenge-operacoes.git
+cd tech-challenge-infra-k8s && ./kind/subir.sh</pre>
+  <p>O script cria o cluster, gera os segredos, sobe RabbitMQ, Jaeger, Prometheus, Grafana e Loki, constrói e implanta os três serviços e imprime as URLs e as senhas geradas. Requisitos: Docker, kind e kubectl.</p>
+  <table class="dados">
+    <tr><th>Serviço</th><th>Endereço</th></tr>
+    <tr><td>OS · Billing · Operações (Swagger)</td><td><code>localhost:8090/os/swagger</code> · <code>localhost:8091/billing/swagger</code> · <code>localhost:8092/operacoes/swagger</code></td></tr>
+    <tr><td>Grafana · Prometheus · Jaeger · RabbitMQ</td><td><code>localhost:13000</code> · <code>localhost:19090</code> · <code>localhost:16690</code> · <code>localhost:15680</code></td></tr>
+  </table>
+  <h3>Testes de cada serviço</h3>
+  <pre>dotnet test     # na raiz do repositório; a integração usa Testcontainers (Docker)</pre>
+  <p>Instruções completas, cobertura e arquitetura de cada serviço estão no README de cada repositório.</p>
+
+  <h2 style="margin-top:8mm">Links da entrega</h2>
+  <div class="link"><b>Serviço OS (orquestrador da Saga)</b><a href="https://github.com/LucazDenadai/tech-challenge-os">https://github.com/LucazDenadai/tech-challenge-os</a></div>
+  <div class="link"><b>Serviço Billing (orçamento e pagamento)</b><a href="https://github.com/LucazDenadai/tech-challenge-billing">https://github.com/LucazDenadai/tech-challenge-billing</a></div>
+  <div class="link"><b>Serviço Operações (estoque e execução)</b><a href="https://github.com/LucazDenadai/tech-challenge-operacoes">https://github.com/LucazDenadai/tech-challenge-operacoes</a></div>
+  <div class="link"><b>Plataforma Kubernetes e observabilidade</b><a href="https://github.com/LucazDenadai/tech-challenge-infra-k8s">https://github.com/LucazDenadai/tech-challenge-infra-k8s</a></div>
+  <div class="link"><b>Documentação: ADRs, contrato AsyncAPI, diagramas e cards</b><a href="https://github.com/LucazDenadai/tech-challenge-docs">https://github.com/LucazDenadai/tech-challenge-docs</a></div>
+  <div class="link"><b>Collection Postman da Saga nos três serviços</b><a href="https://github.com/LucazDenadai/tech-challenge-docs/tree/main/postman">https://github.com/LucazDenadai/tech-challenge-docs/tree/main/postman</a></div>
+  <div class="link"><b>Vídeo demonstrativo (YouTube)</b><span class="pendente">[LINK DO VÍDEO]</span><br>Demonstra o fluxo completo de uma OS pelos três serviços, a Saga com falha e compensação, o deploy automatizado com validação de testes e o monitoramento e rastreamento do fluxo distribuído.</div>
+
+  <div class="fim">Documento de Entrega — Tech Challenge SOAT Fase 4<br>13/10/2026<br>© POSTECH — Programa de Especialização em Software Architecture</div>
+</section>
+
+</main>
+</body>
+</html>
