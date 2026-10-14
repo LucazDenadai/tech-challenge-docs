@@ -1,7 +1,7 @@
 # CARD-43a — Postman da Fase 4: fluxo da Saga nos três serviços
 
 **Tipo:** Documentação / API
-**Status:** To Do — escopo definido (2026-10-13)
+**Status:** Concluído — collection verde no Newman contra o Kind local (2026-10-13)
 **Depende de:** CARD-40, CARD-41, CARD-42
 **Bloqueia:** Submissão no portal
 **Decisão arquitetural:** [ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md) (Kind, sem Lambda), [ADR-022](../../adr/ADR-022-observabilidade-fase4-stack-otel-local.md) (observabilidade)
@@ -22,11 +22,17 @@ A collection `tech-challenge-os` cobre só o OS e não passa pela Saga: os statu
 - **Environment do Kind:** `os_url`, `billing_url` e `operacoes_url` nas portas do `kind/subir.sh`; `senha_demo` e `jwt_key` vazios, com o comando `kubectl` que os lê dos Secrets.
 - **Repetível no mesmo cluster:** cada execução abre OS novas; os saldos são comparados com o valor lido no início da execução.
 
+## Implementação (2026-10-13)
+
+- `postman/tech-challenge-fase4.postman_collection.json` (63 requests) e `postman/tech-challenge-fase4-kind.postman_environment.json`, gerados pelo mesmo roteiro do BDD.
+- **Newman contra o Kind local**, com a `main` dos três serviços: 63 requests (84 a 88 com as repetições de espera), 155 a 159 asserções, nenhuma falha, cerca de 15 s; repetido no mesmo cluster sem falhas.
+- **Achado:** a primeira versão repetia a espera pelo **nome** do request. O nome se repetia entre as jornadas, e o runner pulou do fluxo completo para a última pasta: rodaram 33 de 63 requests, sem nenhuma falha. A espera agora repete pelo id do request, os nomes são numerados por pasta (`3.5 Aguardar...`) e a contagem de requests executados foi conferida.
+
 ## Critérios de aceite
 
-- [ ] A collection roda inteira com o Newman contra o Kind local, sem falhas, e pode ser repetida no mesmo cluster.
-- [ ] O fluxo completo termina em `Completed`, com OS `Finalizada`, pagamento `Aprovado`, execução `Concluida` e baixa de estoque.
-- [ ] A compensação termina em `Compensated`, com pagamento `Estornado` e estoque igual ao inicial.
-- [ ] O pagamento recusado termina em `Cancelled`, com a reserva liberada.
-- [ ] Nenhum segredo fica versionado no environment.
-- [ ] `postman/README.md` explica como preencher o environment e rodar.
+- [x] A collection roda inteira com o Newman contra o Kind local, sem falhas, e pode ser repetida no mesmo cluster.
+- [x] O fluxo completo termina em `Completed`, com OS `Finalizada`, pagamento `Aprovado`, execução `Concluida` e baixa de estoque.
+- [x] A compensação termina em `Compensated`, com pagamento `Estornado` e estoque igual ao inicial.
+- [x] O pagamento recusado termina em `Cancelled`, com a reserva liberada.
+- [x] Nenhum segredo fica versionado no environment.
+- [x] `postman/README.md` explica como preencher o environment e rodar.
