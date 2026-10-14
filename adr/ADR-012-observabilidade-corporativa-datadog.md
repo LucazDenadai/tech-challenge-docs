@@ -1,6 +1,6 @@
 # ADR-012 — Observabilidade Corporativa com Datadog
 
-**Status:** Aceito
+**Status:** Aceito para a Fase 3 — na Fase 4, o Datadog não é usado e a observabilidade fica na stack OTel local ([ADR-022](ADR-022-observabilidade-fase4-stack-otel-local.md))
 **Data:** 2026-08-27
 **Autores:** Time Tech Challenge — Fase 3
 

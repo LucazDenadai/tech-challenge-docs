@@ -57,6 +57,7 @@ evidencias/   ← Evidências de execução real (traces, prints) usadas na entr
 | [ADR-019](adr/ADR-019-integracao-mercado-pago-fase4.md) | Integração do Billing com o Mercado Pago: Pix pela API de Pagamentos, webhook assinado e reconciliação (Fase 4) |
 | [ADR-020](adr/ADR-020-saga-servico-sem-peca-cancelamento-acao-manual.md) | Saga: serviço sem peça, cancelamento antes do reparo e resolução manual pelo Admin (Fase 4) |
 | [ADR-021](adr/ADR-021-kubernetes-local-sem-aws-fase4.md) | Kubernetes da Fase 4 sem AWS: Kind no CI e na demonstração; substitui a plataforma EKS do ADR-015 |
+| [ADR-022](adr/ADR-022-observabilidade-fase4-stack-otel-local.md) | Observabilidade da Fase 4 com a stack OTel local (Prometheus, Grafana, Loki, Jaeger) no Kind; Datadog do ADR-012 fora da Fase 4 |
 
 ## Contratos
 
