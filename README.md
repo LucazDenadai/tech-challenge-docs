@@ -29,6 +29,7 @@ rfcs/         ← Request for Comments (decisões técnicas relevantes)
 diagramas/    ← Diagramas de componentes e sequência
 contratos/    ← Contratos assíncronos entre serviços (AsyncAPI)
 postman/      ← Collections e environments para testar/demonstrar as APIs (Fase 3 e Fase 4)
+entrega/      ← Roteiro do vídeo e PDF de entrega da Fase 4 (fonte em HTML)
 evidencias/   ← Evidências de execução real (traces, prints) usadas na entrega
 ```
 
