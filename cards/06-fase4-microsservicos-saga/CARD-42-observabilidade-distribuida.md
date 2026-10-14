@@ -1,7 +1,7 @@
 # CARD-42 — Observabilidade do fluxo distribuído
 
 **Tipo:** Observabilidade / Operação
-**Status:** To Do — escopo dividido em 42a e 42b (2026-10-13)
+**Status:** Concluído — 42a e 42b em 2026-10-13; span do Mercado Pago não verificado ao vivo
 **Depende de:** CARD-36, CARD-40, CARD-41
 **Bloqueia:** CARD-43
 **Repositórios:** Três serviços, infraestrutura/observabilidade e `tech-challenge-docs`
@@ -27,14 +27,14 @@ Sem conta AWS (ADR-021) e sem acesso à conta Datadog da Fase 3, o time escolheu
 
 ## Critérios de aceite
 
-- [ ] Cada serviço reporta nome/versão/ambiente corretos e traces/logs podem ser filtrados por correlation ID.
-- [ ] Uma trace cobre abertura da OS, orçamento, pagamento (incluindo callback), mensagem e execução, com spans de serviço identificáveis.
-- [ ] Mensageria preserva trace context/correlation ao atravessar producer/consumer.
-- [ ] Existem métricas de sucesso/falha, latência, retries, DLQ e duração/estado das compensações.
-- [ ] Dashboard mostra saúde dos três serviços e o estado agregado do fluxo, sem inferir sucesso apenas de disponibilidade HTTP.
-- [ ] Alertas/runbooks descrevem ação para pagamento pendente, Saga parada, DLQ crescente e falha de deploy.
-- [ ] Segredos, CPF completo, dados de cartão e conteúdo sensível não são exportados em logs/tags.
-- [ ] Evidências são capturadas em ambiente autorizado e o custo/janela de ativação está descrito.
+- [x] Cada serviço reporta nome/versão/ambiente corretos e traces/logs podem ser filtrados por correlation ID.
+- [x] Uma trace cobre abertura da OS, orçamento, pagamento (incluindo callback), mensagem e execução, com spans de serviço identificáveis. *(Como contexto correlacionável pela tag `correlation_id`: cada ação humana abre um trace; ver [CARD-42b](CARD-42b-plataforma-dashboards-alertas.md).)*
+- [x] Mensageria preserva trace context/correlation ao atravessar producer/consumer.
+- [x] Existem métricas de sucesso/falha, latência, retries, DLQ e duração/estado das compensações.
+- [x] Dashboard mostra saúde dos três serviços e o estado agregado do fluxo, sem inferir sucesso apenas de disponibilidade HTTP.
+- [x] Alertas/runbooks descrevem ação para pagamento pendente, Saga parada, DLQ crescente e falha de deploy. *(Disparados no Kind: Saga parada, ação manual, DLQ e serviço fora do ar.)*
+- [x] Segredos, CPF completo, dados de cartão e conteúdo sensível não são exportados em logs/tags.
+- [x] Evidências são capturadas em ambiente autorizado e o custo/janela de ativação está descrito.
 
 ## Cenários de aceite (Gherkin)
 
