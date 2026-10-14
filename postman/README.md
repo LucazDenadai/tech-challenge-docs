@@ -3,7 +3,44 @@
 | Collection | Fase | Alvo |
 |---|---|---|
 | `tech-challenge.postman_collection.json` | 3 | Atendimento + Estoque via API Gateway na AWS |
+| `tech-challenge-fase4.postman_collection.json` | 4 | **Saga nos três serviços** ([CARD-43a](../cards/06-fase4-microsservicos-saga/CARD-43a-postman-fase4.md)), no Kind local |
 | `tech-challenge-os.postman_collection.json` | 4 | Serviço OS ([CARD-37b](../cards/06-fase4-microsservicos-saga/CARD-37b-api-e-contratos-os.md)), local ou em cluster |
+
+## Fase 4 — Saga entre OS, Billing e Operações
+
+### Arquivos
+
+| Arquivo | Conteúdo |
+|---|---|
+| `tech-challenge-fase4.postman_collection.json` | 63 requests em 7 pastas: saúde, login, preparação, **fluxo completo até `Completed`**, **compensação depois do pagamento** (falha no reparo, estorno, `Compensated`), **pagamento recusado** (reserva liberada, `Cancelled`) e erros esperados (401, 403, 400, 409, 422). |
+| `tech-challenge-fase4-kind.postman_environment.json` | Endereços do Kind local (`kind/subir.sh`), CPF do cliente de demonstração, issuer e audience do JWT. `senha_demo` e `jwt_key` vêm vazios. |
+
+### Como usar
+
+1. Subir a demonstração: `./kind/subir.sh` no `tech-challenge-infra-k8s`.
+2. Preencher os dois segredos do environment com os valores gerados na subida:
+
+   ```sh
+   kubectl -n oficina-mecanica get secret os-segredos -o jsonpath='{.data.seed-senha}' | base64 -d          # senha_demo
+   kubectl -n oficina-mecanica get secret plataforma-segredos -o jsonpath='{.data.jwt-key}' | base64 -d     # jwt_key
+   ```
+
+3. Rodar a collection inteira no **runner** do Postman (ou uma pasta de cada vez, sempre depois das pastas 1 e 2).
+
+Pelo Newman, com o Docker (o container acessa o Kind pelo `host.docker.internal`):
+
+```sh
+docker run --rm -v "$PWD:/etc/newman" postman/newman:6-alpine run tech-challenge-fase4.postman_collection.json   -e tech-challenge-fase4-kind.postman_environment.json   --env-var os_url=http://host.docker.internal:8090 --env-var billing_url=http://host.docker.internal:8091   --env-var operacoes_url=http://host.docker.internal:8092 --env-var senha_demo=... --env-var jwt_key=...
+```
+
+Execução de 2026-10-13 contra o Kind local com a `main` dos três serviços: 63 requests (84 a 88 com as repetições de espera), 155 a 159 asserções, nenhuma falha, cerca de 15 s. Repetida no mesmo cluster sem falhas.
+
+### Observações
+
+- **Espera pela Saga:** os efeitos chegam por mensagem. Os requests "Aguardar..." repetem a cada 500 ms até a condição, por no máximo 30 s. Isso só funciona no runner; com **Send**, o request mostra o estado daquele momento.
+- **Token de cliente sem Lambda:** o pré-request da collection assina, com `jwt_key`, um JWT no formato da Lambda de CPF (role `Cliente`, claim `cliente_id`), como o BDD ([ADR-021](../adr/ADR-021-kubernetes-local-sem-aws-fase4.md)).
+- **Pagamento:** no Kind, o Billing usa o provedor simulado; o request do simulador faz o papel do cliente pagando ou recusando o Pix.
+- **Correlation ID:** cada request envia um `X-Correlation-Id` novo e confere que a resposta devolve o mesmo valor.
 
 ## Fase 4 — Serviço OS
 
