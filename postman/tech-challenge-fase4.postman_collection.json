@@ -1,0 +1,2719 @@
+{
+  "info": {
+    "name": "Tech Challenge — Fase 4 (Saga entre OS, Billing e Operações)",
+    "description": "Fluxo da Saga pelas APIs públicas dos três serviços (CARD-43a). Rode a collection inteira no runner ou com o Newman: os requests de espera repetem até a Saga avançar. Ver postman/README.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.collectionVariables.set('correlation_id', pm.variables.replaceIn('{{$guid}}'));",
+          "",
+          "// Token de cliente no formato da Lambda de CPF (role Cliente, claim cliente_id), assinado com jwt_key.",
+          "// Na Fase 4 não há Lambda (ADR-021): é o mesmo token que o BDD usa.",
+          "const clienteId = pm.collectionVariables.get('cliente_id');",
+          "if (clienteId && pm.environment.get('jwt_key')) {",
+          "  const cripto = require('crypto-js');",
+          "  const b64 = (p) => cripto.enc.Base64.stringify(p).replace(/=+$/, '').replace(/\\+/g, '-').replace(/\\//g, '_');",
+          "  const json = (o) => b64(cripto.enc.Utf8.parse(JSON.stringify(o)));",
+          "  const agora = Math.floor(Date.now() / 1000);",
+          "  const corpo = { cliente_id: clienteId, role: 'Cliente', iss: pm.environment.get('jwt_issuer'), aud: pm.environment.get('jwt_audience'), iat: agora, exp: agora + 600 };",
+          "  const assinado = json({ alg: 'HS256', typ: 'JWT' }) + '.' + json(corpo);",
+          "  pm.collectionVariables.set('token_cliente', assinado + '.' + b64(cripto.HmacSHA256(assinado, pm.environment.get('jwt_key'))));",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('devolve o X-Correlation-Id enviado', () => {",
+          "  pm.expect(pm.response.headers.get('X-Correlation-Id')).to.eql(pm.collectionVariables.get('correlation_id'));",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "correlation_id",
+      "value": ""
+    },
+    {
+      "key": "token_cliente",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Saúde",
+      "description": "Readiness dos três serviços: banco e consumidor da Saga prontos.",
+      "item": [
+        {
+          "name": "0.1 Readiness OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ready",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "55ec2525-d741-5ed1-81ff-5fa486868fcd"
+        },
+        {
+          "name": "0.2 Readiness Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/ready",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "79daf7ec-1dc4-5880-833d-30367b2611f9"
+        },
+        {
+          "name": "0.3 Readiness Operações",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/ready",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "2d9d9404-e0c3-5f42-a28d-0558d4a4e072"
+        }
+      ]
+    },
+    {
+      "name": "1. Login dos funcionários",
+      "description": "Usuários do seed do OS. O token vale nos três serviços (mesma chave JWT).",
+      "item": [
+        {
+          "name": "1.1 Login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{os_url}}/os/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@oficina.example\",\n  \"senha\": \"{{senha_demo}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_admin', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "id": "fc84d3c3-5147-57df-9428-707b7c5257de"
+        },
+        {
+          "name": "1.2 Login atendente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{os_url}}/os/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"atendente@oficina.example\",\n  \"senha\": \"{{senha_demo}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_atendente', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "id": "a3d64543-61f5-5355-aeae-1c21c3b108b5"
+        },
+        {
+          "name": "1.3 Login mecanico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{os_url}}/os/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mecanico@oficina.example\",\n  \"senha\": \"{{senha_demo}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_mecanico', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "id": "1f9cdfe8-a498-500d-8449-f8ce06996f2d"
+        }
+      ]
+    },
+    {
+      "name": "2. Preparação",
+      "description": "Cliente, veículo e filial do seed do OS; peça e serviço do catálogo de Operações.",
+      "item": [
+        {
+          "name": "2.1 Buscar cliente pelo CPF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/clientes?busca={{cpf_cliente}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('cliente_id', pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ],
+          "id": "a0499be1-dfc8-539a-bfeb-7e84d5ba6027"
+        },
+        {
+          "name": "2.2 Veículos do cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/veiculos/cliente/{{cliente_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('veiculo_id', pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ],
+          "id": "9ae379bf-4c8d-5321-92b5-263569847b46"
+        },
+        {
+          "name": "2.3 Filiais",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/filiais",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('filial_id', pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ],
+          "id": "a75d171e-8b83-5988-9bae-174de576776e"
+        },
+        {
+          "name": "2.4 Peças (óleo)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/pecas",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('oleo_id', pm.response.json().find(p => p.codigo === 'OLEO-5W30-1L').id);"
+                ]
+              }
+            }
+          ],
+          "id": "efa85667-7238-59b4-a732-f4bd6a5e53c9"
+        },
+        {
+          "name": "2.5 Serviços (troca de óleo)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/servicos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('servico_id', pm.response.json().find(s => s.nome === 'Troca de óleo e filtro').id);"
+                ]
+              }
+            }
+          ],
+          "id": "03794fe9-7efb-5c37-8b11-1d611f0dbe16"
+        }
+      ]
+    },
+    {
+      "name": "3. Fluxo completo até Completed",
+      "description": "Abertura → diagnóstico → orçamento → aprovação → reserva → pagamento → execução → Completed.",
+      "item": [
+        {
+          "name": "3.1 Saldo de óleo antes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/estoque/filiais/{{filial_id}}/saldos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const oleo = pm.response.json().find(s => s.pecaId === pm.collectionVariables.get('oleo_id'));",
+                  "pm.collectionVariables.set('saldo_oleo_inicial', oleo.quantidadeDisponivel);"
+                ]
+              }
+            }
+          ],
+          "id": "f0c4e40c-f019-5cb7-94ad-24f52531bc1a"
+        },
+        {
+          "name": "3.2 Abrir OS (atendente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico",
+            "description": "A OS nasce em EmDiagnostico e a Saga manda DiagnosisRequested para Operações.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{cliente_id}}\",\n  \"veiculoId\": \"{{veiculo_id}}\",\n  \"filialId\": \"{{filial_id}}\",\n  \"observacoes\": \"Postman Fase 4\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "const os = pm.response.json();",
+                  "pm.collectionVariables.set('os_id', os.id);",
+                  "pm.collectionVariables.set('numero_os', os.numero);"
+                ]
+              }
+            }
+          ],
+          "id": "f427a4ec-3263-5ca3-9cd6-2c4f6f6afcb4"
+        },
+        {
+          "name": "3.3 Aguardar a execução em Operações",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.id));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Operações abriu a execução', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "  if (ok) pm.collectionVariables.set('execucao_id', r.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "3fa26373-aa30-5aa9-b734-3b0cf4f213d8"
+        },
+        {
+          "name": "3.4 Diagnosticar 2 óleo e a troca (mecânico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/{{execucao_id}}/diagnostico",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    {\n      \"tipo\": \"Peca\",\n      \"itemId\": \"{{oleo_id}}\",\n      \"quantidade\": 2\n    },\n    {\n      \"tipo\": \"Servico\",\n      \"itemId\": \"{{servico_id}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200, 201, 204', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "id": "abb1dd36-1433-5b2f-af65-b36a0f2f6e04"
+        },
+        {
+          "name": "3.5 Aguardar o orçamento (Saga em AwaitingApproval)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.estado === 'AwaitingApproval'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Billing gerou o orçamento', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "a54da48e-5a45-5c9d-9fe8-01dfceaaf13c"
+        },
+        {
+          "name": "3.6 Meus orçamentos (cliente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/meus",
+            "description": "Token de cliente no formato da Lambda de CPF, assinado no pré-request da collection (sem Lambda na Fase 4, ADR-021).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const o = pm.response.json().find(x => x.osId === pm.collectionVariables.get('os_id'));",
+                  "pm.test('orçamento da OS', () => pm.expect(o).to.exist);",
+                  "pm.collectionVariables.set('quote_id', o.quoteId);",
+                  "pm.collectionVariables.set('quote_versao', o.versaoVigente.versao);"
+                ]
+              }
+            }
+          ],
+          "id": "844e2002-2d6f-596b-9993-9a3a8f9b526b"
+        },
+        {
+          "name": "3.7 Aprovar o orçamento (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/{{quote_id}}/aprovar",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versao\": \"{{quote_versao}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "99aab5e8-35dd-5747-b12c-4eea7bf3b206"
+        },
+        {
+          "name": "3.8 Aguardar a cobrança Pix no Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/pagamentos/os/{{os_id}}",
+            "description": "InventoryReserved → PaymentCreationRequested → cobrança no provedor (simulado no Kind).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.length && r[0].referenciaProvedor));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('reserva confirmada e cobrança criada', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "  if (ok) pm.collectionVariables.set('referencia', r[0].referenciaProvedor);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "0f234012-3b89-5a56-8d8d-451cde912b15"
+        },
+        {
+          "name": "3.9 Mercado Pago (simulador): approved",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/simulador/pagamentos/{{referencia}}/status",
+            "description": "Faz o papel do cliente pagando ou recusando o Pix; a notificação segue o mesmo caminho do webhook.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "cd52f2f2-bbf4-5e52-a5fe-1eaad5a92b4f"
+        },
+        {
+          "name": "3.10 Aguardar a execução na fila",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.status === 'NaFila'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('pagamento aprovado e execução na fila', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "3494ffa3-55f0-555a-bc08-a82c98bde87a"
+        },
+        {
+          "name": "3.11 Iniciar o reparo (mecânico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/{{execucao_id}}/reparo",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200, 204', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ],
+          "id": "3f8f393f-faa1-5de9-a883-88a1bd7f77f4"
+        },
+        {
+          "name": "3.12 Concluir o reparo consumindo 2 óleo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/{{execucao_id}}/conclusao",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pecasConsumidas\": [\n    {\n      \"pecaId\": \"{{oleo_id}}\",\n      \"quantidade\": 2\n    }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200, 204', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ],
+          "id": "89ac3334-a89b-5278-8b4c-eb157493a220"
+        },
+        {
+          "name": "3.13 Aguardar a Saga em Completed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.estado === 'Completed' && r.terminada));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Saga terminou em Completed', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "493a9931-ff45-5f66-89ed-c269f8822c33"
+        },
+        {
+          "name": "3.14 Status da OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('OS Finalizada', () => pm.expect(pm.response.json().status).to.eql('Finalizada'));"
+                ]
+              }
+            }
+          ],
+          "id": "adc4e4d6-e8ba-5ce6-abc1-dc76978e4dd5"
+        },
+        {
+          "name": "3.15 Histórico da OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/historico",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('passou por todas as etapas', () => pm.expect(pm.response.json().map(h => h.statusNovo)).to.eql(['AguardandoAprovacao', 'AguardandoPagamento', 'EmExecucao', 'Finalizada']));"
+                ]
+              }
+            }
+          ],
+          "id": "526e3164-af97-5257-aaa8-f9a34ed3f924"
+        },
+        {
+          "name": "3.16 Pagamento Aprovado no Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/pagamentos/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.length && r[0].status === 'Aprovado'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('pagamento Aprovado', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "7f43ea92-bf56-51e5-be6a-333bd48d2696"
+        },
+        {
+          "name": "3.17 Estoque de óleo baixou 2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/estoque/filiais/{{filial_id}}/saldos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const o = pm.response.json().find(s => s.pecaId === pm.collectionVariables.get('oleo_id'));",
+                  "pm.test('baixa de 2 unidades', () => pm.expect(o.quantidadeDisponivel).to.eql(Number(pm.collectionVariables.get('saldo_oleo_inicial')) - 2));"
+                ]
+              }
+            }
+          ],
+          "id": "416f05a6-d9c2-5aac-b281-b8b413bef357"
+        },
+        {
+          "name": "3.18 Recusar o orçamento já aprovado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/{{quote_id}}/recusar",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versao\": \"{{quote_versao}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.expect(pm.response.code).to.be.oneOf([409]));"
+                ]
+              }
+            }
+          ],
+          "id": "b3d1acaf-4425-52dc-84cf-62660c7d2084"
+        },
+        {
+          "name": "3.19 Cliente acompanha a OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/acompanhar/{{numero_os}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('OS do cliente', () => pm.expect(pm.response.json().numero).to.eql(pm.collectionVariables.get('numero_os')));"
+                ]
+              }
+            }
+          ],
+          "id": "ee08fac7-71ac-5fc5-adc3-3aa573e7af9f"
+        },
+        {
+          "name": "3.20 Saga da OS (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga",
+            "description": "Estado, ids de cada participante e as transições com a mensagem que causou cada uma.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "d448afb2-25c1-5cae-b746-50aebd056323"
+        }
+      ]
+    },
+    {
+      "name": "4. Compensação: falha no reparo depois do pagamento",
+      "description": "Pagamento aprovado e falha operacional: a Saga estorna o pagamento, libera a reserva e termina em Compensated.",
+      "item": [
+        {
+          "name": "4.1 Saldo de óleo antes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/estoque/filiais/{{filial_id}}/saldos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const oleo = pm.response.json().find(s => s.pecaId === pm.collectionVariables.get('oleo_id'));",
+                  "pm.collectionVariables.set('saldo_oleo_inicial', oleo.quantidadeDisponivel);"
+                ]
+              }
+            }
+          ],
+          "id": "fb8b60c4-50d7-5da7-8950-0144f892e5d0"
+        },
+        {
+          "name": "4.2 Abrir OS (atendente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico",
+            "description": "A OS nasce em EmDiagnostico e a Saga manda DiagnosisRequested para Operações.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{cliente_id}}\",\n  \"veiculoId\": \"{{veiculo_id}}\",\n  \"filialId\": \"{{filial_id}}\",\n  \"observacoes\": \"Postman Fase 4\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "const os = pm.response.json();",
+                  "pm.collectionVariables.set('os_id', os.id);",
+                  "pm.collectionVariables.set('numero_os', os.numero);"
+                ]
+              }
+            }
+          ],
+          "id": "37a0ff2b-d031-55ca-b851-462e5936bba2"
+        },
+        {
+          "name": "4.3 Aguardar a execução em Operações",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.id));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Operações abriu a execução', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "  if (ok) pm.collectionVariables.set('execucao_id', r.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "e0251184-97f6-5528-9e54-c4b9624ff6e2"
+        },
+        {
+          "name": "4.4 Diagnosticar 1 óleo e a troca (mecânico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/{{execucao_id}}/diagnostico",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    {\n      \"tipo\": \"Peca\",\n      \"itemId\": \"{{oleo_id}}\",\n      \"quantidade\": 1\n    },\n    {\n      \"tipo\": \"Servico\",\n      \"itemId\": \"{{servico_id}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200, 201, 204', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "id": "3cb41264-b56a-5efd-94cf-96ab132277b1"
+        },
+        {
+          "name": "4.5 Aguardar o orçamento (Saga em AwaitingApproval)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.estado === 'AwaitingApproval'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Billing gerou o orçamento', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "2b817259-a90f-558e-a332-5dda892a141d"
+        },
+        {
+          "name": "4.6 Meus orçamentos (cliente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/meus",
+            "description": "Token de cliente no formato da Lambda de CPF, assinado no pré-request da collection (sem Lambda na Fase 4, ADR-021).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const o = pm.response.json().find(x => x.osId === pm.collectionVariables.get('os_id'));",
+                  "pm.test('orçamento da OS', () => pm.expect(o).to.exist);",
+                  "pm.collectionVariables.set('quote_id', o.quoteId);",
+                  "pm.collectionVariables.set('quote_versao', o.versaoVigente.versao);"
+                ]
+              }
+            }
+          ],
+          "id": "9740925a-06a6-5397-bfa2-176ce5e35402"
+        },
+        {
+          "name": "4.7 Aprovar o orçamento (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/{{quote_id}}/aprovar",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versao\": \"{{quote_versao}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "563ac65a-03e0-5d02-b519-923ef0684116"
+        },
+        {
+          "name": "4.8 Aguardar a cobrança Pix no Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/pagamentos/os/{{os_id}}",
+            "description": "InventoryReserved → PaymentCreationRequested → cobrança no provedor (simulado no Kind).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.length && r[0].referenciaProvedor));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('reserva confirmada e cobrança criada', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "  if (ok) pm.collectionVariables.set('referencia', r[0].referenciaProvedor);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "8382ad06-c1f9-5010-90a5-674bbbb65c75"
+        },
+        {
+          "name": "4.9 Mercado Pago (simulador): approved",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/simulador/pagamentos/{{referencia}}/status",
+            "description": "Faz o papel do cliente pagando ou recusando o Pix; a notificação segue o mesmo caminho do webhook.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "24df762f-e1dc-53e9-9e87-41b9440ecaf3"
+        },
+        {
+          "name": "4.10 Aguardar a execução na fila",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.status === 'NaFila'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('pagamento aprovado e execução na fila', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "3ae5591d-78da-539d-a423-7c46b807369f"
+        },
+        {
+          "name": "4.11 Iniciar o reparo (mecânico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/{{execucao_id}}/reparo",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200, 204', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ],
+          "id": "792e1661-6b19-5af0-99af-2d1b65d2780a"
+        },
+        {
+          "name": "4.12 Registrar falha sem consumir peças",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/{{execucao_id}}/falha",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Peça incompatível com o veículo\",\n  \"pecasConsumidas\": []\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200, 204', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+                ]
+              }
+            }
+          ],
+          "id": "857eada8-1f14-5e6e-8928-8057564e201a"
+        },
+        {
+          "name": "4.13 Aguardar a Saga em Compensated",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.estado === 'Compensated' && r.terminada));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Saga terminou em Compensated', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "49e2e128-782f-5369-94e4-5a4ee2ab7b14"
+        },
+        {
+          "name": "4.14 Status da OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('OS Cancelada', () => pm.expect(pm.response.json().status).to.eql('Cancelada'));"
+                ]
+              }
+            }
+          ],
+          "id": "5b092432-1277-55fa-adcd-9fe901f3c343"
+        },
+        {
+          "name": "4.15 Pagamento Estornado no Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/pagamentos/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.length && r[0].status === 'Estornado'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('pagamento Estornado', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "c66e5eee-f7e1-5116-bdf5-18b3c55b20b4"
+        },
+        {
+          "name": "4.16 Estoque de óleo igual ao inicial (reserva liberada)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/estoque/filiais/{{filial_id}}/saldos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && ((() => { const o = r.find(s => s.pecaId === pm.collectionVariables.get('oleo_id')); return o.quantidadeReservada === 0 && o.quantidadeDisponivel === Number(pm.collectionVariables.get('saldo_oleo_inicial')); })()));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('nada reservado nem consumido', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "05847ba2-77d4-5117-b692-6188fbceb32d"
+        }
+      ]
+    },
+    {
+      "name": "5. Pagamento recusado: liberar a reserva",
+      "description": "O cliente não paga: a Saga libera a reserva de estoque e termina em Cancelled, sem execução.",
+      "item": [
+        {
+          "name": "5.1 Saldo de óleo antes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/estoque/filiais/{{filial_id}}/saldos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const oleo = pm.response.json().find(s => s.pecaId === pm.collectionVariables.get('oleo_id'));",
+                  "pm.collectionVariables.set('saldo_oleo_inicial', oleo.quantidadeDisponivel);"
+                ]
+              }
+            }
+          ],
+          "id": "472e2a4d-7636-56a6-b0b1-88672440b46f"
+        },
+        {
+          "name": "5.2 Abrir OS (atendente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico",
+            "description": "A OS nasce em EmDiagnostico e a Saga manda DiagnosisRequested para Operações.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": \"{{cliente_id}}\",\n  \"veiculoId\": \"{{veiculo_id}}\",\n  \"filialId\": \"{{filial_id}}\",\n  \"observacoes\": \"Postman Fase 4\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "const os = pm.response.json();",
+                  "pm.collectionVariables.set('os_id', os.id);",
+                  "pm.collectionVariables.set('numero_os', os.numero);"
+                ]
+              }
+            }
+          ],
+          "id": "e30df7b4-5032-5baf-a6c6-ce8ced52f13b"
+        },
+        {
+          "name": "5.3 Aguardar a execução em Operações",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.id));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Operações abriu a execução', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "  if (ok) pm.collectionVariables.set('execucao_id', r.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "00c08fb1-0ee0-5cc7-8c9a-549228b6612c"
+        },
+        {
+          "name": "5.4 Diagnosticar 1 óleo e a troca (mecânico)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/{{execucao_id}}/diagnostico",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    {\n      \"tipo\": \"Peca\",\n      \"itemId\": \"{{oleo_id}}\",\n      \"quantidade\": 1\n    },\n    {\n      \"tipo\": \"Servico\",\n      \"itemId\": \"{{servico_id}}\",\n      \"quantidade\": 1\n    }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200, 201, 204', () => pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]));"
+                ]
+              }
+            }
+          ],
+          "id": "ec50626c-6a0b-5b98-9bba-f585f8dc06a1"
+        },
+        {
+          "name": "5.5 Aguardar o orçamento (Saga em AwaitingApproval)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.estado === 'AwaitingApproval'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Billing gerou o orçamento', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "421d8748-5d86-583a-b8f9-a9044836c2ac"
+        },
+        {
+          "name": "5.6 Meus orçamentos (cliente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/meus",
+            "description": "Token de cliente no formato da Lambda de CPF, assinado no pré-request da collection (sem Lambda na Fase 4, ADR-021).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const o = pm.response.json().find(x => x.osId === pm.collectionVariables.get('os_id'));",
+                  "pm.test('orçamento da OS', () => pm.expect(o).to.exist);",
+                  "pm.collectionVariables.set('quote_id', o.quoteId);",
+                  "pm.collectionVariables.set('quote_versao', o.versaoVigente.versao);"
+                ]
+              }
+            }
+          ],
+          "id": "0d509113-e2d2-5576-a4e8-8317be63a015"
+        },
+        {
+          "name": "5.7 Aprovar o orçamento (cliente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/{{quote_id}}/aprovar",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versao\": \"{{quote_versao}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "65108e9d-da77-566f-8bd1-9f196e3e53f6"
+        },
+        {
+          "name": "5.8 Aguardar a cobrança Pix no Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/pagamentos/os/{{os_id}}",
+            "description": "InventoryReserved → PaymentCreationRequested → cobrança no provedor (simulado no Kind).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.length && r[0].referenciaProvedor));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('reserva confirmada e cobrança criada', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "  if (ok) pm.collectionVariables.set('referencia', r[0].referenciaProvedor);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "e278c55a-26f1-5cb5-a777-aa25a655c206"
+        },
+        {
+          "name": "5.9 Mercado Pago (simulador): rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/simulador/pagamentos/{{referencia}}/status",
+            "description": "Faz o papel do cliente pagando ou recusando o Pix; a notificação segue o mesmo caminho do webhook.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "id": "fe950af1-e951-55b0-af2c-b73cb301d248"
+        },
+        {
+          "name": "5.10 Aguardar a Saga em Cancelled",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_atendente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.estado === 'Cancelled' && r.terminada));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('Saga terminou em Cancelled', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "ffecbfa9-9adb-5edd-a547-70232bef6e8b"
+        },
+        {
+          "name": "5.11 Pagamento Recusado no Billing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/pagamentos/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && (r.length && r[0].status === 'Recusado'));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('pagamento Recusado', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "72e8a7b4-ba12-574e-ba34-d30a8b4a0d0c"
+        },
+        {
+          "name": "5.12 Estoque de óleo igual ao inicial (reserva liberada)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/estoque/filiais/{{filial_id}}/saldos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_mecanico}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let r = null;",
+                  "try { r = pm.response.code === 200 ? pm.response.json() : null; } catch (e) { r = null; }",
+                  "const ok = !!(r && ((() => { const o = r.find(s => s.pecaId === pm.collectionVariables.get('oleo_id')); return o.quantidadeReservada === 0 && o.quantidadeDisponivel === Number(pm.collectionVariables.get('saldo_oleo_inicial')); })()));",
+                  "const n = Number(pm.collectionVariables.get('espera') || 0);",
+                  "if (!ok && n < 60) {",
+                  "  // A Saga anda por mensagens: repete este request daqui a 500 ms.",
+                  "  pm.collectionVariables.set('espera', n + 1);",
+                  "  setTimeout(() => {}, 500);",
+                  "  // Pelo id: o nome se repete entre as jornadas, e o runner pularia para outra pasta.",
+                  "  postman.setNextRequest(pm.info.requestId);",
+                  "} else {",
+                  "  pm.collectionVariables.unset('espera');",
+                  "  pm.test('nada reservado nem consumido', () => pm.expect(ok, 'não aconteceu em 30 s; última resposta: ' + pm.response.text()).to.be.true);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "id": "ee4724b6-d6b6-59f2-83c8-1ff0e9a2d93f"
+        }
+      ]
+    },
+    {
+      "name": "6. Erros esperados",
+      "description": "Autenticação, autorização e regras de negócio.",
+      "item": [
+        {
+          "name": "6.1 Orçamentos sem token (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{billing_url}}/billing/orcamentos/meus",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+                ]
+              }
+            }
+          ],
+          "id": "29f9d9bd-1b91-5857-a7aa-e939587a704d"
+        },
+        {
+          "name": "6.2 Cliente não acessa Operações (403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              }
+            ],
+            "url": "{{operacoes_url}}/operacoes/execucoes/os/{{os_id}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ],
+          "id": "6a843fc8-cec8-5a19-b627-74e1a4f9c493"
+        },
+        {
+          "name": "6.3 Status inválido no simulador (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{billing_url}}/billing/simulador/pagamentos/{{referencia}}/status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"pago\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ],
+          "id": "e5c0980e-30f8-56fb-a074-ba2c3d4c6843"
+        },
+        {
+          "name": "6.4 Resolver Saga que não está em ação manual (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Correlation-Id",
+                "value": "{{correlation_id}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{os_url}}/os/ordens-servico/{{os_id}}/saga/resolucao",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"acao\": \"Cancelar\",\n  \"motivo\": \"Teste da collection\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 422', () => pm.expect(pm.response.code).to.be.oneOf([422]));"
+                ]
+              }
+            }
+          ],
+          "id": "37605492-2d14-5456-9fe2-35f9d85266bb"
+        }
+      ]
+    }
+  ]
+}
