@@ -54,6 +54,7 @@ Subcards mantêm entregas limitadas dentro dos cards de serviço:
 - CARD-39a/39b: orçamento/aprovação e integração de pagamentos.
 - CARD-40a/40b/40c: orquestrador com fluxo normal, compensações e falhas, ambiente integrado e BDD.
 - CARD-41a/41b: CI por serviço (testes, cobertura, qualidade, imagem) e Kubernetes por serviço no Kind (manifests, rollout, demonstração).
+- CARD-42a/42b: instrumentação dos serviços (identidade, métricas de negócio, logs ligados ao trace) e stack de observabilidade no Kind (dashboards, alertas, runbooks, evidências).
 
 ## Cards
 
@@ -70,7 +71,7 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | [CARD-39](CARD-39-servico-billing-pagamentos.md) | Billing e Mercado Pago | Em andamento — 39a concluído; 39b implementado; sandbox validado em parte (criação do Pix bloqueada por `500` do provedor); deploy/CI (CARD-41) pendente |
 | [CARD-40](CARD-40-saga-e-bdd-integrado.md) | Implementação da Saga e BDD ponta a ponta | Concluído — 40a, 40b e 40c; BDD verde no CI; trace como evidência no CARD-42 |
 | [CARD-41](CARD-41-cicd-kubernetes-por-servico.md) | CI/CD, qualidade, cobertura e deploy independente | Concluído — 41a (CI, gate ≥80%) e 41b (deploy no Kind, ADR-021); SonarCloud pendente dos segredos |
-| [CARD-42](CARD-42-observabilidade-distribuida.md) | Observabilidade do fluxo entre serviços | To Do |
+| [CARD-42](CARD-42-observabilidade-distribuida.md) | Observabilidade do fluxo entre serviços | To Do — escopo de 42a e 42b definido; stack OTel local no Kind (ADR-022) |
 | [CARD-43](CARD-43-documentacao-e-entrega.md) | Swagger/Postman, vídeo e PDF final | To Do |
 
 ## Critérios globais da Fase 4
