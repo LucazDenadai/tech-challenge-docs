@@ -1,7 +1,7 @@
 # CARD-43b — Roteiro do vídeo da Fase 4
 
 **Tipo:** Documentação / Entrega
-**Status:** To Do — escopo definido (2026-10-13)
+**Status:** Concluído — roteiro em `entrega/fase4/roteiro-video.md` (2026-10-13); gravação é do time
 **Depende de:** CARD-40, CARD-41, CARD-42
 **Bloqueia:** Submissão no portal
 **Decisão arquitetural:** [ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md) (Kind, sem Lambda), [ADR-022](../../adr/ADR-022-observabilidade-fase4-stack-otel-local.md) (observabilidade)
@@ -27,8 +27,14 @@ O vídeo tem até 15 minutos e precisa mostrar, de forma visível (requisito E-0
 - **Sem Lambda e sem AWS:** explicar em uma frase, com o ADR-021.
 - **Checklist antes de gravar:** cluster novo, collection verde, dashboards abertos, nada sensível na tela (senhas, tokens).
 
+## Implementação (2026-10-13)
+
+- [`entrega/fase4/roteiro-video.md`](../../entrega/fase4/roteiro-video.md): 7 blocos, 13 min 10 s, com tabela que liga cada pedido do enunciado ao bloco e à evidência na tela. Inclui o preparo do ambiente, o checklist antes de gravar e o que fazer se algo falhar.
+- **Ensaiado contra o Kind local, pelas APIs:** as pastas 3, 4 e 5 da collection (Newman), a busca no Jaeger pela tag `correlation_id`, a consulta de logs do dashboard (logs dos três serviços, com `TraceId`), o alerta `DlqCrescendo` com a mensagem publicada na fila do OS e a proteção de branch (`enforce_admins`).
+- **Não ensaiado na interface:** o clique no link TraceId do Grafana e o Publish pela tela do RabbitMQ; o equivalente pela API funcionou.
+
 ## Critérios de aceite
 
-- [ ] O roteiro cobre os quatro itens do enunciado, cada um com a evidência que aparece na tela.
-- [ ] A soma dos tempos fica em até 15 minutos.
-- [ ] O roteiro foi ensaiado contra o ambiente (comandos e requests funcionam como escritos).
+- [x] O roteiro cobre os quatro itens do enunciado, cada um com a evidência que aparece na tela.
+- [x] A soma dos tempos fica em até 15 minutos.
+- [x] O roteiro foi ensaiado contra o ambiente (comandos e requests funcionam como escritos). *(Pelas APIs; dois cliques de interface não ensaiados, ver acima.)*
