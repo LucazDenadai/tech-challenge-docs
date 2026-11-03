@@ -80,9 +80,9 @@ Linhas / branches. O OS medido corretamente ficava **abaixo do gate de 80%**: a 
 | `EmailSmtpAdapter`: autenticar e enviar | STARTTLS com certificado confiável e cliente SMTP não injetável |
 | OS: parte dos branches da Saga, dos contratos e dos casos de uso | Não atacados por decisão do time (prazo da entrega) |
 
-### Sugestão registrada (comportamento não alterado)
+### Identificadores na DLQ (implementado a pedido do time)
 
-Quando a falha temporária persiste e a mensagem vai para a DLQ, os cabeçalhos `x-message-id` e `x-correlation-id` saem vazios (o resultado é montado com `null`), embora o corpo leve os dois. O runbook da DLQ ficaria mais simples com eles preenchidos.
+Quando a falha transitória persistia, a mensagem ia para a DLQ com `x-message-id` e `x-correlation-id` vazios, embora o corpo levasse os dois. Agora o consumidor lê os identificadores do corpo com a leitura tolerante do `LeitorMensagemSaga` e preenche os cabeçalhos, o que facilita o runbook do alerta de DLQ. PRs: `tech-challenge-os` #16, `tech-challenge-billing` #17 e `tech-challenge-operacoes` #14.
 
 ## Critérios de aceite
 
