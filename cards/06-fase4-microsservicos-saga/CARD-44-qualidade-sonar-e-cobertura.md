@@ -1,7 +1,7 @@
 # CARD-44 — Qualidade: vulnerabilidades do SonarCloud e cobertura máxima
 
 **Tipo:** Qualidade / Testes
-**Status:** Em andamento — escopo definido (2026-11-03)
+**Status:** Concluído — PRs mergeados nos três serviços (2026-11-03)
 **Depende de:** CARD-41a, CARD-43d
 **Bloqueia:** —
 **Repositórios alvo:** `tech-challenge-os`, `tech-challenge-billing`, `tech-challenge-operacoes`, `tech-challenge-docs`
@@ -32,11 +32,63 @@ A cobertura passa do gate de 80% (CARD-41a), mas não cobre tudo. O time quer ch
 - **Gate:** continua em 80%. Os números novos viram a evidência no README; subir o gate fica para depois da avaliação, para não travar a entrega.
 - **Testes locais no container do SDK:** o Smart App Control do host bloqueia as DLLs de teste (`mcr.microsoft.com/dotnet/sdk:10.0`, com Testcontainers pelo socket do Docker).
 
+## Implementação (2026-11-03)
+
+PRs de código: `tech-challenge-operacoes` #12, `tech-challenge-billing` #15 e `tech-challenge-os` #14. READMEs: #13, #16 e #15, na mesma ordem.
+
+### A medição estava errada
+
+`coverlet.runsettings` excluía `CompilerGeneratedAttribute`. O compilador gera uma classe com esse atributo para cada método `async`, então controllers, casos de uso, repositórios e consumidores ficavam fora da conta (no Operações, 112 de 113 métodos `async`). O atributo saiu da exclusão nos três serviços.
+
+| Serviço | Antes (sem async) | Medição correta, antes dos testes | Depois |
+|---|---|---|---|
+| Operações | 97,1% / 84,4% | 95,6% / 88,7% | **99,6% / 98,4%** (CI) |
+| Billing | 94,8% / 82,4% | 93,4% / 82,1% | **99,5% / 98,8%** (CI) |
+| OS | 93,6% / 86,3% | 85,8% / **79,6%** | **97,2% / 89,6%** (CI) |
+
+Linhas / branches. O OS medido corretamente ficava **abaixo do gate de 80%**: a correção da medição e os testes entraram no mesmo PR.
+
+### Vulnerabilidades
+
+- S7637 e S7636: corrigidas no CARD-43d (action por SHA, `GITHUB_TOKEN` por variável).
+- S5332: o fallback `http://jaeger:4318` saiu do código; sem `Jaeger:Endpoint`, o serviço não sobe. O `appsettings.json` sempre define o endpoint, então nada muda em execução. O tráfego OTLP continua em HTTP dentro do cluster (ADR-022).
+
+### Código de produção alterado
+
+| Mudança | Por quê |
+|---|---|
+| `mensagem is null` removido no leitor (Operações, Billing) | A raiz já é um objeto JSON: a desserialização nunca devolve null |
+| Consultas de OS por cliente e por status removidas (OS) | Sem uso em nenhum lugar |
+| `ExtrairContextoTrace` `private` → `internal` (OS) e `InternalsVisibleTo` nos projetos | Testar guardas internas sem mudar a API pública |
+| **Defeito:** documento de cliente desativado devolvia 500 (OS) | `DocumentoExisteAsync` só via clientes ativos; o ramo de reativação nunca rodava. Corrigido por decisão do time |
+| **Defeito:** Mecânico recebia 403 ao ler veículo (OS) | `[Authorize]` da classe soma com o do método. A classe admite o Mecânico e as rotas que não são dele restringem a Admin e Atendente. Corrigido por decisão do time |
+
+### Testes que mudaram de natureza
+
+- **Concorrência determinística (Billing):** os testes paralelos de decisão e de notificação dependiam do agendamento; na execução medida, a nova tentativa não rodava. Um repositório decorado faz a gravação concorrente acontecer entre a leitura e o `SaveChanges`.
+- **Eventos publicados validados (Billing):** o Billing não tinha o equivalente ao teste do Operações que passa cada evento pelo próprio validador.
+
+### O que fica descoberto
+
+| Onde | Motivo |
+|---|---|
+| `default` de `switch` sobre tipo aberto (resultado de reserva, decisão de orçamento, mensagem sem tratamento) | Inalcançável, e o compilador exige o caminho |
+| Saída normal dos laços (despachantes, consumidor, expiração, reconciliação) | O laço só termina por cancelamento, que sai pela exceção do `Delay` |
+| Falha ao publicar na DLQ e `ObjectDisposedException` ao fechar o canal | Exigem falha do broker no meio da operação |
+| DynamoDB: tabela fora de `ACTIVE`, paginação da fila, `TransactionCanceled` sem motivo de condição | O DynamoDB Local não reproduz |
+| Mensagem de erro do broker com mais de 500 caracteres | O broker não produz |
+| `EmailSmtpAdapter`: autenticar e enviar | STARTTLS com certificado confiável e cliente SMTP não injetável |
+| OS: parte dos branches da Saga, dos contratos e dos casos de uso | Não atacados por decisão do time (prazo da entrega) |
+
+### Sugestão registrada (comportamento não alterado)
+
+Quando a falha temporária persiste e a mensagem vai para a DLQ, os cabeçalhos `x-message-id` e `x-correlation-id` saem vazios (o resultado é montado com `null`), embora o corpo leve os dois. O runbook da DLQ ficaria mais simples com eles preenchidos.
+
 ## Critérios de aceite
 
-- [ ] Nenhuma vulnerabilidade aberta no SonarCloud nos três projetos.
-- [ ] Cobertura de linhas e branches o mais perto possível de 100% em cada serviço; o que ficar descoberto está listado com o motivo.
-- [ ] Nenhum teste existente alterado para passar; BDD ponta a ponta verde.
+- [x] Nenhuma vulnerabilidade aberta no SonarCloud nos três projetos.
+- [x] Cobertura de linhas e branches o mais perto possível de 100% em cada serviço; o que ficar descoberto está listado com o motivo.
+- [x] Nenhum teste existente alterado para passar; BDD ponta a ponta verde.
 - [ ] READMEs e matriz com os números novos.
 
 ## Passos
