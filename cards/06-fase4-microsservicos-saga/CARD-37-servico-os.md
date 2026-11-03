@@ -1,7 +1,7 @@
 # CARD-37 — Serviço OS independente
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-37a e CARD-37b concluídos; falta imagem/deploy independente e CI (CARD-41); mensagens publicadas com a filial desde o [CARD-40a](CARD-40a-orquestrador-saga-os.md)
+**Status:** Concluído — CARD-37a e CARD-37b; imagem, CI e deploy no Kind no CARD-41; README de entrega no CARD-43d (2026-11-03)
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-os`
