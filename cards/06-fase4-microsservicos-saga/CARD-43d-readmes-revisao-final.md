@@ -50,7 +50,7 @@ Busca nos cinco repositórios públicos (`git grep`) por tokens do Mercado Pago,
 |---|---|
 | Nenhum token, chave ou segredo | — |
 | CPFs `111.444.777-35`, `123.456.789-09` e `529.982.247-25` em testes e no `postman/README.md` | São CPFs de exemplo, válidos só no dígito verificador. Ficam. |
-| E-mail pessoal do autor no ADR-011 (alertas da Fase 3) | Dado do próprio autor; decisão dele. |
+| E-mail pessoal do autor no ADR-011 (alertas da Fase 3) | Mantido por decisão do autor (2026-11-03): a conta AWS não existe mais e o dado é dele. |
 
 ## Critérios de aceite
 
