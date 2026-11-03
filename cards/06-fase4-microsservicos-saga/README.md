@@ -45,6 +45,7 @@ CARD-37 + CARD-38 + CARD-39 ----------+--> CARD-40 (Saga + BDD integrado)
 CARD-34 + CARD-37 + CARD-38 + CARD-39 ----> CARD-41 (CI/CD + Kubernetes)
 CARD-40 + CARD-41 --------------------------> CARD-42 (Observabilidade distribuída)
 CARD-33 + CARD-40 + CARD-41 + CARD-42 ------> CARD-43 (Documentação e entrega)
+CARD-41 + CARD-43d -------------------------> CARD-44 (Vulnerabilidades do Sonar e cobertura)
 ```
 
 Subcards mantêm entregas limitadas dentro dos cards de serviço:
@@ -73,7 +74,8 @@ Baseline atual dos requisitos, evidências e ambiguidades: [matriz-requisitos.md
 | [CARD-40](CARD-40-saga-e-bdd-integrado.md) | Implementação da Saga e BDD ponta a ponta | Concluído — 40a, 40b e 40c; BDD verde no CI; trace como evidência no CARD-42 |
 | [CARD-41](CARD-41-cicd-kubernetes-por-servico.md) | CI/CD, qualidade, cobertura e deploy independente | Concluído — 41a (CI, gate ≥80%) e 41b (deploy no Kind, ADR-021); SonarCloud pendente dos segredos |
 | [CARD-42](CARD-42-observabilidade-distribuida.md) | Observabilidade do fluxo entre serviços | Concluído — 42a (instrumentação) e 42b (Prometheus, Grafana, Loki e alertas no Kind, ADR-022); span do Mercado Pago não verificado ao vivo |
-| [CARD-43](CARD-43-documentacao-e-entrega.md) | Swagger/Postman, vídeo e PDF final | Em andamento — 43a (Postman) e 43b (roteiro) concluídos; 43c (PDF gerado, falta o link do vídeo); 43d (READMEs e revisão) com escopo definido; SonarCloud sem segredos |
+| [CARD-43](CARD-43-documentacao-e-entrega.md) | Swagger/Postman, vídeo e PDF final | Em andamento — 43a (Postman) e 43b (roteiro) concluídos; 43c (PDF gerado, falta o link do vídeo); 43d (READMEs e revisão) concluído; falta o vídeo |
+| [CARD-44](CARD-44-qualidade-sonar-e-cobertura.md) | Vulnerabilidades do SonarCloud e cobertura máxima | Em andamento — escopo definido |
 
 ## Critérios globais da Fase 4
 
