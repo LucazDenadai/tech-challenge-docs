@@ -37,10 +37,25 @@ Os três READMEs já explicam estrutura, configuração, execução local, API, 
 - **SonarCloud descrito como está:** o passo existe e roda com os segredos; hoje o gate de cobertura é a verificação que bloqueia o merge.
 - **Kind:** os comandos do `tech-challenge-infra-k8s` (`kind/subir.sh`) e a porta de cada serviço (OS 8090, Billing 8091, Operações 8092). Nada sobre AWS (ADR-021).
 
+## Implementação (2026-11-03)
+
+- **READMEs:** `tech-challenge-os` PR #12, `tech-challenge-billing` PR #13 e `tech-challenge-operacoes` PR #10. Cada um ganhou o badge do CI (no OS, também o do BDD) e as seções "Saga: por que orquestrada", "CI/CD", "Cobertura", "Executar no Kubernetes (Kind)", "Observabilidade" e "Swagger e Postman". O texto é o mesmo nos três; mudam o nome, a porta, o run e os números.
+- **Matriz de requisitos:** linhas que ainda mostravam o baseline passaram a mostrar o estado atual (R-01 a R-05, R-07 a R-09, R-11, R-12, E-01, E-04, E-05, E-07, E-08). Os cards CARD-37, 38 e 39 deixaram de dizer "falta CI (CARD-41)".
+
+### Revisão de segredos e dados pessoais
+
+Busca nos cinco repositórios públicos (`git grep`) por tokens do Mercado Pago, JWT, tokens do GitHub e do Sonar, chaves AWS, chaves privadas, e-mails pessoais e CPF formatado.
+
+| Achado | Decisão |
+|---|---|
+| Nenhum token, chave ou segredo | — |
+| CPFs `111.444.777-35`, `123.456.789-09` e `529.982.247-25` em testes e no `postman/README.md` | São CPFs de exemplo, válidos só no dígito verificador. Ficam. |
+| E-mail pessoal do autor no ADR-011 (alertas da Fase 3) | Dado do próprio autor; decisão dele. |
+
 ## Critérios de aceite
 
-- [ ] Cada README traz ownership dos dados, contratos, testes, execução local e no Kind, Swagger e link da cobertura no CI.
-- [ ] Revisão final sem segredos, CPF real ou dados pessoais publicados.
+- [x] Cada README traz ownership dos dados, contratos, testes, execução local e no Kind, Swagger e link da cobertura no CI.
+- [x] Revisão final sem segredos, CPF real ou dados pessoais publicados.
 - [ ] Links do PDF e do vídeo abertos e conferidos antes do envio; submissão registrada.
 
 ## Passos
