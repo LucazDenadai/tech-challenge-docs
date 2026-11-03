@@ -1,7 +1,7 @@
 # CARD-39 — Serviço Billing e pagamentos
 
 **Tipo:** Implementação / Microsserviço
-**Status:** Em andamento — CARD-39a concluído; CARD-39b implementado com provedor simulado ([ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md)), sandbox validado em parte (webhook e consulta; criação do Pix bloqueada por `500` do provedor); deploy e CI no CARD-41
+**Status:** Concluído com ressalva — CARD-39a e CARD-39b; CI e deploy no Kind no CARD-41. Sandbox validado em parte (webhook e consulta); a criação do Pix recebeu `500` do provedor ([ADR-019](../../adr/ADR-019-integracao-mercado-pago-fase4.md)) (2026-11-03)
 **Depende de:** CARD-34, CARD-35, CARD-36
 **Bloqueia:** CARD-40, CARD-41, CARD-43
 **Repositório alvo:** `tech-challenge-billing` (nome definido no CARD-34 / [ADR-015](../../adr/ADR-015-ownership-e-infraestrutura-fase4.md))
