@@ -1,7 +1,7 @@
 # CARD-43 — Documentação e entrega final da Fase 4
 
 **Tipo:** Documentação / Entrega
-**Status:** To Do — dividido em 43a, 43b, 43c e 43d (2026-10-13)
+**Status:** Em andamento — 43a e 43b concluídos; 43c falta o link do vídeo; 43d em andamento (2026-11-03)
 **Depende de:** CARD-33, CARD-37, CARD-38, CARD-39, CARD-40, CARD-41, CARD-42
 **Bloqueia:** Submissão no portal
 **Repositórios:** OS, Operações, Billing e `tech-challenge-docs`
