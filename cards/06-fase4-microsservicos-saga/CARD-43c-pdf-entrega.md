@@ -1,7 +1,7 @@
 # CARD-43c — PDF de entrega da Fase 4
 
 **Tipo:** Documentação / Entrega
-**Status:** Em andamento — PDF gerado (2026-10-13); falta o link do vídeo
+**Status:** Concluído (2026-11-03) — PDF gerado de novo com o link do vídeo
 **Depende de:** CARD-40, CARD-41, CARD-42
 **Bloqueia:** Submissão no portal
 **Decisão arquitetural:** [ADR-021](../../adr/ADR-021-kubernetes-local-sem-aws-fase4.md) (Kind, sem Lambda), [ADR-022](../../adr/ADR-022-observabilidade-fase4-stack-otel-local.md) (observabilidade)
@@ -19,7 +19,7 @@ O portal pede um PDF com participantes, links dos repositórios, link do vídeo,
 - **Participante (confirmado pelo time):** Lucaz Gabriel Teixeira Denadai — RM37376.
 - **Fonte em HTML** (`entrega/fase4/entrega-fase4.html`), convertido em PDF pelo Chromium headless. O HTML fica versionado; o PDF é gerado de novo quando o link do vídeo existir.
 - **Conteúdo:** descrição e objetivos; diagrama geral; divisão dos serviços e bancos (SQL e NoSQL); Saga orquestrada e compensações; tecnologias; CI/CD e deploy no Kind; observabilidade; decisões principais (ADRs da Fase 4); execução; links (repositórios, docs, Postman, vídeo).
-- **Link do vídeo:** campo marcado como pendente até a gravação.
+- **Link do vídeo:** campo marcado como pendente até a gravação. *(Preenchido em 2026-11-03: <https://youtu.be/I4jkgqyC1sA>.)*
 
 ## Implementação (2026-10-13)
 
@@ -27,11 +27,11 @@ O portal pede um PDF com participantes, links dos repositórios, link do vídeo,
 - Seções: capa com identificação; descrição e objetivos; diagrama geral (serviços, bancos, RabbitMQ, Mercado Pago, observabilidade, Kind); divisão dos serviços e bancos com a justificativa de SQL e NoSQL; Saga orquestrada (por que orquestração, fluxo normal, falhas e compensações, garantias de mensageria); tecnologias; CI/CD; monitoramento; decisões principais; execução; links.
 - Repositórios conferidos como públicos: `tech-challenge-os`, `-billing`, `-operacoes`, `-infra-k8s` e `-docs`.
 
-### Para fechar
+### Fechamento (2026-11-03)
 
-1. Gravar e publicar o vídeo (roteiro no CARD-43b).
-2. Trocar `[LINK DO VÍDEO]` no HTML pelo link e, se for outro dia, a data da capa e do rodapé.
-3. Gerar o PDF de novo:
+- Vídeo publicado no YouTube como não listado, com cerca de 10min20s: <https://youtu.be/I4jkgqyC1sA>.
+- Link e data (03/11/2026) atualizados na capa e no rodapé do HTML.
+- PDF gerado de novo, com 9 páginas:
 
    ```sh
    msedge --headless --no-pdf-header-footer --print-to-pdf=Tech_Challenge_Fase4_Entrega.pdf entrega-fase4.html
@@ -39,7 +39,7 @@ O portal pede um PDF com participantes, links dos repositórios, link do vídeo,
 
 ## Critérios de aceite
 
-- [ ] O PDF tem todos os itens do enunciado; o link do vídeo é preenchido antes da submissão.
+- [x] O PDF tem todos os itens do enunciado; o link do vídeo é preenchido antes da submissão.
 - [x] O diagrama mostra só o que existe nos manifests e contratos.
 - [x] Os links abrem sem login (repositórios públicos).
 - [x] Nenhum segredo ou dado pessoal de cliente aparece.
